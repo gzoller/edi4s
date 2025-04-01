@@ -1,0 +1,374 @@
+      "name": "TDS",
+      "presence": "optional",
+      "fields": [
+        {
+          "name": "TDS01",
+          "presence": "optional",
+          "dependsOn": [
+            {
+              "field": "FOB01",
+              "condition": "NON_EMPTY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ITD",
+      "presence": "optional",
+      "fields": [
+        {
+          "name": "ITD01",
+          "presence": "optional",
+          "dependsOn": [
+            {
+              "field": "ST02",
+              "condition": "BETWEEN_INCLUSIVE",
+              "min": "10",
+              "max": "100"
+            }
+          ]
+        }
+
+
+
+
+        {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "dependsOn": {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "EQ", "NE", "GT", "GTE", "LT", "LTE",
+                    "EXISTS", "NOT_EXISTS", "EMPTY", "NON_EMPTY",
+                    "BETWEEN_INCLUSIVE", "BETWEEN_EXCLUSIVE", "LIKE"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Value for the comparison (e.g., used in EQ, NE, LIKE)"
+                },
+                "minValue": {
+                  "type": "string",
+                  "description": "Minimum value for range checks (used for BETWEEN_INCLUSIVE, BETWEEN_EXCLUSIVE)"
+                },
+                "maxValue": {
+                  "type": "string",
+                  "description": "Maximum value for range checks (used for BETWEEN_INCLUSIVE, BETWEEN_EXCLUSIVE)"
+                }
+              },
+              "required": ["operation"],
+              "if": {
+                "properties": {
+                  "operation": { "const": "EXISTS" }
+                }
+              },
+              "then": {
+                "not": {
+                  "properties": {
+                    "value": { "type": "string" },
+                    "minValue": { "type": "string" },
+                    "maxValue": { "type": "string" }
+                  }
+                }
+              },
+              "else": {
+                "if": {
+                  "properties": {
+                    "operation": { "enum": ["EQ", "NE", "GT", "GTE", "LT", "LTE", "LIKE"] }
+                  }
+                },
+                "then": {
+                  "required": ["value"],
+                  "not": {
+                    "properties": {
+                      "minValue": { "type": "string" },
+                      "maxValue": { "type": "string" }
+                    }
+                  }
+                },
+                "else": {
+                  "if": {
+                    "properties": {
+                      "operation": { "enum": ["BETWEEN_INCLUSIVE", "BETWEEN_EXCLUSIVE"] }
+                    }
+                  },
+                  "then": {
+                    "required": ["minValue", "maxValue"]
+                  }
+                }
+              },
+              "if": {
+                "properties": {
+                  "operation": { "const": "EMPTY" }
+                }
+              },
+              "then": {
+                "not": {
+                  "properties": {
+                    "value": { "type": "string" },
+                    "minValue": { "type": "string" },
+                    "maxValue": { "type": "string" }
+                  }
+                }
+              },
+              "if": {
+                "properties": {
+                  "operation": { "const": "NOT_EXISTS" }
+                }
+              },
+              "then": {
+                "not": {
+                  "properties": {
+                    "value": { "type": "string" },
+                    "minValue": { "type": "string" },
+                    "maxValue": { "type": "string" }
+                  }
+                }
+              },
+              "if": {
+                "properties": {
+                  "operation": { "const": "NON_EMPTY" }
+                }
+              },
+              "then": {
+                "not": {
+                  "properties": {
+                    "value": { "type": "string" },
+                    "minValue": { "type": "string" },
+                    "maxValue": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "required": ["dependsOn"]
+        }
+
+    -----------------
+
+        {
+          "ediVersion": "5010",
+          "documentName": "850 Purchase Order",
+          "segments": [
+            {
+              "name": "ST",
+              "presence": "required",
+              "fields": [
+                {
+                  "name": "ST01",
+                  "presence": "required"
+                },
+                {
+                  "name": "ST02",
+                  "presence": "required"
+                }
+              ]
+            },
+            {
+              "name": "BEG",
+              "presence": "required",
+              "fields": [
+                {
+                  "name": "BEG01",
+                  "presence": "required"
+                },
+                {
+                  "name": "BEG02",
+                  "presence": "required"
+                },
+                {
+                  "name": "BEG03",
+                  "presence": "required"
+                },
+                {
+                  "name": "BEG04",
+                  "presence": "optional"
+                },
+                {
+                  "name": "BEG05",
+                  "presence": "optional"
+                }
+              ]
+            },
+            {
+              "name": "REF",
+              "presence": "optional",
+              "fields": [
+                {
+                  "name": "REF01",
+                  "presence": "optional"
+                },
+                {
+                  "name": "REF02",
+                  "presence": "optional"
+                }
+              ]
+            },
+            {
+              "name": "DTM",
+              "presence": "optional",
+              "fields": [
+                {
+                  "name": "DTM01",
+                  "presence": "optional"
+                },
+                {
+                  "name": "DTM02",
+                  "presence": "optional"
+                }
+              ]
+            },
+            {
+              "name": "N1",
+              "presence": "optional",
+              "loopBody": {
+                "fields": [
+                  {
+                    "name": "N101",
+                    "presence": "required"
+                  },
+                  {
+                    "name": "N102",
+                    "presence": "optional"
+                  },
+                  {
+                    "name": "N103",
+                    "presence": "optional"
+                  },
+                  {
+                    "name": "N104",
+                    "presence": "optional"
+                  }
+                ],
+                "body": [
+                  {
+                    "name": "N3",
+                    "presence": "optional",
+                    "fields": [
+                      {
+                        "name": "N301",
+                        "presence": "optional"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "N4",
+                    "presence": "optional",
+                    "fields": [
+                      {
+                        "name": "N401",
+                        "presence": "optional"
+                      },
+                      {
+                        "name": "N402",
+                        "presence": "optional"
+                      },
+                      {
+                        "name": "N403",
+                        "presence": "optional"
+                      },
+                      {
+                        "name": "N404",
+                        "presence": "optional"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "minRepetitions": 1,
+              "maxRepetitions": 10
+            },
+            {
+              "name": "PO1",
+              "presence": "required",
+              "loopBody": {
+                "fields": [
+                  {
+                    "name": "PO101",
+                    "presence": "required"
+                  },
+                  {
+                    "name": "PO102",
+                    "presence": "optional"
+                  }
+                ],
+                "body": []
+              },
+              "minRepetitions": 1,
+              "maxRepetitions": 100
+            },
+            {
+              "name": "CTT",
+              "presence": "optional",
+              "fields": [
+                {
+                  "name": "CTT01",
+                  "presence": "optional"
+                }
+              ]
+            },
+            {
+              "name": "SE",
+              "presence": "required",
+              "fields": [
+                {
+                  "name": "SE01",
+                  "presence": "required"
+                },
+                {
+                  "name": "SE02",
+                  "presence": "required"
+                }
+              ]
+            }
+          ]
+        }
+
+
+        -----
+
+
+
+        {
+          "ediVersion": "5010",
+          "segments": [
+            {
+              "name": "N3",
+              "friendlyName": "addressInformation",
+              "description": "Address Information",
+              "fields": [
+                {
+                  "name": "N301",
+                  "friendlyName": "addressLine1",
+                  "description": "Address Line 1",
+                  "ediType": "AN",
+                  "subFields": [
+                    {
+                      "name": "N30101",
+                      "friendlyName": "streetAddress",
+                      "description": "Street Address",
+                      "ediType": "AN"
+                    },
+                    {
+                      "name": "N30102",
+                      "friendlyName": "suiteNumber",
+                      "description": "Suite Number",
+                      "ediType": "AN"
+                    },
+                    {
+                      "name": "N30103",
+                      "friendlyName": "city",
+                      "description": "City Name",
+                      "ediType": "AN"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }

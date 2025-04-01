@@ -1,0 +1,137 @@
+{
+  "ediVersion": "5010",
+  "compositeTypes": [
+    {
+      "name": "C050",
+      "fields": [
+        {
+          "name": "1250",
+          "camelName": "formatQualifier",
+          "description": "Date Time Period Format Qualifier",
+          "ediType": "ID",
+          "presence": "required"
+        },
+        {
+          "name": "1251",
+          "camelName": "dateTimePeriod",
+          "description": "Date Time Period",
+          "ediType": "AN",
+          "presence": "required"
+        }
+      ]
+    },
+    {
+      "name": "C060",
+      "fields": [
+        {
+          "name": "1280",
+          "camelName": "locationQualifier1",
+          "description": "Location Qualifier",
+          "ediType": "ID",
+          "presence": "required"
+        },
+        {
+          "name": "1281",
+          "camelName": "locationIdentifier1",
+          "description": "Location Identifier",
+          "ediType": "AN",
+          "presence": "required"
+        },
+        {
+          "name": "1280",
+          "camelName": "locationQualifier2",
+          "description": "Location Qualifier",
+          "ediType": "ID",
+          "presence": "optional"
+        },
+        {
+          "name": "1281",
+          "camelName": "locationIdentifier2",
+          "description": "Location Identifier",
+          "ediType": "AN",
+          "presence": "optional"
+        }
+      ]
+    },
+    {
+      "name": "C040",
+      "fields": [
+        {
+          "name": "128",
+          "camelName": "referenceQualifier1",
+          "description": "Reference Identification Qualifier",
+          "ediType": "ID",
+          "presence": "required"
+        },
+        {
+          "name": "127",
+          "camelName": "referenceId1",
+          "description": "Reference Identification",
+          "ediType": "AN",
+          "presence": "required"
+        },
+        {
+          "name": "128",
+          "camelName": "referenceQualifier2",
+          "description": "Reference Identification Qualifier",
+          "ediType": "ID",
+          "presence": "optional"
+        },
+        {
+          "name": "127",
+          "camelName": "referenceId2",
+          "description": "Reference Identification",
+          "ediType": "AN",
+          "presence": "optional"
+        }
+      ]
+    },
+    {
+      "name": "C001",
+      "fields": [
+        {
+          "name": "355",
+          "camelName": "unitOrBasisCode",
+          "description": "Unit or Basis for Measurement Code",
+          "ediType": "ID",
+          "presence": "required"
+        },
+        {
+          "name": "1018",
+          "camelName": "exponent",
+          "description": "Exponent",
+          "ediType": "R",
+          "presence": "optional"
+        },
+        {
+          "name": "649",
+          "camelName": "multiplier",
+          "description": "Multiplier",
+          "ediType": "R",
+          "presence": "optional"
+        },
+        {
+          "name": "355",
+          "camelName": "unitOrBasisCode2",
+          "description": "Unit or Basis for Measurement Code",
+          "ediType": "ID",
+          "presence": "optional"
+        },
+        {
+          "name": "1018",
+          "camelName": "exponent2",
+          "description": "Exponent",
+          "ediType": "R",
+          "presence": "optional"
+        },
+        {
+          "name": "649",
+          "camelName": "multiplier2",
+          "description": "Multiplier",
+          "ediType": "R",
+          "presence": "optional"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,276 @@
+{  # TODO: Check all these segments for missing fields!!!
+  "ediVersion": "5010",
+  "segments": [
+    {
+      "name": "ST",
+      "friendlyName": "transactionSetHeader",
+      "description": "Transaction Set Header",
+      "fields": [
+        {"name": "ST01", "friendlyName": "transactionSetIdentifier", "description": "Transaction Set Identifier", "ediType": "AN"},
+        {"name": "ST02", "friendlyName": "transactionSetControlNumber", "description": "Transaction Set Control Number", "ediType": "AN"}
+      ]
+    },
+    {
+      "name": "BEG",
+      "friendlyName": "beginningSegmentForPurchaseOrder",
+      "description": "Beginning Segment for Purchase Order",
+      "fields": [
+        {"name": "BEG01", "friendlyName": "transactionSetPurposeCode", "description": "Transaction Set Purpose Code", "ediType": "ID"},
+        {"name": "BEG02", "friendlyName": "purchaseOrderTypeCode", "description": "Purchase Order Type Code", "ediType": "ID"},
+        {"name": "BEG03", "friendlyName": "purchaseOrderNumber", "description": "Purchase Order Number", "ediType": "AN"},
+        {"name": "BEG04", "friendlyName": "releaseNumber", "description": "Release Number", "ediType": "AN"},
+        {"name": "BEG05", "friendlyName": "date", "description": "Date", "ediType": "DT"}
+      ]
+    },
+    {
+      "name": "REF",
+      "friendlyName": "referenceIdentification",
+      "description": "Reference Identification",
+      "fields": [
+        {"name": "REF01", "friendlyName": "referenceIdentificationQualifier", "description": "Reference Identification Qualifier", "ediType": "ID"},
+        {"name": "REF02", "friendlyName": "referenceIdentification", "description": "Reference Identification", "ediType": "AN"}
+      ]
+    },
+    {
+      "name": "DTM",
+      "friendlyName": "dateTimeReference",
+      "description": "Date/Time Reference",
+      "fields": [
+        {
+          "name": "DTM01",
+          "friendlyName": "dateTimeQualifier",
+          "description": "Date/Time Qualifier",
+          "ediType": "ID"
+        },
+        {
+          "name": "DTM02",
+          "friendlyName": "date",
+          "description": "Date",
+          "ediType": "DT"
+        },
+        {
+          "name": "DTM03",
+          "friendlyName": "time",
+          "description": "Time",
+          "ediType": "TM"
+        },
+        {
+          "name": "DTM04",
+          "friendlyName": "timeCode",
+          "description": "Time Code",
+          "ediType": "ID"
+        },
+        {
+          "name": "DTM05",
+          "friendlyName": "formatQualifier",
+          "description": "Date Time Period Format Qualifier",
+          "ediType": "ID"
+        },
+        {
+          "name": "DTM06",
+          "friendlyName": "compositePeriod",
+          "description": "Date Time Period (Composite)",
+          "ediType": "C050"
+        }
+      ]
+    },
+    {
+      "name": "N1",
+      "friendlyName": "name",
+      "description": "Name",
+      "fields": [
+        {"name": "N101", "friendlyName": "entityIdentifierCode", "description": "Entity Identifier Code", "ediType": "ID"},
+        {"name": "N102", "friendlyName": "name", "description": "Name", "ediType": "AN"},
+        {"name": "N103", "friendlyName": "identificationCodeQualifier", "description": "Identification Code Qualifier", "ediType": "ID"},
+        {"name": "N104", "friendlyName": "identificationCode", "description": "Identification Code", "ediType": "AN"}
+      ]
+    },
+    {
+      "name": "N3",
+      "friendlyName": "addressInformation",
+      "description": "Address Information",
+      "fields": [
+        {"name": "N301", "friendlyName": "addressLine1", "description": "Address Line 1", "ediType": "AN"},
+        {"name": "N302", "friendlyName": "addressLine2", "description": "Address Line 2", "ediType": "AN"}
+      ]
+    },
+    {
+      "name": "N4",
+      "friendlyName": "geographicLocation",
+      "description": "Geographic Location",
+      "fields": [
+        {"name": "N401", "friendlyName": "cityName", "description": "City Name", "ediType": "AN"},
+        {"name": "N402", "friendlyName": "stateOrProvinceCode", "description": "State or Province Code", "ediType": "ID"},
+        {"name": "N403", "friendlyName": "postalCode", "description": "Postal Code", "ediType": "AN"},
+        {"name": "N404", "friendlyName": "countryCode", "description": "Country Code", "ediType": "ID"}
+      ]
+    },
+    {
+      "name": "PO1",
+      "friendlyName": "purchaseOrderLineItem",
+      "description": "Purchase Order Line Item",
+      "fields": [
+        {"name": "PO101", "friendlyName": "assignedIdentification", "description": "Assigned Identification", "ediType": "AN"},
+        {"name": "PO102", "friendlyName": "quantityOrdered", "description": "Quantity Ordered", "ediType": "R"},
+        {"name": "PO103", "friendlyName": "unitOfMeasure", "description": "Unit of Measure", "ediType": "ID"},
+        {"name": "PO104", "friendlyName": "unitPrice", "description": "Unit Price", "ediType": "R"},
+        {"name": "PO105", "friendlyName": "basisOfUnitPriceCode", "description": "Basis of Unit Price Code", "ediType": "ID"}
+      ]
+    },
+    {
+      "name": "CTT",
+      "friendlyName": "transactionTotals",
+      "description": "Transaction Totals",
+      "fields": [
+        {"name": "CTT01", "friendlyName": "numberOfLineItems", "description": "Number of Line Items", "ediType": "R"},
+        {"name": "CTT02", "friendlyName": "hashTotal", "description": "Hash Total", "ediType": "R"}
+      ]
+    },
+    {
+      "name": "SE",
+      "friendlyName": "transactionSetTrailer",
+      "description": "Transaction Set Trailer",
+      "fields": [
+        {"name": "SE01", "friendlyName": "numberOfIncludedSegments", "description": "Number of Included Segments", "ediType": "R"},
+        {"name": "SE02", "friendlyName": "transactionSetControlNumber", "description": "Transaction Set Control Number", "ediType": "AN"}
+      ]
+    },
+    {
+      "name": "SAC",
+      "friendlyName": "serviceAllowanceCharge",
+      "description": "Service Allowance/Charge",
+      "fields": [
+        {"name": "SAC01", "friendlyName": "allowanceOrChargeIndicator", "description": "Allowance or Charge Indicator", "ediType": "ID"},
+        {"name": "SAC02", "friendlyName": "allowanceOrChargeCode", "description": "Allowance or Charge Code", "ediType": "ID"},
+        {"name": "SAC03", "friendlyName": "monetaryAmount", "description": "Monetary Amount", "ediType": "R"},
+        {"name": "SAC04", "friendlyName": "percent", "description": "Percent", "ediType": "R"},
+        {"name": "SAC05", "friendlyName": "quantity", "description": "Quantity", "ediType": "R"},
+        {"name": "SAC06", "friendlyName": "basisOfUnitPriceCode", "description": "Basis of Unit Price Code", "ediType": "ID"},
+        {"name": "SAC07", "friendlyName": "unitPrice", "description": "Unit Price", "ediType": "R"},
+        {"name": "SAC08", "friendlyName": "unitOfMeasurement", "description": "Unit of Measurement", "ediType": "ID"}
+      ]
+    },
+    {
+      "name": "PID",
+      "friendlyName": "productDescription",
+      "description": "Product/Item Description",
+      "fields": [
+        {"name": "PID01", "friendlyName": "productDescriptionQualifier", "description": "Product Description Qualifier", "ediType": "ID"},
+        {"name": "PID02", "friendlyName": "productDescription", "description": "Product Description", "ediType": "AN"}
+      ]
+    },
+    {
+      "name": "ITD",
+      "friendlyName": "termsOfSale",
+      "description": "Terms of Sale",
+      "fields": [
+        {"name": "ITD01", "friendlyName": "termsTypeCode", "description": "Terms Type Code", "ediType": "ID"},
+        {"name": "ITD02", "friendlyName": "termsBasisDateCode", "description": "Terms Basis Date Code", "ediType": "ID"},
+        {"name": "ITD03", "friendlyName": "termsDiscountPercent", "description": "Terms Discount Percent", "ediType": "R"},
+        {"name": "ITD04", "friendlyName": "termsDiscountDueDate", "description": "Terms Discount Due Date", "ediType": "DT"},
+        {"name": "ITD05", "friendlyName": "termsNetDueDate", "description": "Terms Net Due Date", "ediType": "DT"},
+        {"name": "ITD06", "friendlyName": "termsDiscountAmount", "description": "Terms Discount Amount", "ediType": "R"},
+        {"name": "ITD07", "friendlyName": "termsNetAmount", "description": "Terms Net Amount", "ediType": "R"}
+      ]
+    },
+    {
+      "name": "TDS",
+      "friendlyName": "totalMonetaryAmount",
+      "description": "Total Monetary Amount",
+      "fields": [
+        {"name": "TDS01", "friendlyName": "totalMonetaryAmount", "description": "Total Monetary Amount", "ediType": "R"}
+      ]
+    },
+    {
+      "name": "FOB",
+      "friendlyName": "freeOnBoard",
+      "description": "Free on Board (FOB)",
+      "fields": [
+        {"name": "FOB01", "friendlyName": "fobPlace", "description": "FOB Place", "ediType": "AN"},
+        {"name": "FOB02", "friendlyName": "fobMethod", "description": "FOB Method", "ediType": "ID"}
+      ]
+    },
+    {
+      "name": "CUR",
+      "friendlyName": "currency",
+      "description": "Currency",
+      "fields": [
+        {"name": "CUR01", "friendlyName": "currencyCode", "description": "Currency Code", "ediType": "ID"}
+      ]
+    },
+    {
+      "name": "TAX",
+      "friendlyName": "taxReference",
+      "description": "Tax Reference",
+      "fields": [
+        {"name": "TAX01", "friendlyName": "taxTypeCode", "description": "Tax Type Code", "ediType": "ID"},
+        {"name": "TAX02", "friendlyName": "taxRate", "description": "Tax Rate", "ediType": "R"},
+        {"name": "TAX03", "friendlyName": "taxAmount", "description": "Tax Amount", "ediType": "R"},
+        {"name": "TAX04", "friendlyName": "taxableAmount", "description": "Taxable Amount", "ediType": "R"}
+      ]
+    },
+    {
+      "name": "DPS",
+      "friendlyName": "discountAndPaymentTerms",
+      "description": "Discount and Payment Terms",
+      "fields": [
+        {"name": "DPS01", "friendlyName": "paymentTermsCode", "description": "Payment Terms Code", "ediType": "ID"},
+        {"name": "DPS02", "friendlyName": "discountPercent", "description": "Discount Percent", "ediType": "R"},
+        {"name": "DPS03", "friendlyName": "discountDueDate", "description": "Discount Due Date", "ediType": "DT"},
+        {"name": "DPS04", "friendlyName": "netDueDate", "description": "Net Due Date", "ediType": "DT"},
+        {"name": "DPS05", "friendlyName": "discountAmount", "description": "Discount Amount", "ediType": "R"}
+      ]
+    },
+    {
+      "name": "IT1",
+      "friendlyName": "itemIdentification",
+      "description": "Item Identification",
+      "fields": [
+        {"name": "IT101", "friendlyName": "lineItemIdentification", "description": "Line Item Identification", "ediType": "AN"},
+        {"name": "IT102", "friendlyName": "quantityOrdered", "description": "Quantity Ordered", "ediType": "R"},
+        {"name": "IT103", "friendlyName": "unitOfMeasure", "description": "Unit of Measure", "ediType": "ID"},
+        {"name": "IT104", "friendlyName": "unitPrice", "description": "Unit Price", "ediType": "R"},
+        {"name": "IT105", "friendlyName": "lineItemAmount", "description": "Line Item Amount", "ediType": "R"}
+      ]
+    },
+    {
+      "name": "PER",
+      "friendlyName": "administrativeCommunicationsContact",
+      "description": "Administrative Communications Contact",
+      "fields": [
+        {"name": "PER01", "friendlyName": "contactFunctionCode", "description": "Contact Function Code", "ediType": "ID"},
+        {"name": "PER02", "friendlyName": "contactName", "description": "Contact Name", "ediType": "AN"},
+        {"name": "PER03", "friendlyName": "communicationNumber", "description": "Communication Number", "ediType": "AN"},
+        {"name": "PER04", "friendlyName": "communicationNumberQualifier", "description": "Communication Number Qualifier", "ediType": "ID"}
+      ]
+    },
+    {
+      "name": "TD5",
+      "friendlyName": "transportationDetails",
+      "description": "Transportation Details",
+      "fields": [
+        {"name": "TD501", "friendlyName": "routingSequenceCode", "description": "Routing Sequence Code", "ediType": "ID"},
+        {"name": "TD502", "friendlyName": "routingDescription", "description": "Routing Description", "ediType": "AN"},
+        {"name": "TD503", "friendlyName": "serviceLevelCode", "description": "Service Level Code", "ediType": "ID"},
+        {"name": "TD504", "friendlyName": "stopOffPoint", "description": "Stop Off Point", "ediType": "AN"}
+      ]
+    },
+    {
+      "name": "N9",
+      "friendlyName": "referenceIdentification",
+      "description": "Reference Identification",
+      "fields": [
+        {"name": "N901", "friendlyName": "referenceIdentificationQualifier", "description": "Reference Identification Qualifier", "ediType": "ID"},
+        {"name": "N902", "friendlyName": "referenceIdentification", "description": "Reference Identification", "ediType": "AN"}
+      ]
+    },
+    {
+      "name": "MSG",
+      "friendlyName": "messageText",
+      "description": "Message Text",
+      "fields": [
+        {"name": "MSG01", "friendlyName": "messageText", "description": "Message Text", "ediType": "AN"}
+      ]
+    }
+  ]
+}

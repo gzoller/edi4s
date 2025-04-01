@@ -1,0 +1,27 @@
++---------+----------------------------+----------------------+-------------------------------------------------------------+
+| Segment | Composite Fields Present? | Composite ID(s)      | Notes                                                       |
++---------+----------------------------+----------------------+-------------------------------------------------------------+
+| ST      | No                         | —                    | Transaction Set Header — all simple fields                  |
+| BEG     | No                         | —                    | Beginning Segment for PO — all simple fields                |
+| REF     | No                         | —                    | Reference Identification — all fields are simple            |
+| DTM     | Yes                        | C050                 | DTM06 (Date/Time Period Format Qualifier) is a composite    |
+| N1      | No                         | —                    | Name — all fields are simple                                |
+| N3      | No                         | —                    | Address Information — all simple fields                     |
+| N4      | Yes                        | C060                 | N406 (Geographic Location Qualifier) is a composite         |
+| PO1     | Yes                        | C040                 | PO107–PO110 are composite Product/Service ID fields         |
+| CTT     | No                         | —                    | Transaction Totals — all simple numeric fields              |
+| SE      | No                         | —                    | Transaction Set Trailer — only simple fields                |
+| SAC     | Yes                        | C001                 | SAC05 (Allowance/Charge Handling Code) is composite         |
+| PID     | No                         | —                    | Product/Item Description — all fields are simple            |
+| ITD     | No                         | —                    | Terms of Sale/Deferred Terms — all simple fields            |
+| TDS     | No                         | —                    | Total Monetary Value Summary — all simple numeric fields    |
+| FOB     | No                         | —                    | F.O.B. Related Instructions — all fields are simple         |
+| CUR     | Yes                        | C001                 | CUR02 (Currency Details) is composite                       |
+| TAX     | Yes                        | C001                 | TAX12 (Tax Information) is composite                        |
+| DPS     | No                         | —                    | Discount Payment Schedule — all fields are simple           |
+| IT1     | Yes                        | C040                 | IT106–IT109 are composite Product/Service ID fields         |
+| PER     | Yes                        | C001                 | PER04, PER06, PER08 use composite Communication Numbers     |
+| TD5     | No                         | —                    | Carrier Details — all fields are simple                     |
+| N9      | No                         | —                    | Reference Identifier — all fields are simple                |
+| MSG     | No                         | —                    | Free-form Message — always a single text string             |
++---------+----------------------------+----------------------+-------------------------------------------------------------+

@@ -1,0 +1,83 @@
+package co.blocke.edi4s
+package versions.v5010.segments
+
+// ST - Transaction Set Header
+case class STParser() extends SimpleSegmentParser("ST")
+
+// BEG - Beginning Segment for Purchase Order
+case class BEGParser() extends SimpleSegmentParser("BEG")
+
+// REF - Reference Identification
+case class REFParser() extends SimpleSegmentParser("REF")
+
+// DTM - Date/Time Reference
+case class DTMParser() extends SimpleSegmentParser("DTM")
+
+// N1 - Name
+case class N1Parser() extends LoopingSegmentParser(
+  segmentName = "N1",
+  segmentParser = new SimpleSegmentParser("N1"),
+  bodySegmentParsers = List(new N3Parser(), new N4Parser())
+)
+
+// N3 - Address Information
+case class N3Parser() extends SimpleSegmentParser("N3")
+
+// N4 - Geographic Location
+case class N4Parser() extends SimpleSegmentParser("N4")
+
+// PO1 - Purchase Order Line Item
+case class PO1Parser() extends LoopingSegmentParser(
+  segmentName = "PO1",
+  segmentParser = new SimpleSegmentParser("PO1"),
+  bodySegmentParsers = List()
+)
+
+// CTT - Transaction Totals
+case class CTTParser() extends SimpleSegmentParser("CTT")
+
+// SE - Transaction Set Trailer
+case class SEParser() extends SimpleSegmentParser("SE")
+
+// SAC - Service, Promotion, Allowance, Charge Information
+case class SACParser() extends SimpleSegmentParser("SAC")
+
+// PID - Product/Item Description
+case class PIDParser() extends SimpleSegmentParser("PID")
+
+// ITD - Terms of Sale/Deferred Terms
+case class ITDParser() extends SimpleSegmentParser("ITD")
+
+// TDS - Total Monetary Amount Summary
+case class TDSParser() extends SimpleSegmentParser("TDS")
+
+// FOB - Free On Board (FOB) Related Instructions
+case class FOBParser() extends SimpleSegmentParser("FOB")
+
+// CUR - Currency
+case class CURParser() extends SimpleSegmentParser("CUR")
+
+// TAX - Tax Information
+case class TAXParser() extends SimpleSegmentParser("TAX")
+
+// DPS - Discount and Payment Terms
+case class DPSParser() extends SimpleSegmentParser("DPS")
+
+// PER - Administrative Communications Contact
+case class PERParser() extends SimpleSegmentParser("PER")
+
+// TD5 - Carrier Details (Routing Sequence/Transit Time)
+case class TD5Parser() extends SimpleSegmentParser("TD5")
+
+// N9 - Reference Identification
+case class N9Parser() extends SimpleSegmentParser("N9")
+
+// MSG - Message Text
+case class MSGParser() extends SimpleSegmentParser("MSG")
+
+// IT1 - Item Detail (Purchase Order Line Item)
+case class IT1Parser() extends LoopingSegmentParser(
+  segmentName = "IT1",
+  segmentParser = new SimpleSegmentParser("IT1"),
+  bodySegmentParsers = List() // IT1 does not have additional body segments, but this can be adjusted if needed
+)

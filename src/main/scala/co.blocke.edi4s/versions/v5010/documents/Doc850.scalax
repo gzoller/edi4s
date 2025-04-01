@@ -1,0 +1,68 @@
+package co.blocke.edi4s
+package versions.v5010
+package documents
+
+import segments.*
+import zio.*
+
+// This structure allows vendor-specific definition of  Doc850 parser--with different/new segments
+// Partners can change optionality, add segments, and (although not a good practiece) remove segments,
+// so partner-specific Doc850Parsers can re-mix the canonical listt we have here by default.
+case class Doc850Parser(
+   segParseMap: Map[String, SegmentParser] =
+   Map(
+     "ST" -> new STParser(),
+     "BEG" -> new BEGParser(),
+     "REF" -> new REFParser(),
+     "DTM" -> new DTMParser(),
+     "N1" -> new N1Parser(),
+     "N3" -> new N3Parser(),
+     "N4" -> new N4Parser(),
+     "PO1" -> new PO1Parser(),
+     "CTT" -> new CTTParser(),
+     "SE" -> new SEParser(),
+     "SAC" -> new SACParser(),
+     "PID" -> new PIDParser(),
+     "ITD" -> new ITDParser(),
+     "TDS" -> new TDSParser(),
+     "FOB" -> new FOBParser(),
+     "CUR" -> new CURParser(),
+     "TAX" -> new TAXParser(),
+     "DPS" -> new DPSParser(),
+     "IT1" -> new IT1Parser(),
+     "PER" -> new PERParser(),
+     "TD5" -> new TD5Parser(),
+     "N9" -> new N9Parser(),
+     "MSG" -> new MSGParser()
+   ),
+   orderedSegments: List[String] =
+   List(
+     "ST", "BEG", "REF", "DTM", "N1", "N3", "N4", "PO1", "CTT", "SE",
+     "SAC", "PID", "ITD", "TDS", "FOB", "CUR", "TAX", "DPS", "IT1", "PER", "TD5", "N9", "MSG"
+   ),
+   requiredFields: Map[String, List[Int]] = Map(
+     "ST" -> List(1, 2),
+     "BEG" -> List(1, 2, 3),
+     "REF" -> List(1),
+     "DTM" -> List(1, 2),
+     "N1" -> List(1),
+     "N3" -> List(1),
+     "N4" -> List(1),
+     "PO1" -> List(1, 2, 3),
+     "CTT" -> List(1, 2),
+     "SE" -> List(1, 2),
+     "SAC" -> List(1),
+     "PID" -> List(1),
+     "ITD" -> List(1),
+     "TDS" -> List(1),
+     "FOB" -> List(1),
+     "CUR" -> List(1),
+     "TAX" -> List(1),
+     "DPS" -> List(1),
+     "IT1" -> List(1, 2, 3),
+     "PER" -> List(1),
+     "TD5" -> List(1),
+     "N9" -> List(1),
+     "MSG" -> List(1)
+   )
+) extends DocumentParser(segParseMap, orderedSegments, requiredFields)

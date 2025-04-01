@@ -1,0 +1,550 @@
+{
+  "document": {
+    "documentName": "850",
+    "ediVersion": "5010",
+    "segments": [
+      {
+        "name": "ST",
+        "presence": "required",
+        "fields": [
+          {
+            "name": "ST01",
+            "description": "Transaction Set Identifier",
+            "ediType": "AN",
+            "presence": "required"
+          },
+          {
+            "name": "ST02",
+            "description": "Transaction Set Control Number",
+            "ediType": "AN",
+            "presence": "required"
+          }
+        ]
+      },
+      {
+        "name": "BEG",
+        "presence": "required",
+        "fields": [
+          {
+            "name": "BEG01",
+            "description": "Transaction Set Purpose Code",
+            "ediType": "ID",
+            "presence": "required"
+          },
+          {
+            "name": "BEG02",
+            "description": "Purchase Order Type Code",
+            "ediType": "ID",
+            "presence": "required"
+          },
+          {
+            "name": "BEG03",
+            "description": "Purchase Order Number",
+            "ediType": "AN",
+            "presence": "required"
+          },
+          {
+            "name": "BEG04",
+            "description": "Date",
+            "ediType": "DT",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "REF",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "REF01",
+            "description": "Reference Identification Qualifier",
+            "ediType": "ID",
+            "presence": "required"
+          },
+          {
+            "name": "REF02",
+            "description": "Reference Identification",
+            "ediType": "AN",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "DTM",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "DTM01",
+            "description": "Date/Time Qualifier",
+            "ediType": "ID",
+            "presence": "required"
+          },
+          {
+            "name": "DTM02",
+            "description": "Date",
+            "ediType": "DT",
+            "presence": "required"
+          }
+        ]
+      },
+      {
+        "name": "N1",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "N101",
+            "description": "Entity Identifier Code",
+            "ediType": "ID",
+            "presence": "required"
+          },
+          {
+            "name": "N102",
+            "description": "Name",
+            "ediType": "AN",
+            "presence": "optional"
+          },
+          {
+            "name": "N103",
+            "description": "Identification Code Qualifier",
+            "ediType": "ID",
+            "presence": "optional"
+          },
+          {
+            "name": "N104",
+            "description": "Identification Code",
+            "ediType": "AN",
+            "presence": "optional"
+          }
+        ],
+        "loopBody": [
+          {
+            "name": "N3",
+            "fields": [
+              {
+                "name": "N301",
+                "description": "Address Information",
+                "ediType": "AN",
+                "presence": "required"
+              }
+            ]
+          },
+          {
+            "name": "N4",
+            "fields": [
+              {
+                "name": "N401",
+                "description": "City Name",
+                "ediType": "AN",
+                "presence": "required"
+              },
+              {
+                "name": "N402",
+                "description": "State or Province Code",
+                "ediType": "ID",
+                "presence": "optional"
+              },
+              {
+                "name": "N403",
+                "description": "Postal Code",
+                "ediType": "AN",
+                "presence": "optional"
+              },
+              {
+                "name": "N404",
+                "description": "Country Code",
+                "ediType": "ID",
+                "presence": "optional"
+              }
+            ]
+          ]
+        }
+      },
+      {
+        "name": "PO1",
+        "presence": "required",
+        "fields": [
+          {
+            "name": "PO101",
+            "description": "Assigned Identification",
+            "ediType": "AN",
+            "presence": "required"
+          },
+          {
+            "name": "PO102",
+            "description": "Quantity Ordered",
+            "ediType": "R",
+            "presence": "required"
+          },
+          {
+            "name": "PO103",
+            "description": "Unit of Measurement Code",
+            "ediType": "ID",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "CTT",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "CTT01",
+            "description": "Number of Line Items",
+            "ediType": "R",
+            "presence": "required"
+          },
+          {
+            "name": "CTT02",
+            "description": "Transaction Total Value",
+            "ediType": "R",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "SE",
+        "presence": "required",
+        "fields": [
+          {
+            "name": "SE01",
+            "description": "Number of Included Segments",
+            "ediType": "N0",
+            "presence": "required"
+          },
+          {
+            "name": "SE02",
+            "description": "Transaction Set Control Number",
+            "ediType": "AN",
+            "presence": "required"
+          }
+        ]
+      },
+      {
+        "name": "SAC",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "SAC01",
+            "presence": "required"
+          },
+          {
+            "name": "SAC02",
+            "presence": "optional"
+          },
+          {
+            "name": "SAC03",
+            "presence": "optional"
+          },
+          {
+            "name": "SAC04",
+            "presence": "optional"
+          },
+          {
+            "name": "SAC05",
+            "presence": "optional"
+          },
+          {
+            "name": "SAC06",
+            "presence": "optional"
+          },
+          {
+            "name": "SAC07",
+            "presence": "optional"
+          },
+          {
+            "name": "SAC08",
+            "presence": "optional"
+          },
+          {
+            "name": "SAC09",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "PID",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "PID01",
+            "presence": "required"
+          },
+          {
+            "name": "PID02",
+            "presence": "optional"
+          },
+          {
+            "name": "PID03",
+            "presence": "optional"
+          },
+          {
+            "name": "PID04",
+            "presence": "optional"
+          },
+          {
+            "name": "PID05",
+            "presence": "optional"
+          },
+          {
+            "name": "PID06",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "ITD",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "ITD01",
+            "presence": "required"
+          },
+          {
+            "name": "ITD02",
+            "presence": "optional"
+          },
+          {
+            "name": "ITD03",
+            "presence": "optional"
+          },
+          {
+            "name": "ITD04",
+            "presence": "optional"
+          },
+          {
+            "name": "ITD05",
+            "presence": "optional"
+          },
+          {
+            "name": "ITD06",
+            "presence": "optional"
+          },
+          {
+            "name": "ITD07",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "TDS",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "TDS01",
+            "presence": "required"
+          },
+          {
+            "name": "TDS02",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "FOB",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "FOB01",
+            "presence": "required"
+          },
+          {
+            "name": "FOB02",
+            "presence": "optional"
+          },
+          {
+            "name": "FOB03",
+            "presence": "optional"
+          },
+          {
+            "name": "FOB04",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "CUR",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "CUR01",
+            "presence": "required"
+          },
+          {
+            "name": "CUR02",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "TAX",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "TAX01",
+            "presence": "required"
+          },
+          {
+            "name": "TAX02",
+            "presence": "optional"
+          },
+          {
+            "name": "TAX03",
+            "presence": "optional"
+          },
+          {
+            "name": "TAX04",
+            "presence": "optional"
+          },
+          {
+            "name": "TAX05",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "DPS",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "DPS01",
+            "presence": "required"
+          },
+          {
+            "name": "DPS02",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "IT1",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "IT101",
+            "presence": "required"
+          },
+          {
+            "name": "IT102",
+            "presence": "optional"
+          },
+          {
+            "name": "IT103",
+            "presence": "optional"
+          },
+          {
+            "name": "IT104",
+            "presence": "optional"
+          },
+          {
+            "name": "IT105",
+            "presence": "optional"
+          },
+          {
+            "name": "IT106",
+            "presence": "optional"
+          },
+          {
+            "name": "IT107",
+            "presence": "optional"
+          },
+          {
+            "name": "IT108",
+            "presence": "optional"
+          },
+          {
+            "name": "IT109",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "PER",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "PER01",
+            "presence": "required"
+          },
+          {
+            "name": "PER02",
+            "presence": "optional"
+          },
+          {
+            "name": "PER03",
+            "presence": "optional"
+          },
+          {
+            "name": "PER04",
+            "presence": "optional"
+          },
+          {
+            "name": "PER05",
+            "presence": "optional"
+          },
+          {
+            "name": "PER06",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "TD5",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "TD501",
+            "presence": "required"
+          },
+          {
+            "name": "TD502",
+            "presence": "optional"
+          },
+          {
+            "name": "TD503",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "N9",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "N901",
+            "presence": "required"
+          },
+          {
+            "name": "N902",
+            "presence": "optional"
+          },
+          {
+            "name": "N903",
+            "presence": "optional"
+          },
+          {
+            "name": "N904",
+            "presence": "optional"
+          }
+        ]
+      },
+      {
+        "name": "MSG",
+        "presence": "optional",
+        "fields": [
+          {
+            "name": "MSG01",
+            "presence": "required"
+          },
+          {
+            "name": "MSG02",
+            "presence": "optional"
+          },
+          {
+            "name": "MSG03",
+            "presence": "optional"
+          }
+        ]
+      }
+    ]
+  }
+}

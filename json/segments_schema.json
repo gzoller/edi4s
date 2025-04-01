@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "ediVersion": {
+      "type": "string"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "friendlyName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "friendlyName": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "ediType": {
+                  "type": "string"
+                },
+                "subFields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "friendlyName": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "ediType": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name", "friendlyName", "description", "ediType"]
+                  }
+                }
+              },
+              "required": ["name", "friendlyName", "description", "ediType"]
+            }
+          }
+        },
+        "required": ["name", "friendlyName", "description", "fields"]
+      }
+    }
+  },
+  "required": ["ediVersion", "segments"]
+}
