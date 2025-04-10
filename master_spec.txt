@@ -1,0 +1,680 @@
+==============================
+Segment: ST
+FriendlyName: transactionSetHeader
+Description: Transaction Set Header
+IsRequired: true
+Fields:
+  - Name: ST01
+    FriendlyName: transactionSetIdentifierCode
+    Description: Transaction Set Identifier Code
+    EdiType: ID 3/3
+    IsRequired: true
+  - Name: ST02
+    FriendlyName: transactionSetControlNumber
+    Description: Transaction Set Control Number
+    EdiType: AN 4/9
+    IsRequired: true
+
+==============================
+Segment: BSN
+FriendlyName: beginningSegmentForShipNotice
+Description: Beginning Segment for Ship Notice
+IsRequired: true
+Fields:
+  - Name: BSN01
+    FriendlyName: transactionSetPurposeCode
+    Description: Transaction Set Purpose Code
+    EdiType: ID 3/3
+    IsRequired: true
+  - Name: BSN02
+    FriendlyName: shipmentIdentification
+    Description: Shipment Identification
+    EdiType: AN 2/30
+    IsRequired: true
+  - Name: BSN03
+    FriendlyName: date
+    Description: Date
+    EdiType: DT 8/8
+    IsRequired: true
+  - Name: BSN04
+    FriendlyName: time
+    Description: Time
+    EdiType: TM 4/8
+    IsRequired: true
+  - Name: BSN05
+    FriendlyName: hierarchicalStructureCode
+    Description: Hierarchical Structure Code
+    EdiType: ID 4/4
+    IsRequired: false
+
+==============================
+Segment: HL
+FriendlyName: hlShipment
+Description: Shipment level loop
+IsRequired: true
+Fields:
+  - Name: HL01
+    FriendlyName: hierarchicalIdNumber
+    Description: Hierarchical ID Number
+    EdiType: AN 1/12
+    IsRequired: true
+  - Name: HL02
+    FriendlyName: hierarchicalParentIdNumber
+    Description: Hierarchical Parent ID Number
+    EdiType: AN 1/12
+    IsRequired: false
+  - Name: HL03
+    FriendlyName: hierarchicalLevelCode
+    Description: Hierarchical Level Code
+    EdiType: ID 1/2
+    IsRequired: true
+  - Name: HL04
+    FriendlyName: hierarchicalChildCode
+    Description: Hierarchical Child Code
+    EdiType: ID 1/1
+    IsRequired: false
+Loop:
+  MinOccurs: 1
+  MaxOccurs: 200000
+  Body:
+    ==============================
+    Segment: TD1
+    FriendlyName: td1Segment
+    Description: Description for TD1
+    IsRequired: true
+    Fields:
+      - Name: TD101
+        FriendlyName: packagingCode
+        Description: Packaging Code
+        EdiType: AN 3/5
+        IsRequired: false
+      - Name: TD102
+        FriendlyName: ladingQuantity
+        Description: Lading Quantity
+        EdiType: N0 1/7
+        IsRequired: false
+      - Name: TD106
+        FriendlyName: weightQualifier
+        Description: Weight Qualifier
+        EdiType: ID 1/2
+        IsRequired: false
+      - Name: TD107
+        FriendlyName: weight
+        Description: Weight
+        EdiType: R 1/10
+        IsRequired: false
+      - Name: TD108
+        FriendlyName: unitOrBasisForMeasurementCode
+        Description: Unit or Basis for Measurement Code
+        EdiType: ID 2/2
+        IsRequired: false
+
+    ==============================
+    Segment: TD5
+    FriendlyName: td5Segment
+    Description: Description for TD5
+    IsRequired: true
+    Fields:
+      - Name: TD502
+        FriendlyName: identificationCodeQualifier
+        Description: Identification Code Qualifier
+        EdiType: ID 1/2
+        IsRequired: false
+      - Name: TD503
+        FriendlyName: identificationCode
+        Description: Identification Code
+        EdiType: AN 2/80
+        IsRequired: false
+      - Name: TD504
+        FriendlyName: transportationMethodtypeCode
+        Description: Transportation Method/Type Code
+        EdiType: ID 1/2
+        IsRequired: false
+      - Name: TD505
+        FriendlyName: routing
+        Description: Routing
+        EdiType: AN 1/35
+        IsRequired: false
+      - Name: TD506
+        FriendlyName: shipmentorderStatusCode
+        Description: Shipment/Order Status Code
+        EdiType: ID 2/2
+        IsRequired: false
+
+    ==============================
+    Segment: TD3
+    FriendlyName: td3Segment
+    Description: Description for TD3
+    IsRequired: true
+    Fields:
+      - Name: TD301
+        FriendlyName: equipmentDescriptionCode
+        Description: Equipment Description Code
+        EdiType: ID 2/2
+        IsRequired: true
+
+    ==============================
+    Segment: REF
+    FriendlyName: refSegment
+    Description: Description for REF
+    IsRequired: true
+    Fields:
+      - Name: REF01
+        FriendlyName: referenceIdentificationQualifier
+        Description: Reference Identification Qualifier
+        EdiType: ID 2/3
+        IsRequired: true
+      - Name: REF02
+        FriendlyName: referenceIdentification
+        Description: Reference Identification
+        EdiType: AN 1/50
+        IsRequired: true
+
+    ==============================
+    Segment: MAN
+    FriendlyName: manSegment
+    Description: Description for MAN
+    IsRequired: false
+    Fields:
+      - Name: MAN01
+        FriendlyName: marksAndNumbersQualifier
+        Description: Marks and Numbers Qualifier
+        EdiType: ID 1/2
+        IsRequired: true
+      - Name: MAN02
+        FriendlyName: marksAndNumbers
+        Description: Marks and Numbers
+        EdiType: AN 1/48
+        IsRequired: true
+
+    ==============================
+    Segment: DTM
+    FriendlyName: dtmSegment
+    Description: Description for DTM
+    IsRequired: true
+    Fields:
+      - Name: DTM01
+        FriendlyName: datetimeQualifier
+        Description: Date/Time Qualifier
+        EdiType: ID 3/3
+        IsRequired: true
+      - Name: DTM02
+        FriendlyName: date
+        Description: Date
+        EdiType: DT 8/8
+        IsRequired: true
+
+    ==============================
+    Segment: FOB
+    FriendlyName: fobSegment
+    Description: Description for FOB
+    IsRequired: true
+    Fields:
+      - Name: FOB01
+        FriendlyName: shipmentMethodOfPayment
+        Description: Shipment Method of Payment
+        EdiType: ID 2/2
+        IsRequired: true
+
+    ==============================
+    Segment: N1
+    FriendlyName: partyIdentification
+    Description: Party Identification
+    IsRequired: false
+    Fields:
+      - Name: N101
+        FriendlyName: entityIdentifierCode
+        Description: Entity Identifier Code
+        EdiType: ID 2/3
+        IsRequired: true
+      - Name: N102
+        FriendlyName: Name
+        Description: Name
+        EdiType: AN 1/60
+        IsRequired: false
+      - Name: N103
+        FriendlyName: identificationCodeQualifier
+        Description: Identification Code Qualifier
+        EdiType: ID 1/2
+        IsRequired: false
+      - Name: N104
+        FriendlyName: identificationCode
+        Description: Identification Code
+        EdiType: AN 2/80
+        IsRequired: false
+    Loop:
+      MinOccurs: 0
+      MaxOccurs: 200
+      Body:
+        ==============================
+        Segment: N3
+        FriendlyName: addressInformation
+        Description: Address Information
+        IsRequired: false
+        Fields:
+          - Name: N301
+            FriendlyName: addressInformation
+            Description: Address Information
+            EdiType: AN 1/55
+            IsRequired: true
+
+        ==============================
+        Segment: N4
+        FriendlyName: geographicLocation
+        Description: Geographic Location
+        IsRequired: false
+        Fields:
+          - Name: N401
+            FriendlyName: cityName
+            Description: City Name
+            EdiType: ID 2/3
+            IsRequired: true
+          - Name: N402
+            FriendlyName: stateOrProvinceCode
+            Description: State or Province Code
+            EdiType: AN 1/60
+            IsRequired: false
+          - Name: N403
+            FriendlyName: postalCode
+            Description: Postal Code
+            EdiType: ID 1/2
+            IsRequired: false
+          - Name: N404
+            FriendlyName: countryCode
+            Description: Country Code
+            EdiType: AN 2/80
+            IsRequired: false
+
+    # Continue hlShipment body fields
+    ==============================
+    Segment: HL
+    FriendlyName: hlOrder
+    Description: Order level loop
+    IsRequired: true
+    Fields:
+      - Name: HL01
+        FriendlyName: hierarchicalIdNumber
+        Description: Hierarchical ID Number
+        EdiType: AN 1/12
+        IsRequired: true
+      - Name: HL02
+        FriendlyName: hierarchicalParentIdNumber
+        Description: Hierarchical Parent ID Number
+        EdiType: AN 1/12
+        IsRequired: false
+      - Name: HL03
+        FriendlyName: hierarchicalLevelCode
+        Description: Hierarchical Level Code
+        EdiType: ID 1/2
+        IsRequired: true
+      - Name: HL04
+        FriendlyName: hierarchicalChildCode
+        Description: Hierarchical Child Code
+        EdiType: ID 1/1
+        IsRequired: false
+    Loop:
+      MinOccurs: 1
+      MaxOccurs: 200000
+      Body:
+
+        ==============================
+        Segment: PRF
+        FriendlyName: prfSegment
+        Description: Description for PRF
+        IsRequired: true
+        Fields:
+          - Name: PRF01
+            FriendlyName: purchaseOrderNumber
+            Description: Purchase Order Number
+            EdiType: AN 1/22
+            IsRequired: true
+          - Name: PRF04
+            FriendlyName: date
+            Description: Date
+            EdiType: DT 8/8
+            IsRequired: false
+
+        ==============================
+        Segment: REF
+        FriendlyName: refSegment
+        Description: Description for REF
+        IsRequired: true
+        Fields:
+          - Name: REF01
+            FriendlyName: referenceIdentificationQualifier
+            Description: Reference Identification Qualifier
+            EdiType: ID 2/3
+            IsRequired: true
+          - Name: REF02
+            FriendlyName: referenceIdentification
+            Description: Reference Identification
+            EdiType: AN 1/50
+            IsRequired: false
+
+      # Continue hlOrder body fields
+      ==============================
+      Segment: HL
+      FriendlyName: hlTare
+      Description: Tare level loop
+      IsRequired: true
+      Fields:
+        - Name: HL01
+          FriendlyName: hierarchicalIdNumber
+          Description: Hierarchical ID Number
+          EdiType: AN 1/12
+          IsRequired: true
+        - Name: HL02
+          FriendlyName: hierarchicalParentIdNumber
+          Description: Hierarchical Parent ID Number
+          EdiType: AN 1/12
+          IsRequired: false
+        - Name: HL03
+          FriendlyName: hierarchicalLevelCode
+          Description: Hierarchical Level Code
+          EdiType: ID 1/2
+          IsRequired: true
+        - Name: HL04
+          FriendlyName: hierarchicalChildCode
+          Description: Hierarchical Child Code
+          EdiType: ID 1/1
+          IsRequired: false
+      Loop:
+        MinOccurs: 1
+        MaxOccurs: 200000
+        Body:
+
+          ==============================
+          Segment: MAN
+          FriendlyName: manSegment
+          Description: Description for MAN
+          IsRequired: false
+          Fields:
+            - Name: MAN01
+              FriendlyName: marksAndNumbersQualifier
+              Description: Marks and Numbers Qualifier
+              EdiType: ID 1/2
+              IsRequired: true
+            - Name: MAN02
+              FriendlyName: marksAndNumbers
+              Description: Marks and Numbers
+              EdiType: AN 1/48
+              IsRequired: true
+
+        # Continue hlTare body segments
+        ==============================
+        Segment: HL
+        FriendlyName: hlPack
+        Description: Pack level loop
+        IsRequired: true
+        Fields:
+          - Name: HL01
+            FriendlyName: hierarchicalIdNumber
+            Description: Hierarchical ID Number
+            EdiType: AN 1/12
+            IsRequired: true
+          - Name: HL02
+            FriendlyName: hierarchicalParentIdNumber
+            Description: Hierarchical Parent ID Number
+            EdiType: AN 1/12
+            IsRequired: false
+          - Name: HL03
+            FriendlyName: hierarchicalLevelCode
+            Description: Hierarchical Level Code
+            EdiType: ID 1/2
+            IsRequired: true
+          - Name: HL04
+            FriendlyName: hierarchicalChildCode
+            Description: Hierarchical Child Code
+            EdiType: ID 1/1
+            IsRequired: false
+        Loop:
+          MinOccurs: 1
+          MaxOccurs: 200000
+          Body:
+
+            ==============================
+            Segment: LIN
+            FriendlyName: linSegment
+            Description: Description for LIN
+            IsRequired: true
+            Fields:
+              - Name: LIN01
+                FriendlyName: hierarchicalIdNumber
+                Description: Hierarchical ID Number
+                EdiType: AN 1/12
+                IsRequired: false
+              - Name: LIN02
+                FriendlyName: productserviceIdQualifier
+                Description: Product/Service ID Qualifier
+                EdiType: ID 2/2
+                IsRequired: true
+              - Name: LIN03
+                FriendlyName: productserviceId
+                Description: Product/Service ID
+                EdiType: AN 1/48
+                IsRequired: true
+              - Name: LIN04
+                FriendlyName: productserviceIdQualifier
+                Description: Product/Service ID Qualifier
+                EdiType: ID 2/2
+                IsRequired: false
+              - Name: LIN05
+                FriendlyName: productserviceId
+                Description: Product/Service ID
+                EdiType: AN 1/48
+                IsRequired: false
+              - Name: LIN06
+                FriendlyName: productserviceIdQualifier
+                Description: Product/Service ID Qualifier
+                EdiType: ID 2/2
+                IsRequired: false
+              - Name: LIN07
+                FriendlyName: productserviceId
+                Description: Product/Service ID
+                EdiType: AN 1/48
+                IsRequired: false
+              - Name: LIN08
+                FriendlyName: productserviceIdQualifier
+                Description: Product/Service ID Qualifier
+                EdiType: ID 2/2
+                IsRequired: false
+              - Name: LIN09
+                FriendlyName: productserviceId
+                Description: Product/Service ID
+                EdiType: AN 1/48
+                IsRequired: false
+
+            ==============================
+            Segment: SN1
+            FriendlyName: sn1Segment
+            Description: Description for SN1
+            IsRequired: true
+            Fields:
+              - Name: SN102
+                FriendlyName: numberOfUnitsShipped
+                Description: Number of Units Shipped
+                EdiType: R 1/10
+                IsRequired: true
+              - Name: SN103
+                FriendlyName: unitOrBasisForMeasurementCode
+                Description: Unit or Basis for Measurement Code
+                EdiType: ID 2/2
+                IsRequired: true
+
+            ==============================
+            Segment: PO4
+            FriendlyName: po4Segment
+            Description: Description for PO4
+            IsRequired: true
+            Fields:
+              - Name: PO401
+                FriendlyName: pack
+                Description: Pack
+                EdiType: N0 1/6
+                IsRequired: true
+
+            ==============================
+            Segment: PID
+            FriendlyName: pidSegment
+            Description: Description for PID
+            IsRequired: true
+            Fields:
+              - Name: PID01
+                FriendlyName: itemDescriptionType
+                Description: Item Description Type
+                EdiType: ID 1/1
+                IsRequired: true
+              - Name: PID05
+                FriendlyName: description
+                Description: Description
+                EdiType: AN 1/80
+                IsRequired: false
+
+          # Continue hlPack body segments
+          ==============================
+          Segment: HL
+          FriendlyName: hlItem
+          Description: Item level loop
+          IsRequired: true
+          Fields:
+            - Name: HL01
+              FriendlyName: hierarchicalIdNumber
+              Description: Hierarchical ID Number
+              EdiType: AN 1/12
+              IsRequired: true
+            - Name: HL02
+              FriendlyName: hierarchicalParentIdNumber
+              Description: Hierarchical Parent ID Number
+              EdiType: AN 1/12
+              IsRequired: false
+            - Name: HL03
+              FriendlyName: hierarchicalLevelCode
+              Description: Hierarchical Level Code
+              EdiType: ID 1/2
+              IsRequired: true
+            - Name: HL04
+              FriendlyName: hierarchicalChildCode
+              Description: Hierarchical Child Code
+              EdiType: ID 1/1
+              IsRequired: false
+          Loop:
+            MinOccurs: 1
+            MaxOccurs: 200000
+            Body:
+
+              ==============================
+              Segment: LIN
+              FriendlyName: linSegment
+              Description: Description for LIN
+              IsRequired: true
+              Fields:
+                - Name: LIN01
+                  FriendlyName: assignedIdentification
+                  Description: Assigned Identification
+                  EdiType: AN 1/20
+                  IsRequired: false
+                - Name: LIN02
+                  FriendlyName: productserviceIdQualifier
+                  Description: Product/Service ID Qualifier
+                  EdiType: ID 2/2
+                  IsRequired: true
+                - Name: LIN03
+                  FriendlyName: productserviceId
+                  Description: Product/Service ID
+                  EdiType: AN 1/48
+                  IsRequired: true
+                - Name: LIN04
+                  FriendlyName: productserviceIdQualifier
+                  Description: Product/Service ID Qualifier
+                  EdiType: ID 2/2
+                  IsRequired: true
+
+              ==============================
+              Segment: SN1
+              FriendlyName: sn1Segment
+              Description: Description for SN1
+              IsRequired: true
+              Fields:
+                - Name: SN102
+                  FriendlyName: numberOfUnitsShipped
+                  Description: Number of Units Shipped
+                  EdiType: R 1/10
+                  IsRequired: true
+                - Name: SN102
+                  FriendlyName: unitOrBasisForMeasurementCode
+                  Description: Unit or Basis for Measurement Code
+                  EdiType: ID 2/2
+                  IsRequired: true
+
+              ==============================
+              Segment: DTM
+              FriendlyName: dtmSegment
+              Description: Description for DTM
+              IsRequired: true
+              Fields:
+                - Name: DTM01
+                  FriendlyName: datetimeQualifier
+                  Description: Date/Time Qualifier
+                  EdiType: ID 3/3
+                  IsRequired: true
+                - Name: DTM02
+                  FriendlyName: date
+                  Description: Date
+                  EdiType: DT 8/8
+                  IsRequired: false
+
+              ==============================
+              Segment: N1
+              FriendlyName: n1Segment
+              Description: Description for N10
+              IsRequired: true
+              Fields:
+                - Name: N101
+                  FriendlyName: entityIdentifierCode
+                  Description: Entity Identifier Code
+                  EdiType: ID 2/3
+                  IsRequired: true
+                - Name: N102
+                  FriendlyName: Name
+                  Description: Name
+                  EdiType: AN 1/60
+                  IsRequired: false
+                - Name: N103
+                  FriendlyName: identificationCodeQualifier
+                  Description: Identification Code Qualifier
+                  EdiType: ID 1/2
+                  IsRequired: false
+                - Name: N104
+                  FriendlyName: identificationCode
+                  Description: Identification Code
+                  EdiType: AN 2/80
+                  IsRequired: false
+
+==============================
+Segment: CTT
+FriendlyName: cttSegment
+Description: Description for CTT
+IsRequired: true
+Fields:
+  - Name: CTT01
+    FriendlyName: numberOfLineItems
+    Description: Number of Line Items
+    EdiType: N0 1/6
+    IsRequired: true
+
+==============================
+Segment: SEG29
+FriendlyName: seg29Segment
+Description: Description for SEG29
+IsRequired: true
+Fields:
+  - Name: SE01
+    FriendlyName: numberOfIncludedSegments
+    Description: Number of Included Segments
+    EdiType: N0 1/10
+    IsRequired: true
+  - Name: SE02
+    FriendlyName: transactionSetControlNumber
+    Description: Transaction Set Control Number
+    EdiType: AN 4/9
+    IsRequired: true

@@ -1,0 +1,637 @@
+RESULTS: 
+  unknown
+  Model -- element (string) no fmt - no id
+  ST --     segment ST
+    TransactionSetIdentifierCode_01 -- element (string) X12_AN - 143
+    TransactionSetControlNumber_02 -- element (string) X12_AN - 329
+    ImplementationConventionPreference_03 -- element (string) X12_AN - 1705
+  BSN --     segment BSN
+    TransactionSetPurposeCode_01 -- element (string) no fmt - 353
+    ShipmentIdentification_02 -- element (string) X12_AN - 396
+    Date_03 -- element (string) X12_DT - 373
+    Time_04 -- element (string) X12_TM - 337
+    HierarchicalStructureCode_05 -- element (string) no fmt - 1005
+    TransactionTypeCode_06 -- element (string) no fmt - 640
+    StatusReasonCode_07 -- element (string) no fmt - 641
+  DTM -- items (array)     segment DTM
+    DateTimeQualifier_01 -- element (string) no fmt - 374
+    Date_02 -- element (string) X12_DT - 373
+    Time_03 -- element (string) X12_TM - 337
+    TimeCode_04 -- element (string) no fmt - 623
+    DateTimePeriodFormatQualifier_05 -- element (string) no fmt - 1250
+    DateTimePeriod_06 -- element (string) X12_AN - 1251
+  HLLoop -- items (array)     unknown
+    HL --       segment HL
+      HierarchicalIDNumber_01 -- element (string) X12_AN - 628
+      HierarchicalParentIDNumber_02 -- element (string) X12_AN - 734
+      HierarchicalLevelCode_03 -- element (string) no fmt - 735
+      HierarchicalChildCode_04 -- element (string) no fmt - 736
+    LIN --       segment LIN
+      AssignedIdentification_01 -- element (string) X12_AN - 350
+      ProductServiceIDQualifier_02 -- element (string) no fmt - 235
+      ProductServiceID_03 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_04 -- element (string) no fmt - 235
+      ProductServiceID_05 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_06 -- element (string) no fmt - 235
+      ProductServiceID_07 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_08 -- element (string) no fmt - 235
+      ProductServiceID_09 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_10 -- element (string) no fmt - 235
+      ProductServiceID_11 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_12 -- element (string) no fmt - 235
+      ProductServiceID_13 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_14 -- element (string) no fmt - 235
+      ProductServiceID_15 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_16 -- element (string) no fmt - 235
+      ProductServiceID_17 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_18 -- element (string) no fmt - 235
+      ProductServiceID_19 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_20 -- element (string) no fmt - 235
+      ProductServiceID_21 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_22 -- element (string) no fmt - 235
+      ProductServiceID_23 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_24 -- element (string) no fmt - 235
+      ProductServiceID_25 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_26 -- element (string) no fmt - 235
+      ProductServiceID_27 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_28 -- element (string) no fmt - 235
+      ProductServiceID_29 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_30 -- element (string) no fmt - 235
+      ProductServiceID_31 -- element (string) X12_AN - 234
+    SN1 --       segment SN1
+      AssignedIdentification_01 -- element (string) X12_AN - 350
+      NumberofUnitsShipped_02 -- element (string) X12_R - 382
+      UnitorBasisforMeasurementCode_03 -- element (string) no fmt - 355
+      QuantityShippedtoDate_04 -- element (string) X12_R - 646
+      Quantity_05 -- element (string) X12_R - 380
+      UnitorBasisforMeasurementCode_06 -- element (string) no fmt - 355
+      ReturnableContainerLoadMakeUpCode_07 -- element (string) no fmt - 728
+      LineItemStatusCode_08 -- element (string) no fmt - 668
+    SLN -- items (array)       segment SLN
+      AssignedIdentification_01 -- element (string) X12_AN - 350
+      AssignedIdentification_02 -- element (string) X12_AN - 350
+      RelationshipCode_03 -- element (string) no fmt - 662
+      Quantity_04 -- element (string) X12_R - 380
+      CompositeUnitofMeasure_05 --         composite C001
+        UnitorBasisforMeasurementCode_01 -- element (string) no fmt - 355
+        Exponent_02 -- element (string) X12_R - 1018
+        Multiplier_03 -- element (string) X12_R - 649
+        UnitorBasisforMeasurementCode_04 -- element (string) no fmt - 355
+        Exponent_05 -- element (string) X12_R - 1018
+        Multiplier_06 -- element (string) X12_R - 649
+        UnitorBasisforMeasurementCode_07 -- element (string) no fmt - 355
+        Exponent_08 -- element (string) X12_R - 1018
+        Multiplier_09 -- element (string) X12_R - 649
+        UnitorBasisforMeasurementCode_10 -- element (string) no fmt - 355
+        Exponent_11 -- element (string) X12_R - 1018
+        Multiplier_12 -- element (string) X12_R - 649
+        UnitorBasisforMeasurementCode_13 -- element (string) no fmt - 355
+        Exponent_14 -- element (string) X12_R - 1018
+        Multiplier_15 -- element (string) X12_R - 649
+      UnitPrice_06 -- element (string) X12_R - 212
+      BasisofUnitPriceCode_07 -- element (string) no fmt - 639
+      RelationshipCode_08 -- element (string) no fmt - 662
+      ProductServiceIDQualifier_09 -- element (string) no fmt - 235
+      ProductServiceID_10 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_11 -- element (string) no fmt - 235
+      ProductServiceID_12 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_13 -- element (string) no fmt - 235
+      ProductServiceID_14 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_15 -- element (string) no fmt - 235
+      ProductServiceID_16 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_17 -- element (string) no fmt - 235
+      ProductServiceID_18 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_19 -- element (string) no fmt - 235
+      ProductServiceID_20 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_21 -- element (string) no fmt - 235
+      ProductServiceID_22 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_23 -- element (string) no fmt - 235
+      ProductServiceID_24 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_25 -- element (string) no fmt - 235
+      ProductServiceID_26 -- element (string) X12_AN - 234
+      ProductServiceIDQualifier_27 -- element (string) no fmt - 235
+      ProductServiceID_28 -- element (string) X12_AN - 234
+    PRF --       segment PRF
+      PurchaseOrderNumber_01 -- element (string) X12_AN - 324
+      ReleaseNumber_02 -- element (string) X12_AN - 328
+      ChangeOrderSequenceNumber_03 -- element (string) X12_AN - 327
+      Date_04 -- element (string) X12_DT - 373
+      AssignedIdentification_05 -- element (string) X12_AN - 350
+      ContractNumber_06 -- element (string) X12_AN - 367
+      PurchaseOrderTypeCode_07 -- element (string) no fmt - 92
+    PO4 --       segment PO4
+      Pack_01 -- element (string) X12_N0 - 356
+      Size_02 -- element (string) X12_R - 357
+      UnitorBasisforMeasurementCode_03 -- element (string) no fmt - 355
+      PackagingCode_04 -- element (string) X12_AN - 103
+      WeightQualifier_05 -- element (string) no fmt - 187
+      GrossWeightperPack_06 -- element (string) X12_R - 384
+      UnitorBasisforMeasurementCode_07 -- element (string) no fmt - 355
+      GrossVolumeperPack_08 -- element (string) X12_R - 385
+      UnitorBasisforMeasurementCode_09 -- element (string) no fmt - 355
+      Length_10 -- element (string) X12_R - 82
+      Width_11 -- element (string) X12_R - 189
+      Height_12 -- element (string) X12_R - 65
+      UnitorBasisforMeasurementCode_13 -- element (string) no fmt - 355
+      InnerPack_14 -- element (string) X12_N0 - 810
+      SurfaceLayerPositionCode_15 -- element (string) no fmt - 752
+      AssignedIdentification_16 -- element (string) X12_AN - 350
+      AssignedIdentification_17 -- element (string) X12_AN - 350
+      Number_18 -- element (string) X12_N0 - 1470
+    PID -- items (array)       segment PID
+      ItemDescriptionType_01 -- element (string) no fmt - 349
+      ProductProcessCharacteristicCode_02 -- element (string) no fmt - 750
+      AgencyQualifierCode_03 -- element (string) no fmt - 559
+      ProductDescriptionCode_04 -- element (string) X12_AN - 751
+      Description_05 -- element (string) X12_AN - 352
+      SurfaceLayerPositionCode_06 -- element (string) no fmt - 752
+      SourceSubqualifier_07 -- element (string) X12_AN - 822
+      YesNoConditionorResponseCode_08 -- element (string) no fmt - 1073
+      LanguageCode_09 -- element (string) X12_AN - 819
+    MEA -- items (array)       segment MEA
+      MeasurementReferenceIDCode_01 -- element (string) no fmt - 737
+      MeasurementQualifier_02 -- element (string) no fmt - 738
+      MeasurementValue_03 -- element (string) X12_R - 739
+      CompositeUnitofMeasure_04 --         composite C001
+        UnitorBasisforMeasurementCode_01 -- element (string) no fmt - 355
+        Exponent_02 -- element (string) X12_R - 1018
+        Multiplier_03 -- element (string) X12_R - 649
+        UnitorBasisforMeasurementCode_04 -- element (string) no fmt - 355
+        Exponent_05 -- element (string) X12_R - 1018
+        Multiplier_06 -- element (string) X12_R - 649
+        UnitorBasisforMeasurementCode_07 -- element (string) no fmt - 355
+        Exponent_08 -- element (string) X12_R - 1018
+        Multiplier_09 -- element (string) X12_R - 649
+        UnitorBasisforMeasurementCode_10 -- element (string) no fmt - 355
+        Exponent_11 -- element (string) X12_R - 1018
+        Multiplier_12 -- element (string) X12_R - 649
+        UnitorBasisforMeasurementCode_13 -- element (string) no fmt - 355
+        Exponent_14 -- element (string) X12_R - 1018
+        Multiplier_15 -- element (string) X12_R - 649
+      RangeMinimum_05 -- element (string) X12_R - 740
+      RangeMaximum_06 -- element (string) X12_R - 741
+      MeasurementSignificanceCode_07 -- element (string) no fmt - 935
+      MeasurementAttributeCode_08 -- element (string) no fmt - 936
+      SurfaceLayerPositionCode_09 -- element (string) no fmt - 752
+      MeasurementMethodorDevice_10 -- element (string) no fmt - 1373
+      CodeListQualifierCode_11 -- element (string) no fmt - 1270
+      IndustryCode_12 -- element (string) X12_AN - 1271
+    PWK -- items (array)       segment PWK
+      ReportTypeCode_01 -- element (string) no fmt - 755
+      ReportTransmissionCode_02 -- element (string) no fmt - 756
+      ReportCopiesNeeded_03 -- element (string) X12_N0 - 757
+      EntityIdentifierCode_04 -- element (string) no fmt - 98
+      IdentificationCodeQualifier_05 -- element (string) no fmt - 66
+      IdentificationCode_06 -- element (string) X12_AN - 67
+      Description_07 -- element (string) X12_AN - 352
+      ActionsIndicated_08 --         composite C002
+        PaperworkReportActionCode_01 -- element (string) no fmt - 704
+        PaperworkReportActionCode_02 -- element (string) no fmt - 704
+        PaperworkReportActionCode_03 -- element (string) no fmt - 704
+        PaperworkReportActionCode_04 -- element (string) no fmt - 704
+        PaperworkReportActionCode_05 -- element (string) no fmt - 704
+      RequestCategoryCode_09 -- element (string) no fmt - 1525
+    PKG -- items (array)       segment PKG
+      ItemDescriptionType_01 -- element (string) no fmt - 349
+      PackagingCharacteristicCode_02 -- element (string) no fmt - 753
+      AgencyQualifierCode_03 -- element (string) no fmt - 559
+      PackagingDescriptionCode_04 -- element (string) X12_AN - 754
+      Description_05 -- element (string) X12_AN - 352
+      UnitLoadOptionCode_06 -- element (string) no fmt - 400
+    TD1 -- items (array)       segment TD1
+      PackagingCode_01 -- element (string) X12_AN - 103
+      LadingQuantity_02 -- element (string) X12_N0 - 80
+      CommodityCodeQualifier_03 -- element (string) no fmt - 23
+      CommodityCode_04 -- element (string) X12_AN - 22
+      LadingDescription_05 -- element (string) X12_AN - 79
+      WeightQualifier_06 -- element (string) no fmt - 187
+      Weight_07 -- element (string) X12_R - 81
+      UnitorBasisforMeasurementCode_08 -- element (string) no fmt - 355
+      Volume_09 -- element (string) X12_R - 183
+      UnitorBasisforMeasurementCode_10 -- element (string) no fmt - 355
+    TD5 -- items (array)       segment TD5
+      RoutingSequenceCode_01 -- element (string) no fmt - 133
+      IdentificationCodeQualifier_02 -- element (string) no fmt - 66
+      IdentificationCode_03 -- element (string) X12_AN - 67
+      TransportationMethodTypeCode_04 -- element (string) no fmt - 91
+      Routing_05 -- element (string) X12_AN - 387
+      ShipmentOrderStatusCode_06 -- element (string) no fmt - 368
+      LocationQualifier_07 -- element (string) no fmt - 309
+      LocationIdentifier_08 -- element (string) X12_AN - 310
+      TransitDirectionCode_09 -- element (string) no fmt - 731
+      TransitTimeDirectionQualifier_10 -- element (string) no fmt - 732
+      TransitTime_11 -- element (string) X12_R - 733
+      ServiceLevelCode_12 -- element (string) no fmt - 284
+      ServiceLevelCode_13 -- element (string) no fmt - 284
+      ServiceLevelCode_14 -- element (string) no fmt - 284
+      CountryCode_15 -- element (string) X12_AN - 26
+    TD3Loop -- items (array)       unknown
+      TD3 --         segment TD3
+        EquipmentDescriptionCode_01 -- element (string) no fmt - 40
+        EquipmentInitial_02 -- element (string) X12_AN - 206
+        EquipmentNumber_03 -- element (string) X12_AN - 207
+        WeightQualifier_04 -- element (string) no fmt - 187
+        Weight_05 -- element (string) X12_R - 81
+        UnitorBasisforMeasurementCode_06 -- element (string) no fmt - 355
+        OwnershipCode_07 -- element (string) no fmt - 102
+        SealStatusCode_08 -- element (string) no fmt - 407
+        SealNumber_09 -- element (string) X12_AN - 225
+        EquipmentType_10 -- element (string) X12_AN - 24
+      AT9 --         segment AT9
+        EquipmentLength_01 -- element (string) X12_N0 - 567
+        Height_02 -- element (string) X12_R - 65
+        Width_03 -- element (string) X12_R - 189
+        WeightQualifier_04 -- element (string) no fmt - 187
+        WeightUnitCode_05 -- element (string) no fmt - 188
+        Weight_06 -- element (string) X12_R - 81
+        VolumeUnitQualifier_07 -- element (string) no fmt - 184
+        Volume_08 -- element (string) X12_R - 183
+    TD4 -- items (array)       segment TD4
+      SpecialHandlingCode_01 -- element (string) no fmt - 152
+      HazardousMaterialCodeQualifier_02 -- element (string) no fmt - 208
+      HazardousMaterialClassCode_03 -- element (string) X12_AN - 209
+      Description_04 -- element (string) X12_AN - 352
+      YesNoConditionorResponseCode_05 -- element (string) no fmt - 1073
+    TSD --       segment TSD
+      AssignedIdentification_01 -- element (string) X12_AN - 350
+      Position_02 -- element (string) X12_AN - 219
+    REF -- items (array)       segment REF
+      ReferenceIdentificationQualifier_01 -- element (string) no fmt - 128
+      ReferenceIdentification_02 -- element (string) X12_AN - 127
+      Description_03 -- element (string) X12_AN - 352
+      ReferenceIdentifier_04 --         composite C040
+        ReferenceIdentificationQualifier_01 -- element (string) no fmt - 128
+        ReferenceIdentification_02 -- element (string) X12_AN - 127
+        ReferenceIdentificationQualifier_03 -- element (string) no fmt - 128
+        ReferenceIdentification_04 -- element (string) X12_AN - 127
+        ReferenceIdentificationQualifier_05 -- element (string) no fmt - 128
+        ReferenceIdentification_06 -- element (string) X12_AN - 127
+    PER -- items (array)       segment PER
+      ContactFunctionCode_01 -- element (string) no fmt - 366
+      Name_02 -- element (string) X12_AN - 93
+      CommunicationNumberQualifier_03 -- element (string) no fmt - 365
+      CommunicationNumber_04 -- element (string) X12_AN - 364
+      CommunicationNumberQualifier_05 -- element (string) no fmt - 365
+      CommunicationNumber_06 -- element (string) X12_AN - 364
+      CommunicationNumberQualifier_07 -- element (string) no fmt - 365
+      CommunicationNumber_08 -- element (string) X12_AN - 364
+      ContactInquiryReference_09 -- element (string) X12_AN - 443
+    LH1Loop -- items (array)       unknown
+      LH1 --         segment LH1
+        UnitorBasisforMeasurementCode_01 -- element (string) no fmt - 355
+        LadingQuantity_02 -- element (string) X12_N0 - 80
+        UNNAIdentificationCode_03 -- element (string) X12_AN - 277
+        HazardousMaterialsPage_04 -- element (string) X12_AN - 200
+        CommodityCode_05 -- element (string) X12_AN - 22
+        UnitorBasisforMeasurementCode_06 -- element (string) no fmt - 355
+        Quantity_07 -- element (string) X12_R - 380
+        CompartmentIDCode_08 -- element (string) no fmt - 595
+        ResidueIndicatorCode_09 -- element (string) no fmt - 665
+        PackingGroupCode_10 -- element (string) X12_AN - 254
+        InterimHazardousMaterialRegulatoryNumber_11 -- element (string) X12_AN - 1375
+      LH2 -- items (array)         segment LH2
+        HazardousClassification_01 -- element (string) X12_AN - 215
+        HazardousClassQualifier_02 -- element (string) no fmt - 983
+        HazardousPlacardNotation_03 -- element (string) X12_AN - 218
+        HazardousEndorsement_04 -- element (string) X12_AN - 222
+        ReportableQuantityCode_05 -- element (string) no fmt - 759
+        UnitorBasisforMeasurementCode_06 -- element (string) no fmt - 355
+        Temperature_07 -- element (string) X12_R - 408
+        UnitorBasisforMeasurementCode_08 -- element (string) no fmt - 355
+        Temperature_09 -- element (string) X12_R - 408
+        UnitorBasisforMeasurementCode_10 -- element (string) no fmt - 355
+        Temperature_11 -- element (string) X12_R - 408
+        WeightUnitCode_12 -- element (string) no fmt - 188
+        NetExplosiveQuantity_13 -- element (string) X12_N0 - 267
+      LH3 -- items (array)         segment LH3
+        HazardousMaterialShippingName_01 -- element (string) X12_AN - 224
+        HazardousMaterialShippingNameQualifier_02 -- element (string) no fmt - 984
+        NOSIndicatorCode_03 -- element (string) no fmt - 985
+        YesNoConditionorResponseCode_04 -- element (string) no fmt - 1073
+      LFH -- items (array)         segment LFH
+        HazardousMaterialShipmentInformationQualifier_01 -- element (string) no fmt - 808
+        HazardousMaterialShipmentInformation_02 -- element (string) X12_AN - 809
+        HazardousMaterialShipmentInformation_03 -- element (string) X12_AN - 809
+        HazardZoneCode_04 -- element (string) no fmt - 1023
+        UnitorBasisforMeasurementCode_05 -- element (string) no fmt - 355
+        Quantity_06 -- element (string) X12_R - 380
+        Quantity_07 -- element (string) X12_R - 380
+        Date_08 -- element (string) X12_DT - 373
+      LEP -- items (array)         segment LEP
+        EPAWasteStreamNumberCode_01 -- element (string) X12_AN - 806
+        WasteCharacteristicsCode_02 -- element (string) X12_AN - 807
+        StateorProvinceCode_03 -- element (string) X12_AN - 156
+        ReferenceIdentification_04 -- element (string) X12_AN - 127
+      LH4 -- items (array)         segment LH4
+        EmergencyResponsePlanNumber_01 -- element (string) X12_AN - 238
+        CommunicationNumber_02 -- element (string) X12_AN - 364
+        PackingGroupCode_03 -- element (string) X12_AN - 254
+        SubsidiaryClassification_04 -- element (string) X12_AN - 230
+        SubsidiaryClassification_05 -- element (string) X12_AN - 230
+        SubsidiaryClassification_06 -- element (string) X12_AN - 230
+        SubsidiaryRiskIndicator_07 -- element (string) no fmt - 271
+        NetExplosiveQuantity_08 -- element (string) X12_N0 - 267
+        CanadianHazardousNotation_09 -- element (string) X12_AN - 805
+        SpecialCommodityIndicatorCode_10 -- element (string) no fmt - 986
+        CommunicationNumber_11 -- element (string) X12_AN - 364
+        UnitorBasisforMeasurementCode_12 -- element (string) no fmt - 355
+      LHT -- items (array)         segment LHT
+        HazardousClassification_01 -- element (string) X12_AN - 215
+        HazardousPlacardNotation_02 -- element (string) X12_AN - 218
+        HazardousEndorsement_03 -- element (string) X12_AN - 222
+      LHR -- items (array)         segment LHR
+        ReferenceIdentificationQualifier_01 -- element (string) no fmt - 128
+        ReferenceIdentification_02 -- element (string) X12_AN - 127
+        Date_03 -- element (string) X12_DT - 373
+      PER -- items (array)         segment PER
+        ContactFunctionCode_01 -- element (string) no fmt - 366
+        Name_02 -- element (string) X12_AN - 93
+        CommunicationNumberQualifier_03 -- element (string) no fmt - 365
+        CommunicationNumber_04 -- element (string) X12_AN - 364
+        CommunicationNumberQualifier_05 -- element (string) no fmt - 365
+        CommunicationNumber_06 -- element (string) X12_AN - 364
+        CommunicationNumberQualifier_07 -- element (string) no fmt - 365
+        CommunicationNumber_08 -- element (string) X12_AN - 364
+        ContactInquiryReference_09 -- element (string) X12_AN - 443
+      LHE --         segment LHE
+        HazardousMaterialShippingName_01 -- element (string) X12_AN - 224
+        HazardousPlacardNotation_02 -- element (string) X12_AN - 218
+        ReferenceIdentificationQualifier_03 -- element (string) no fmt - 128
+        ReferenceIdentification_04 -- element (string) X12_AN - 127
+        ReportableQuantityCode_05 -- element (string) no fmt - 759
+    CLDLoop -- items (array)       unknown
+      CLD --         segment CLD
+        NumberofLoads_01 -- element (string) X12_N0 - 622
+        NumberofUnitsShipped_02 -- element (string) X12_R - 382
+        PackagingCode_03 -- element (string) X12_AN - 103
+        Size_04 -- element (string) X12_R - 357
+        UnitorBasisforMeasurementCode_05 -- element (string) no fmt - 355
+      REF -- items (array)         segment REF
+        ReferenceIdentificationQualifier_01 -- element (string) no fmt - 128
+        ReferenceIdentification_02 -- element (string) X12_AN - 127
+        Description_03 -- element (string) X12_AN - 352
+        ReferenceIdentifier_04 --           composite C040
+          ReferenceIdentificationQualifier_01 -- element (string) no fmt - 128
+          ReferenceIdentification_02 -- element (string) X12_AN - 127
+          ReferenceIdentificationQualifier_03 -- element (string) no fmt - 128
+          ReferenceIdentification_04 -- element (string) X12_AN - 127
+          ReferenceIdentificationQualifier_05 -- element (string) no fmt - 128
+          ReferenceIdentification_06 -- element (string) X12_AN - 127
+      DTP --         segment DTP
+        DateTimeQualifier_01 -- element (string) no fmt - 374
+        DateTimePeriodFormatQualifier_02 -- element (string) no fmt - 1250
+        DateTimePeriod_03 -- element (string) X12_AN - 1251
+    MAN -- items (array)       segment MAN
+      MarksandNumbersQualifier_01 -- element (string) no fmt - 88
+      MarksandNumbers_02 -- element (string) X12_AN - 87
+      MarksandNumbers_03 -- element (string) X12_AN - 87
+      MarksandNumbersQualifier_04 -- element (string) no fmt - 88
+      MarksandNumbers_05 -- element (string) X12_AN - 87
+      MarksandNumbers_06 -- element (string) X12_AN - 87
+    DTM -- items (array)       segment DTM
+      DateTimeQualifier_01 -- element (string) no fmt - 374
+      Date_02 -- element (string) X12_DT - 373
+      Time_03 -- element (string) X12_TM - 337
+      TimeCode_04 -- element (string) no fmt - 623
+      DateTimePeriodFormatQualifier_05 -- element (string) no fmt - 1250
+      DateTimePeriod_06 -- element (string) X12_AN - 1251
+    FOB --       segment FOB
+      ShipmentMethodofPayment_01 -- element (string) no fmt - 146
+      LocationQualifier_02 -- element (string) no fmt - 309
+      Description_03 -- element (string) X12_AN - 352
+      TransportationTermsQualifierCode_04 -- element (string) no fmt - 334
+      TransportationTermsCode_05 -- element (string) no fmt - 335
+      LocationQualifier_06 -- element (string) no fmt - 309
+      Description_07 -- element (string) X12_AN - 352
+      RiskofLossCode_08 -- element (string) no fmt - 54
+      Description_09 -- element (string) X12_AN - 352
+    PAL --       segment PAL
+      PalletTypeCode_01 -- element (string) no fmt - 883
+      PalletTiers_02 -- element (string) X12_N0 - 884
+      PalletBlocks_03 -- element (string) X12_N0 - 885
+      Pack_04 -- element (string) X12_N0 - 356
+      UnitWeight_05 -- element (string) X12_R - 395
+      UnitorBasisforMeasurementCode_06 -- element (string) no fmt - 355
+      Length_07 -- element (string) X12_R - 82
+      Width_08 -- element (string) X12_R - 189
+      Height_09 -- element (string) X12_R - 65
+      UnitorBasisforMeasurementCode_10 -- element (string) no fmt - 355
+      GrossWeightperPack_11 -- element (string) X12_R - 384
+      UnitorBasisforMeasurementCode_12 -- element (string) no fmt - 355
+      GrossVolumeperPack_13 -- element (string) X12_R - 385
+      UnitorBasisforMeasurementCode_14 -- element (string) no fmt - 355
+      PalletExchangeCode_15 -- element (string) no fmt - 399
+      InnerPack_16 -- element (string) X12_N0 - 810
+      PalletStructureCode_17 -- element (string) no fmt - 1699
+    N1Loop -- items (array)       unknown
+      N1 --         segment N1
+        EntityIdentifierCode_01 -- element (string) no fmt - 98
+        Name_02 -- element (string) X12_AN - 93
+        IdentificationCodeQualifier_03 -- element (string) no fmt - 66
+        IdentificationCode_04 -- element (string) X12_AN - 67
+        EntityRelationshipCode_05 -- element (string) no fmt - 706
+        EntityIdentifierCode_06 -- element (string) no fmt - 98
+      N2 -- items (array)         segment N2
+        Name_01 -- element (string) X12_AN - 93
+        Name_02 -- element (string) X12_AN - 93
+      N3 -- items (array)         segment N3
+        AddressInformation_01 -- element (string) X12_AN - 166
+        AddressInformation_02 -- element (string) X12_AN - 166
+      N4 --         segment N4
+        CityName_01 -- element (string) X12_AN - 19
+        StateorProvinceCode_02 -- element (string) X12_AN - 156
+        PostalCode_03 -- element (string) X12_AN - 116
+        CountryCode_04 -- element (string) X12_AN - 26
+        LocationQualifier_05 -- element (string) no fmt - 309
+        LocationIdentifier_06 -- element (string) X12_AN - 310
+        CountrySubdivisionCode_07 -- element (string) X12_AN - 1715
+      REF -- items (array)         segment REF
+        ReferenceIdentificationQualifier_01 -- element (string) no fmt - 128
+        ReferenceIdentification_02 -- element (string) X12_AN - 127
+        Description_03 -- element (string) X12_AN - 352
+        ReferenceIdentifier_04 --           composite C040
+          ReferenceIdentificationQualifier_01 -- element (string) no fmt - 128
+          ReferenceIdentification_02 -- element (string) X12_AN - 127
+          ReferenceIdentificationQualifier_03 -- element (string) no fmt - 128
+          ReferenceIdentification_04 -- element (string) X12_AN - 127
+          ReferenceIdentificationQualifier_05 -- element (string) no fmt - 128
+          ReferenceIdentification_06 -- element (string) X12_AN - 127
+      PER -- items (array)         segment PER
+        ContactFunctionCode_01 -- element (string) no fmt - 366
+        Name_02 -- element (string) X12_AN - 93
+        CommunicationNumberQualifier_03 -- element (string) no fmt - 365
+        CommunicationNumber_04 -- element (string) X12_AN - 364
+        CommunicationNumberQualifier_05 -- element (string) no fmt - 365
+        CommunicationNumber_06 -- element (string) X12_AN - 364
+        CommunicationNumberQualifier_07 -- element (string) no fmt - 365
+        CommunicationNumber_08 -- element (string) X12_AN - 364
+        ContactInquiryReference_09 -- element (string) X12_AN - 443
+      FOB --         segment FOB
+        ShipmentMethodofPayment_01 -- element (string) no fmt - 146
+        LocationQualifier_02 -- element (string) no fmt - 309
+        Description_03 -- element (string) X12_AN - 352
+        TransportationTermsQualifierCode_04 -- element (string) no fmt - 334
+        TransportationTermsCode_05 -- element (string) no fmt - 335
+        LocationQualifier_06 -- element (string) no fmt - 309
+        Description_07 -- element (string) X12_AN - 352
+        RiskofLossCode_08 -- element (string) no fmt - 54
+        Description_09 -- element (string) X12_AN - 352
+    SDQ -- items (array)       segment SDQ
+      UnitorBasisforMeasurementCode_01 -- element (string) no fmt - 355
+      IdentificationCodeQualifier_02 -- element (string) no fmt - 66
+      IdentificationCode_03 -- element (string) X12_AN - 67
+      Quantity_04 -- element (string) X12_R - 380
+      IdentificationCode_05 -- element (string) X12_AN - 67
+      Quantity_06 -- element (string) X12_R - 380
+      IdentificationCode_07 -- element (string) X12_AN - 67
+      Quantity_08 -- element (string) X12_R - 380
+      IdentificationCode_09 -- element (string) X12_AN - 67
+      Quantity_10 -- element (string) X12_R - 380
+      IdentificationCode_11 -- element (string) X12_AN - 67
+      Quantity_12 -- element (string) X12_R - 380
+      IdentificationCode_13 -- element (string) X12_AN - 67
+      Quantity_14 -- element (string) X12_R - 380
+      IdentificationCode_15 -- element (string) X12_AN - 67
+      Quantity_16 -- element (string) X12_R - 380
+      IdentificationCode_17 -- element (string) X12_AN - 67
+      Quantity_18 -- element (string) X12_R - 380
+      IdentificationCode_19 -- element (string) X12_AN - 67
+      Quantity_20 -- element (string) X12_R - 380
+      IdentificationCode_21 -- element (string) X12_AN - 67
+      Quantity_22 -- element (string) X12_R - 380
+      LocationIdentifier_23 -- element (string) X12_AN - 310
+    ETD --       segment ETD
+      ExcessTransportationReasonCode_01 -- element (string) no fmt - 626
+      ExcessTransportationResponsibilityCode_02 -- element (string) no fmt - 627
+      ReferenceIdentificationQualifier_03 -- element (string) no fmt - 128
+      ReferenceIdentification_04 -- element (string) X12_AN - 127
+      ReturnableContainerFreightPaymentResponsibilityCode_05 -- element (string) no fmt - 743
+    CUR --       segment CUR
+      EntityIdentifierCode_01 -- element (string) no fmt - 98
+      CurrencyCode_02 -- element (string) X12_AN - 100
+      ExchangeRate_03 -- element (string) X12_R - 280
+      EntityIdentifierCode_04 -- element (string) no fmt - 98
+      CurrencyCode_05 -- element (string) X12_AN - 100
+      CurrencyMarketExchangeCode_06 -- element (string) no fmt - 669
+      DateTimeQualifier_07 -- element (string) no fmt - 374
+      Date_08 -- element (string) X12_DT - 373
+      Time_09 -- element (string) X12_TM - 337
+      DateTimeQualifier_10 -- element (string) no fmt - 374
+      Date_11 -- element (string) X12_DT - 373
+      Time_12 -- element (string) X12_TM - 337
+      DateTimeQualifier_13 -- element (string) no fmt - 374
+      Date_14 -- element (string) X12_DT - 373
+      Time_15 -- element (string) X12_TM - 337
+      DateTimeQualifier_16 -- element (string) no fmt - 374
+      Date_17 -- element (string) X12_DT - 373
+      Time_18 -- element (string) X12_TM - 337
+      DateTimeQualifier_19 -- element (string) no fmt - 374
+      Date_20 -- element (string) X12_DT - 373
+      Time_21 -- element (string) X12_TM - 337
+    SACLoop -- items (array)       unknown
+      SAC --         segment SAC
+        AllowanceorChargeIndicator_01 -- element (string) no fmt - 248
+        ServicePromotionAllowanceorChargeCode_02 -- element (string) no fmt - 1300
+        AgencyQualifierCode_03 -- element (string) no fmt - 559
+        AgencyServicePromotionAllowanceorChargeCode_04 -- element (string) X12_AN - 1301
+        Amount_05 -- element (string) X12_N2 - 610
+        AllowanceChargePercentQualifier_06 -- element (string) no fmt - 378
+        PercentDecimalFormat_07 -- element (string) X12_R - 332
+        Rate_08 -- element (string) X12_R - 118
+        UnitorBasisforMeasurementCode_09 -- element (string) no fmt - 355
+        Quantity_10 -- element (string) X12_R - 380
+        Quantity_11 -- element (string) X12_R - 380
+        AllowanceorChargeMethodofHandlingCode_12 -- element (string) no fmt - 331
+        ReferenceIdentification_13 -- element (string) X12_AN - 127
+        OptionNumber_14 -- element (string) X12_AN - 770
+        Description_15 -- element (string) X12_AN - 352
+        LanguageCode_16 -- element (string) X12_AN - 819
+      CUR --         segment CUR
+        EntityIdentifierCode_01 -- element (string) no fmt - 98
+        CurrencyCode_02 -- element (string) X12_AN - 100
+        ExchangeRate_03 -- element (string) X12_R - 280
+        EntityIdentifierCode_04 -- element (string) no fmt - 98
+        CurrencyCode_05 -- element (string) X12_AN - 100
+        CurrencyMarketExchangeCode_06 -- element (string) no fmt - 669
+        DateTimeQualifier_07 -- element (string) no fmt - 374
+        Date_08 -- element (string) X12_DT - 373
+        Time_09 -- element (string) X12_TM - 337
+        DateTimeQualifier_10 -- element (string) no fmt - 374
+        Date_11 -- element (string) X12_DT - 373
+        Time_12 -- element (string) X12_TM - 337
+        DateTimeQualifier_13 -- element (string) no fmt - 374
+        Date_14 -- element (string) X12_DT - 373
+        Time_15 -- element (string) X12_TM - 337
+        DateTimeQualifier_16 -- element (string) no fmt - 374
+        Date_17 -- element (string) X12_DT - 373
+        Time_18 -- element (string) X12_TM - 337
+        DateTimeQualifier_19 -- element (string) no fmt - 374
+        Date_20 -- element (string) X12_DT - 373
+        Time_21 -- element (string) X12_TM - 337
+    GF --       segment GF
+      ReferenceIdentificationQualifier_01 -- element (string) no fmt - 128
+      ReferenceIdentification_02 -- element (string) X12_AN - 127
+      ContractNumber_03 -- element (string) X12_AN - 367
+      MonetaryAmount_04 -- element (string) X12_R - 782
+      ReferenceIdentificationQualifier_05 -- element (string) no fmt - 128
+      ReferenceIdentification_06 -- element (string) X12_AN - 127
+      ReleaseNumber_07 -- element (string) X12_AN - 328
+      ReferenceIdentificationQualifier_08 -- element (string) no fmt - 128
+      ReferenceIdentification_09 -- element (string) X12_AN - 127
+    YNQ -- items (array)       segment YNQ
+      ConditionIndicator_01 -- element (string) no fmt - 1321
+      YesNoConditionorResponseCode_02 -- element (string) no fmt - 1073
+      DateTimePeriodFormatQualifier_03 -- element (string) no fmt - 1250
+      DateTimePeriod_04 -- element (string) X12_AN - 1251
+      FreeformMessageText_05 -- element (string) X12_AN - 933
+      FreeformMessageText_06 -- element (string) X12_AN - 933
+      FreeformMessageText_07 -- element (string) X12_AN - 933
+      CodeListQualifierCode_08 -- element (string) no fmt - 1270
+      IndustryCode_09 -- element (string) X12_AN - 1271
+      FreeformMessageText_10 -- element (string) X12_AN - 933
+    LMLoop -- items (array)       unknown
+      LM --         segment LM
+        AgencyQualifierCode_01 -- element (string) no fmt - 559
+        SourceSubqualifier_02 -- element (string) X12_AN - 822
+      LQ -- items (array)         segment LQ
+        CodeListQualifierCode_01 -- element (string) no fmt - 1270
+        IndustryCode_02 -- element (string) X12_AN - 1271
+    V1Loop -- items (array)       unknown
+      V1 --         segment V1
+        VesselCode_01 -- element (string) X12_AN - 597
+        VesselName_02 -- element (string) X12_AN - 182
+        CountryCode_03 -- element (string) X12_AN - 26
+        FlightVoyageNumber_04 -- element (string) X12_AN - 55
+        StandardCarrierAlphaCode_05 -- element (string) X12_AN - 140
+        VesselRequirementCode_06 -- element (string) no fmt - 249
+        VesselTypeCode_07 -- element (string) no fmt - 854
+        VesselCodeQualifier_08 -- element (string) no fmt - 897
+        TransportationMethodTypeCode_09 -- element (string) no fmt - 91
+      R4 -- items (array)         segment R4
+        PortorTerminalFunctionCode_01 -- element (string) no fmt - 115
+        LocationQualifier_02 -- element (string) no fmt - 309
+        LocationIdentifier_03 -- element (string) X12_AN - 310
+        PortName_04 -- element (string) X12_AN - 114
+        CountryCode_05 -- element (string) X12_AN - 26
+        TerminalName_06 -- element (string) X12_AN - 174
+        PierNumber_07 -- element (string) X12_AN - 113
+        StateorProvinceCode_08 -- element (string) X12_AN - 156
+      DTM -- items (array)         segment DTM
+        DateTimeQualifier_01 -- element (string) no fmt - 374
+        Date_02 -- element (string) X12_DT - 373
+        Time_03 -- element (string) X12_TM - 337
+        TimeCode_04 -- element (string) no fmt - 623
+        DateTimePeriodFormatQualifier_05 -- element (string) no fmt - 1250
+        DateTimePeriod_06 -- element (string) X12_AN - 1251
+  CTT --     segment CTT
+    NumberofLineItems_01 -- element (string) X12_N0 - 354
+    HashTotal_02 -- element (string) X12_R - 347
+    Weight_03 -- element (string) X12_R - 81
+    UnitorBasisforMeasurementCode_04 -- element (string) no fmt - 355
+    Volume_05 -- element (string) X12_R - 183
+    UnitorBasisforMeasurementCode_06 -- element (string) no fmt - 355
+    Description_07 -- element (string) X12_AN - 352
+  SE --     segment SE
+    NumberofIncludedSegments_01 -- element (string) X12_N0 - 96
+    TransactionSetControlNumber_02 -- element (string) X12_AN - 329
+[success] Total time: 1 s, completed Apr 8, 2025, 10:18:19 AM
