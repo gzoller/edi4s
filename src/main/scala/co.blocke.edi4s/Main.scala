@@ -4,7 +4,6 @@ import zio._
 import zio.nio.file.{Files, Path}
 import model.*
 import tokenizer.*
-import scala.annotation.tailrec
 
 /*
 Key takeaways:
@@ -70,16 +69,18 @@ object Main extends ZIOAppDefault {
       X12Tokenizer.tokenize(tokenizerContext).flatMap((result, nextPc) => ZIO.succeed(println("   >>> "+result+"\n")))
     }
 
+    import CanonicalParser.given
+
+//    val rt = RType.of[RefinedDocumentSpec]
+//    ZIO.succeed(println(rt.pretty))
+
     val filePath = Path("doc856_v5010.json")
     for {
       lines <- Files.readAllLines(filePath)
       edi <- CanonicalParser.readSpec(lines.mkString("\n"))
       pid = edi.components.schemas("PID")
-//      def toRefined( edi: EdiObject, topLevel: String, document: String, version: String, partner: String ): ZIO[Any, CanonicalError, RefinedDocumentSpec]
-      _ <- CanonicalParser.toRefined(edi, "TS856", "856", "5010", "Taylor Farms")
-//      _ <- ZIO.succeed(println("RESULTS: \n"+ CanonicalParser.show(edi,"TS856"))) /*edi.components.schemas.collect {
-//        case (x,y: EdiSchema) => x
-//      }))
+      refined <- CanonicalParser.toRefined(edi, "TS856", "856", "5010", "Taylor Farms")
+      _ <- ZIO.succeed(println(sjRefinedSpec.toJson(refined)))
     } yield ()
 
   }
