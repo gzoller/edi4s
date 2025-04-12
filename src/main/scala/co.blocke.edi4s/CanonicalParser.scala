@@ -36,7 +36,7 @@ object CanonicalParser:
     for {
       segment <- prop.dereferenceSegment(catalog)
       fields <- convertComponentFields(segment, canonicalNameWithIndex, catalog)
-    } yield RefinedCompositeFieldSpec(name, canonicalNameWithIndex, index+1, fields)
+    } yield RefinedCompositeFieldSpec(name, canonicalNameWithIndex, index+1, "", segment.required.exists(_.contains(name)), fields)
 
   // Convert simple fields for components of a composite field
   private def convertComponentFields(
