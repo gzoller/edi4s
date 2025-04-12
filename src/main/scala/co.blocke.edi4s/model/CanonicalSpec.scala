@@ -30,7 +30,8 @@ case class EdiSchema(
                       properties: mutable.LinkedHashMap[String, EdiRefProperty|EdiItemsProperty|EdiElementProperty],
                       `x-openedi-segment-id`: Option[String],
                       `x-openedi-composite-id`: Option[String],
-                      `x-openedi-loop-id`: Option[String]
+                      `x-openedi-loop-id`: Option[String],
+                      `x-openedi-syntax`: Option[List[String]]  // encoded assertions
                     ) extends Showable:
   def isRequired(p: String): Boolean = required.exists(_.contains(p))
   def isComposite: Boolean = `x-openedi-composite-id`.isDefined
@@ -45,16 +46,12 @@ case class EdiSchema(
 // Segment property with a reference the details in schemas (segment catalog)
 case class EdiRefProperty(`$ref`: String) extends Showable with Property:
   def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema] =
-    val extractKey = ".*/([^/]+)$".r
-    `$ref` match {
-      case extractKey(key) =>
-        schemas.get(key) match {
-          case Some(v) => ZIO.succeed(v)
-          case None => ZIO.fail(CanonicalError(s"Reference for ${`$ref`} not found in canonical schema"))
-        }
-      case _ => ZIO.fail(CanonicalError(s"Unable to extract a reference key from ${`$ref`}"))
+    Canonical.extractRefKey(`$ref`).flatMap{ key =>
+      schemas.get(key) match {
+        case Some(v) => ZIO.succeed(v)
+        case None => ZIO.fail(CanonicalError(s"Reference for ${`$ref`} not found in canonical schema"))
+      }
     }
-
 
 // Defines loops/arrays
 case class EdiItemsProperty(
@@ -82,14 +79,42 @@ case class EdiElementProperty(
                                minLength: Option[Int],
                                maxLength: Option[Int],
                                format: Option[String],
-                               allOf: Option[List[EdiRefProperty]],  // Constraints. This may not be complete! There may be other objects here defining constraints
+                               `enum`: Option[List[String]],
+                               allOf: Option[List[Map[String,String]]],
+                               anyOf: Option[List[Map[String,String]]],
+                               oneOf: Option[List[Map[String,String]]],
+                               not: Option[List[Map[String,String]]],
                                `x-openedi-element-id`: Option[String]
                              ) extends Showable with Property:
   def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema] =
-    ZIO.succeed(EdiSchema(None,`type`,mutable.LinkedHashMap.empty[String, EdiRefProperty|EdiItemsProperty|EdiElementProperty],`x-openedi-element-id`,None,None))
+    ZIO.succeed(EdiSchema(None,`type`,mutable.LinkedHashMap.empty[String, EdiRefProperty|EdiItemsProperty|EdiElementProperty],`x-openedi-element-id`,None,None,None))
 
 
 case class EdiComponents(schemas: Map[String, EdiEnum | EdiSchema])
 
 
 case class EdiObject(openapi: String, info: EdiInfo, components: EdiComponents)
+
+object Canonical:
+  def extractRefKey(ref: String): ZIO[Any,CanonicalError,String] =
+    val extractKey = ".*/([^/]+)$".r
+    ref match {
+      case extractKey(key) => ZIO.succeed(key)
+      case _ => ZIO.fail(CanonicalError(s"Unable to extract a reference key from $ref"))
+    }
+
+/* BROKEN:
+case class EdiElementProperty(
+                               `type`: String,
+                               minLength: Option[Int],
+                               maxLength: Option[Int],
+                               format: Option[String],
+                               `enum`: Option[List[String]],
+                               allOf: Option[List[Constraint]],  // https://json-schema.org/understanding-json-schema/reference/combining#allof
+                               anyOf: Option[List[Constraint]],
+                               oneOf: Option[List[Constraint]],
+                               not: Option[List[Constraint]],
+                               `x-openedi-element-id`: Option[String]
+                             ) extends Showable with Property:
+
+*/

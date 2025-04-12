@@ -1,0 +1,90 @@
+Assertions are given as:
+
+"x-openedi-syntax": [
+  "R020305",
+  "C0403",
+  "P0506"
+]
+
++------+--------------------------------------------------------------+
+| Code | Meaning                                                      |
++------+--------------------------------------------------------------+
+|  R   | Relational: If any of the listed elements is present,       |
+|      |        all must be present.                                 |
+|      |        Example: R020305 → if 02 is present, 03 and 05 must  |
+|      |        also be present.                                     |
++------+--------------------------------------------------------------+
+|  C   | Conditional: If the first element is present,               |
+|      |        the second must also be present.                     |
+|      |        Example: C0403 → if 04 is present, 03 must be too.   |
++------+--------------------------------------------------------------+
+|  P   | Paired: If any one of the elements is present,              |
+|      |        all must be present.                                 |
+|      |        Example: P0506 → if 05 or 06 is present, both must   |
+|      |        be present.                                          |
++------+--------------------------------------------------------------+
+|  E   | Exclusive: No more than one of the listed elements          |
+|      |        may be present.                                      |
+|      |        Example: E030405 → only one of 03, 04, or 05         |
+|      |        may be present.                                      |
++------+--------------------------------------------------------------+
+|  L   | List Conditional: If the first element is present,          |
+|      |        at least one of the others must be.                  |
+|      |        Example: L020304 → if 02 is present, at least        |
+|      |        one of 03 or 04 must be present.                     |
++------+--------------------------------------------------------------+
+|  N   | Not Used: Indicates that the listed elements                |
+|      |        must not be used.                                    |
+|      |        Example: N0607 → fields 06 and 07 must be omitted.   |
++------+--------------------------------------------------------------+
+
+
+Valid data type fields in standard json spec, per https://json-schema.org/draft/2020-12/json-schema-core.html#rfc.section.4.2.1
+
++------------+---------------------------------------------------------+
+| Type       | Meaning                                                 |
++------------+---------------------------------------------------------+
+| string     | Text values                                             |
+| number     | Any numeric value (integer or floating-point)           |
+| integer    | Whole numbers only (a subtype of number)                |
+| boolean    | true or false                                           |
+| object     | A JSON object (i.e., map of key-value pairs)            |
+| array      | A JSON array (list of values)                           |
+| null       | A null value                                            |
++------------+---------------------------------------------------------+
+
+Basic data types (in format field of spec):
+
++------------+-----------------------------------------------+
+| Format     | Meaning                                       |
++------------+-----------------------------------------------+
+| X12_AN     | Alphanumeric string (letters, digits, symbols)|
+| X12_DT     | Date in CCYYMMDD format                       |
+| X12_TM     | Time in HHMM or HHMMSS format                 |
+| X12_N0     | Integer (whole number, no decimal places)     |
+| X12_N2     | Implied decimal: 2 decimal digits (e.g., 1234 |
+|            |   means 12.34)                                |
+| X12_R      | Real number (can include decimal point)       |
++------------+-----------------------------------------------+
+
+Many of the others are given by enums
+
+
+
+Questions:
+
+* On page 5 of the TF spec, the HL loop body specifies an optional MAN element, yet the pages that follow for that segment
+give no detail on MAN--it's missing.
+
+
+✅ Short Answer:
+
+Within the same segment (e.g., "ZZ") across different versions of an X12 spec:
+	•	✅ New fields may be added (typically at the end)
+	•	✅ Enumerations or allowed values may change
+	•	✅ Requirements (e.g., optional vs required) may change
+	•	✅ Field lengths or data types may tighten
+	•	❌ Fields are almost never renamed or reordered
+	•	⚠️ Removal of fields is rare but possible, especially deprecated ones
+
+⸻

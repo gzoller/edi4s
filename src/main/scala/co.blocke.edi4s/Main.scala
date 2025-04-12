@@ -71,17 +71,59 @@ object Main extends ZIOAppDefault {
 
     import CanonicalParser.given
 
-//    val rt = RType.of[RefinedDocumentSpec]
-//    ZIO.succeed(println(rt.pretty))
 
-    val filePath = Path("doc856_v5010.json")
+    /*
+    val a = FieldDifference("ST01x","ST01", None, Some((true,false)), Some(("string","integer")),None,None,None,Some((None,Some("someref"))))
+    val b = FieldDifference("Foo","ST0201", None, Some((true,false)), Some(("string","integer")),None,None,None,Some((None,Some("someref"))))
+    val c = FieldDifference("Bar","ST0202", None, Some((true,false)), Some(("string","integer")),None,None,None,Some((None,Some("someref"))))
+    val d = FieldDifference("Hi","ST0203", presence = Some((true,false)))
+    val e = FieldDifference("Bye","ST0204", presence = Some((false,true)))
+    val cc = CompositeFieldDifference("blah","ST02", List(b,c,d,e))
+    val cells = a.render("ST",Nil) ++ cc.render("ST",Nil)
+//      ++ List(List("ST.ST03","!present in source - missing in target"))
+//      ++ List(List("ST.ST04", "!present in source - missing in target"))
+    val t = Table(
+      "EDI 856 Specification Differences",
+      List("Difference","Source","Target"),
+      List(35,40,40),
+      cells,
+      "color_text"
+    )
+    ZIO.succeed(println(t.toString))
+     */
+//    val filePath = Path("doc856_v5010.json")
+//    refined <- CanonicalParser.toRefined(edi, "TS856", "856", "5010", "Taylor Farms")
+
+
+    def loadCanonicalSpec(path: String, topLevel: String, document: String, version: String, partner: String): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
+      val filePath = Path(path)
+      (for {
+        lines <- Files.readAllLines(filePath)
+        edi <- CanonicalParser.readSpec(lines.mkString("\n"))
+        refined <- CanonicalParser.toRefined(edi, topLevel, document, version, partner)
+      } yield refined)
+        .mapError{
+          case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
+        }
+
+    def loadRefinedSpec(path: String): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
+      val filePath = Path(path)
+      (for {
+        lines <- Files.readAllLines(filePath)
+        refined = sjRefinedSpec.fromJson(lines.mkString("\n"))
+      } yield refined)
+        .mapError {
+          case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
+        }
+
     for {
-      lines <- Files.readAllLines(filePath)
-      edi <- CanonicalParser.readSpec(lines.mkString("\n"))
-      pid = edi.components.schemas("PID")
-      refined <- CanonicalParser.toRefined(edi, "TS856", "856", "5010", "Taylor Farms")
-      _ <- ZIO.succeed(println(sjRefinedSpec.toJson(refined)))
+      std <- loadRefinedSpec("x12_856_5010.json")
+      tf <- loadRefinedSpec("tf_856_5010.json")
+      diffs <- DifferenceEngine.computeDifference(std, tf)
+      table = DifferenceEngine.differenceTable(diffs,"EDI 856 Specification Differences")
+      _ <- ZIO.succeed(println(table.toString))
     } yield ()
+
 
   }
 }
