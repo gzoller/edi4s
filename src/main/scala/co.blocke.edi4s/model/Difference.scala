@@ -118,7 +118,7 @@ case class LoopSegmentDifference(
                                   presence: Option[(Boolean,Boolean)] = None,
                                   required: Option[(Boolean,Boolean)] = None,
                                   assertions: Option[(List[String],List[String])] = None,
-                                  pathDiff: Option[(String,String)],
+                                  pathDiff: Option[(String,String)] = None,
                                   fieldDiff: List[FieldDifference],
                                   minDiff: Option[(Option[Int], Option[Int])] = None,
                                   maxDiff: Option[(Option[Int], Option[Int])] = None,

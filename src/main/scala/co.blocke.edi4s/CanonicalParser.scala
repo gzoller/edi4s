@@ -36,7 +36,7 @@ object CanonicalParser:
     for {
       segment <- prop.dereferenceSegment(catalog)
       fields <- convertComponentFields(segment, canonicalNameWithIndex, catalog)
-    } yield RefinedCompositeFieldSpec(name, canonicalNameWithIndex, index+1, "", segment.required.exists(_.contains(name)), fields)
+    } yield RefinedCompositeFieldSpec(name, canonicalNameWithIndex, None, index+1, "", segment.required.exists(_.contains(name)), fields)
 
   // Convert simple fields for components of a composite field
   private def convertComponentFields(
@@ -56,6 +56,7 @@ object CanonicalParser:
               RefinedSingleFieldSpec(
                 fname,
                 canonicalNameWithIndex + f"${i + 1}%02d",
+                None,
                 i + 1,
                 "",
                 segment.required.exists(_.contains(fname)),
@@ -96,6 +97,7 @@ object CanonicalParser:
                   RefinedSingleFieldSpec(
                     fname,
                     segment.getId + f"${i + 1}%02d",
+                    None,
                     i+1,
                     "",
                     segment.required.exists(_.contains(fname)),
@@ -112,6 +114,7 @@ object CanonicalParser:
                   RefinedSingleFieldSpec(
                     fname,
                     segment.getId + f"${i + 1}%02d",
+                    None,
                     i+1,
                     "",
                     segment.required.exists(_.contains(fname)),
@@ -137,7 +140,7 @@ object CanonicalParser:
 //      _ <- ZIO.succeed(println("SEGMENT PROPERTY: "+name))
       segment <- prop.dereferenceSegment(catalog)
       fields  <- convertFields( segment, catalog )
-    } yield RefinedSegmentSpec(name, name, "", isRequired, segment.`x-openedi-syntax`.getOrElse(Nil), fields)
+    } yield RefinedSegmentSpec(name, name, None, "", isRequired, segment.`x-openedi-syntax`.getOrElse(Nil), fields)
 
   private def convertLoopProperty(
                                    name: String,
@@ -173,6 +176,7 @@ object CanonicalParser:
     } yield RefinedLoopSpec(
       loopName,
       loopName,
+      None,
       "",
       isRequired,
       loopSegmentSchema.`x-openedi-syntax`.getOrElse(Nil),
@@ -192,7 +196,7 @@ object CanonicalParser:
     for {
       loopSchema <- prop.dereferenceSegment(catalog)
       fields <- prop.dereferenceSegment(catalog).flatMap(loopSegment => convertFields(loopSchema, catalog))
-    } yield RefinedLoopSpec(name, name, "", isRequired, loopSchema.`x-openedi-syntax`.getOrElse(Nil), fields, prop.minItems, prop.maxItems, Nil)
+    } yield RefinedLoopSpec(name, name, None, "", isRequired, loopSchema.`x-openedi-syntax`.getOrElse(Nil), fields, prop.minItems, prop.maxItems, Nil)
 
   private type RefinedUnion = RefinedSegmentSpec | RefinedLoopSpec
   def toRefined( edi: EdiObject, topLevel: String, document: String, version: String, partner: String ): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
@@ -219,7 +223,6 @@ object CanonicalParser:
               action.map(identity[RefinedUnion])
             }
         }
-//        _ <- ZIO.succeed(println(props.mkString("\n")))
         result <- ZIO.succeed(RefinedDocumentSpec(document, version, partner, props))
       } yield result
       case _ => ZIO.fail(CanonicalError(s"Can't find top level spec $topLevel in canonical spec, or it is the wrong type (EdiEnum)"))

@@ -12,6 +12,7 @@ case class RefinedDocumentSpec(
 case class RefinedSingleFieldSpec(
                                    name: String,  // initially canonical name but may be renamed
                                    canonicalName: String,  // name used in the canonical spec
+                                   humanName: Option[String],
                                    index: Int,
                                    description: String,
                                    required: Boolean,
@@ -26,6 +27,7 @@ case class RefinedSingleFieldSpec(
 case class RefinedCompositeFieldSpec(
                                       name: String,
                                       canonicalName: String,
+                                      humanName: Option[String],
                                       index: Int,
                                       description: String,
                                       required: Boolean,
@@ -35,6 +37,7 @@ case class RefinedCompositeFieldSpec(
 case class RefinedSegmentSpec(
                                     name: String,  // initially canonical name but may be renamed
                                     canonicalName: String,  // name used in the canonical spec
+                                    humanName: Option[String],
                                     description: String,
                                     required: Boolean,
                                     assertions: List[String],
@@ -45,6 +48,7 @@ case class RefinedSegmentSpec(
 case class RefinedLoopSpec(
                                  name: String,  // initially canonical name but may be renamed
                                  canonicalName: String,  // name used in the canonical spec
+                                 humanName: Option[String],
                                  description: String,
                                  required: Boolean,
                                  assertions: List[String],

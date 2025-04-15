@@ -8,6 +8,15 @@ import pprint.*
 
 object Walker2:
 
+  def compareSpecs(
+                    src: RefinedDocumentSpec,
+                    target: RefinedDocumentSpec
+                  ): ZIO[Any, DifferenceError, List[Difference]] =
+    val z = compareSegmentLists("", src.segments, target.segments)
+    //pprint.log(z, height = 2000)
+    ZIO.succeed(z)
+
+
   // Find a segment in a target population (in). May be multiple hits.
   // Return List[(path, segment)]
   private def findSegment(
@@ -51,86 +60,6 @@ object Walker2:
     loop(parts, in, Nil) // ← this must be the last line so it's returned
   }
 
-  def compareSpecs(
-                    src: RefinedDocumentSpec,
-                    target: RefinedDocumentSpec
-                  ): ZIO[Any, DifferenceError, List[Difference]] =
-    val z = compareSegmentLists("", src.segments, target.segments)
-    pprint.log(z, height=2000)
-    ZIO.succeed(z)
-    /*
-    ZIO.foreach(src.segments) {
-      case s: RefinedSegmentSpec =>
-        val path = nameOf(s)
-        for {
-          found <- findSegment(path, target.segments)
-          result <- found match {
-            case Nil =>
-              ZIO.succeed(
-                List(
-                  SimpleSegmentDifference(
-                    path,
-                    nameOf(s),
-                    canonicalNameOf(s),
-                    Some((true, false)),
-                    None,
-                    None,
-                    None,
-                    Nil
-                  )
-                )
-              )
-
-            case List((foundPath, one: RefinedSegmentSpec)) =>
-              ZIO.succeed(
-                compareTwoSegments(foundPath, s, one).map(s => List(s)).getOrElse(List.empty[SimpleSegmentDifference])
-              )
-
-            case multiple =>
-              ZIO.fail(
-                DifferenceError(
-                  s"Multiple matches found for segment at path $path: ${multiple.map(_._2).map(nameOf).mkString(", ")}"
-                )
-              )
-          }
-        } yield result
-
-      case s: RefinedLoopSpec =>
-        val path = nameOf(s)
-        for {
-          found <- findSegment(path, target.segments)
-          result <- found match {
-            case Nil =>
-              ZIO.succeed(
-                List(
-                  SimpleSegmentDifference(
-                    path,
-                    nameOf(s),
-                    canonicalNameOf(s),
-                    Some((true, false)),
-                    None,
-                    None,
-                    None,
-                    Nil
-                  )
-                )
-              )
-
-            case List((foundPath, one: RefinedLoopSpec)) =>
-              ZIO.succeed(
-                compareTwoLoopSegments(foundPath, s, one).map(s => List(s)).getOrElse(List.empty[SimpleSegmentDifference])
-              )
-
-            case multiple =>
-              ZIO.fail(
-                DifferenceError(
-                  s"Multiple matches found for segment at path $path: ${multiple.map(_._2).map(nameOf).mkString(", ")}"
-                )
-              )
-          }
-        } yield result
-    }.map(_.flatten)
-    */
 
   private def nameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
     case s: RefinedSegmentSpec => s.name
@@ -161,6 +90,15 @@ object Walker2:
       case _ => Some(SimpleSegmentDifference(path, nameOf(a), canonicalNameOf(b), None, req, assertions, None, fieldDiffs))
     }
 
+  private case class HLNavigator(
+                          srcMap: Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]],
+                          targetMap: Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]]
+                        )
+
+  private inline def splitPath(path: String): (String,String) =
+    val (prefix, last) = path.splitAt(path.lastIndexOf('.'))
+    (prefix.stripSuffix("."), last.stripPrefix("."))
+
   private def compareTwoLoopSegments(path: String, a: RefinedLoopSpec, b: RefinedLoopSpec): Option[LoopSegmentDifference] =
     val req = Option.when(a.required != b.required)((a.required, b.required))
     val assertions = Option.when(a.assertions.toSet != b.assertions.toSet)((a.assertions, b.assertions))
@@ -168,11 +106,85 @@ object Walker2:
     val minDiff = Option.when(a.minRepeats != b.minRepeats)(a.minRepeats,b.minRepeats)
     val maxDiff = Option.when(a.maxRepeats != b.maxRepeats)(a.maxRepeats,b.maxRepeats)
     val pathPrefix = if path.isEmpty then "" else path+"."
-    val bodyDiff = compareSegmentLists(canonicalNameOf(a), a.body, b.body)
-    (req, assertions, fieldDiffs, minDiff, maxDiff, bodyDiff) match {
-      case (None, None, Nil, None, None, Nil) => None
+    val bodyAndNest: (Option[List[SegmentDifference]], Option[List[LoopSegmentDifference]]) =
+      if canonicalNameOf(a) == "HL" then
+        val nav = HLNavigator( buildSegmentPathMap(List(a),""), buildSegmentPathMap(List(b),"") )
+
+        // Find any missing segments, regardless of path in src and target
+        val sourceKeys = nav.srcMap.keySet
+        val targetKeys = nav.targetMap.keySet
+        val onlyInSource = (sourceKeys -- targetKeys).toList
+        val onlyInTarget = (targetKeys -- sourceKeys).toList
+        val acc1 = onlyInSource.flatMap { k =>
+          nav.srcMap(k).map { case (elemPath, spec) =>
+            val (prefix, _) = splitPath(elemPath)
+            LoopSegmentDifference(prefix, nameOf(spec), canonicalNameOf(spec), Some((true, false)), fieldDiff = Nil)
+          }
+        }
+        val acc2 = onlyInTarget.flatMap { k =>
+          nav.targetMap(k).map { case (elemPath, spec) =>
+            val (prefix, _) = splitPath(elemPath)
+            LoopSegmentDifference(prefix, nameOf(spec), canonicalNameOf(spec), Some((false, true)), fieldDiff = Nil)
+          }
+        }
+        
+        def compareFoundOnPath()
+
+        // Now track "moved" segments (NOTE: unordered!)
+        val foo = sourceKey.map { k =>
+          val srcElemPaths = nav.srcMap(k)
+          val targetElemPaths = nav.targetMap(k)
+          (srcElemPaths.size, targetElemPaths.size) match {
+            // Exact mapping
+            case (1,1) =>
+              (srcElemPaths.head._2, targetElemPaths.head._2) match {
+                case (a: RefinedSegmentSpec, b: RefinedSegmentSpec) =>
+                  val (prefix, _) = splitPath(elemPath) // <-- Won't work.... no elemPath here
+                  // We need to do 2 things here:
+                  // 1) Create a LoopDifference object, noting the difference in pathsw
+                  // 2) Compare the actual segments, regardless of their different paths--perhaps put the results (SegmentDifference) in the body of the LoopDifference?
+                  compareTwoSegments("(different paths)", a, b)
+                case (a: RefinedLoopSpec, b: RefinedLoopSpec) =>
+                  val (prefix, _) = splitPath(elemPath)
+                  compareTwoLoopSegments(prefix, a, b)
+                case (a,b) =>
+                  Some(SeriousDifference(path,nameOf(a),canonicalNameOf(a),s"Elements ${srcElemPaths.head._1} and ${targetElemPaths.head._1} have different types!"))
+              }
+            // Equal mapping (presume same?)
+            case (n,m) if n == m => ???
+            // 1-to-many: Possible nesting HLs from canonical spec
+            case (1,n) => ???
+            // n-to-m: Who knows!
+            case _ =>
+          }
+        }
+
+        val allAcc: List[LoopSegmentDifference] = acc1 ++ acc2
+        pprint.log(allAcc)
+        (None, Some(allAcc))
+      /*
+case class LoopSegmentDifference(
+                                  path: String,
+                                  name: String,  // initially canonical name but may be renamed
+                                  canonicalName: String,  // name used in the canonical spec
+                                  presence: Option[(Boolean,Boolean)] = None,
+                                  required: Option[(Boolean,Boolean)] = None,
+                                  assertions: Option[(List[String],List[String])] = None,
+                                  pathDiff: Option[(String,String)],
+                                  fieldDiff: List[FieldDifference],
+                                  minDiff: Option[(Option[Int], Option[Int])] = None,
+                                  maxDiff: Option[(Option[Int], Option[Int])] = None,
+                                  bodyDiff: Option[List[SegmentDifference]] = None,
+                                  nested: Option[List[LoopSegmentDifference]] = None
+                                ) extends SegmentDifference:
+      */
+      else
+        (Some(compareSegmentLists(canonicalNameOf(a), a.body, b.body)), None)
+    val (bodyDiff, nestDiff) = bodyAndNest
+    (req, assertions, fieldDiffs, minDiff, maxDiff, bodyDiff, nestDiff) match {
+      case (None, None, Nil, None, None, None, None) => None
       case _ =>
-        Some(LoopSegmentDifference(path, nameOf(a), canonicalNameOf(b), None, req, assertions, None, fieldDiffs, minDiff, maxDiff, if (bodyDiff.nonEmpty) Some(bodyDiff) else None, None))
+        Some(LoopSegmentDifference(path, nameOf(a), canonicalNameOf(b), None, req, assertions, None, fieldDiffs, minDiff, maxDiff, if (bodyDiff.nonEmpty) bodyDiff else None, nestDiff))
     }
 
   private def compareSegmentLists(
@@ -197,7 +209,7 @@ object Walker2:
           case (s1: RefinedSegmentSpec, t1: RefinedSegmentSpec) =>
             tracker(s+1, t+1, acc :+ compareTwoSegments(path, s1, t1))
           case (s2: RefinedLoopSpec, t2: RefinedLoopSpec) =>
-            tracker(s+1, t+1, acc :+ compareTwoLoopSegments(path, s2, t2))
+            tracker(s+1, t+1, acc :+ compareTwoLoopSegments(path, s2, t2, None))
           case _ => tracker(s+1, t+1, acc :+ Some(SeriousDifference(path,nameOf(target(t)),canonicalNameOf(target(t)),"Types (loop vs segment) differ. They must match!")))
         }
       else
@@ -290,4 +302,55 @@ object Walker2:
         case _ => None
       }
     }
+  }
+
+  private def mergePathMaps(
+                     maps: List[Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]]]
+                   ): Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]] = {
+    maps.flatten
+      .groupBy(_._1)
+      .view
+      .mapValues(_.flatMap(_._2))
+      .toMap
+  }
+
+  private def cleanPath(path: String): String =
+    path.replaceAll(">(HL\\.HL)+", ">HL")
+
+  private def buildSegmentPathMap(
+                           specs: List[RefinedSegmentSpec | RefinedLoopSpec],
+                           path: String = ""
+                         ): Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]] = {
+    specs.flatMap {
+      case s: RefinedSegmentSpec =>
+        val pathName = if s.canonicalName == "HL" && s.description.nonEmpty then s.canonicalName+s"[${s.description}]" else s.canonicalName
+        val segPath = cleanPath(if path.isEmpty then s.canonicalName else s"$path.$pathName")
+        Map(s.canonicalName -> List((segPath, s)))
+
+      case loop: RefinedLoopSpec =>
+        val loopName = loop.canonicalName
+        val newPath = if path.isEmpty then loopName else s"$path.$loopName"
+
+        // Traverse body
+        val bodyMap = buildSegmentPathMap(loop.body, newPath)
+
+        // Traverse nested loops, if any, using '>' delimiter
+        val nestedMap = loop.nested match {
+          case Some(nestedLoops) =>
+            nestedLoops.flatMap { nestedLoop =>
+              val pathName = if nestedLoop.canonicalName == "HL" && nestedLoop.description.nonEmpty then nestedLoop.canonicalName+s"[${nestedLoop.description}]" else nestedLoop.canonicalName
+              val newnewPath = if loop.description.isEmpty then newPath else s"$newPath[${loop.description}]"
+              val nestedPath = cleanPath(s"$newnewPath>$pathName")
+              buildSegmentPathMap(List(nestedLoop), nestedPath)
+            }.groupBy(_._1).map { case (k, v) => k -> v.flatMap(_._2) }
+
+          case None => Map.empty
+        }
+
+        // Also include this loop in the result
+        val thisLoopEntry = Map(loop.canonicalName -> List((newPath, loop)))
+
+        // Merge all maps
+        mergePathMaps(List(thisLoopEntry, bodyMap, nestedMap))
+    }.groupBy(_._1).view.mapValues(_.flatMap(_._2)).toMap
   }
