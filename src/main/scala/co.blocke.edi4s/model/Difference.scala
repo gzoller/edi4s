@@ -123,7 +123,7 @@ case class LoopSegmentDifference(
                                   minDiff: Option[(Option[Int], Option[Int])] = None,
                                   maxDiff: Option[(Option[Int], Option[Int])] = None,
                                   bodyDiff: Option[List[SegmentDifference]] = None,
-                                  nested: Option[List[LoopSegmentDifference]] = None
+                                  nested: Option[List[HLDifference]] = None
                                 ) extends SegmentDifference:
   override def subRender(path: String, soFar: List[List[String]], nestLevel: Int): List[List[String]] =
     val superList = super.subRender(path, soFar, nestLevel)
@@ -172,3 +172,18 @@ case class SeriousDifference(
   val fieldDiff: List[FieldDifference] = Nil
   override def subRender(path: String, soFar: List[List[String]], nestLevel: Int): List[List[String]] =
     soFar ++ List(List(s"!{path}.$canonicalName ($name) serious error: "+message))
+
+
+case class HLDifference(
+                       path: String,
+                       name: String,
+                       canonicalName: String,
+                       presence: Option[(Boolean,Boolean)] = None,
+                       targetDiff: List[SegmentDifference],
+                       errMsg: Option[String] = None,
+                       unknownMappings: Option[(List[String],List[String])] = None  // srcPaths,targetPaths
+                       ) extends Difference:
+  val required: Option[(Boolean,Boolean)] = None
+  override def subRender(path: String, soFar: List[List[String]], nestLevel: Int): List[List[String]] = Nil
+  override def render(path: String, soFar: List[List[String]], nestLevel: Int = -1): List[List[String]] =
+    Nil

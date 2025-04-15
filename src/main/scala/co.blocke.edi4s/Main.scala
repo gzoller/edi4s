@@ -4,6 +4,7 @@ import zio._
 import zio.nio.file.{Files, Path}
 import model.*
 import tokenizer.*
+import table.*
 
 /*
 Key takeaways:
@@ -14,6 +15,118 @@ Key takeaways:
 
 object Main extends ZIOAppDefault {
 
+  import CanonicalParser.given
+
+
+  def loadCanonicalSpec(path: String, topLevel: String, document: String, version: String, partner: String): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
+    val filePath = Path(path)
+    (for {
+      lines <- Files.readAllLines(filePath)
+      edi <- CanonicalParser.readSpec(lines.mkString("\n"))
+      refined <- CanonicalParser.toRefined(edi, topLevel, document, version, partner)
+    } yield refined)
+      .mapError{
+        case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
+      }
+
+  def loadRefinedSpec(path: String): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
+    val filePath = Path(path)
+    (for {
+      lines <- Files.readAllLines(filePath)
+      refined = sjRefinedSpec.fromJson(lines.mkString("\n"))
+    } yield refined)
+      .mapError {
+        case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
+      }
+
+  def run = {
+    for {
+      std <- loadRefinedSpec("x12_856_5010.json")
+      tf <- loadRefinedSpec("tf_856_5010.json")
+      //      result <- Walker2.compareSpecs(std, tf)
+      table = "done"
+      _ <- ZIO.succeed {
+        val titles = List(
+          Title(List(Cell("📦 EDI Segment Comparison Report")))
+        )
+
+        val header = Header(List(
+          Cell("Segment"),
+          Cell("Source"),
+          Cell("Target")
+        ))
+
+        val rows = List(
+          SubHeader(List(
+            Cell("Header Information", style = Some(Style.SECONDARY))
+          )),
+          Row(List(
+            Cell("ST01", indent = 1),
+            Cell("850.25", align = Some(Align.DECIMAL)),
+            Cell("850")
+          )),
+          Row(List(
+            Cell("ST02", indent = 1),
+            Cell("0001.1", align = Some(Align.DECIMAL)),
+            Cell("0002", style = Some(Style.ALERT)) // Highlight difference
+          )),
+          SubHeader(List(
+            Cell("Footer"),
+            Cell("Stuff here...", style = Some(Style.MUTED))
+          )),
+          Row(List(
+            Cell("SE01"),
+            Cell("25"),
+            Cell("25.50", align = Some(Align.DECIMAL))
+          )),
+          Row(List(
+            Cell("SE02"),
+            Cell("0001.444", align = Some(Align.DECIMAL)),
+            Cell("0001", align = Some(Align.CENTER))
+          )),
+          Row(List(
+            Cell("SE03"),
+            Cell("0009.444", align = Some(Align.DECIMAL)),
+            Cell("stuff", align = Some(Align.RIGHT))
+          )),
+
+          // --- New Colspan Examples ---
+
+          SubHeader(List(
+            Cell("Full-width notice", style = Some(Style.ALERT))
+          )),
+
+          Row(List(
+            Cell("Some info spans 2 cols", colspan = 2),
+            Cell("Final Col")
+          )),
+
+          Row(List(
+            Cell("This is a nested summary", indent = 1, style = Some(Style.MUTED), colspan = 3)
+          )),
+
+          Row(List(
+            Cell("Left cell", colspan = 2),
+            Cell("Middle") // Spans two columns
+          ))
+        )
+
+        val table = Table(
+          title = titles,
+          columns = 3,
+          columnWidthPct = List(40, 30, 30),
+          tableWidth = 100,
+          header,
+          rows
+        )
+
+        println(table.toHtml)
+      }
+    } yield ()
+  }
+}
+
+  /*
   val sampleEDI1 = "ST*855*0001*0002*4010~"
   // All fields are present and populated.
   // Field 1: "855", Field 2: "0001", Field 3: "0002", Field 4: "4010"
@@ -68,53 +181,7 @@ object Main extends ZIOAppDefault {
       val tokenizerContext = TokenizerContext(doc = txt,offset = 0, config = TokenizerConfig())
       X12Tokenizer.tokenize(tokenizerContext).flatMap((result, nextPc) => ZIO.succeed(println("   >>> "+result+"\n")))
     }
-
-    import CanonicalParser.given
-
-
-    /*
-    val a = FieldDifference("ST01x","ST01", None, Some((true,false)), Some(("string","integer")),None,None,None,Some((None,Some("someref"))))
-    val b = FieldDifference("Foo","ST0201", None, Some((true,false)), Some(("string","integer")),None,None,None,Some((None,Some("someref"))))
-    val c = FieldDifference("Bar","ST0202", None, Some((true,false)), Some(("string","integer")),None,None,None,Some((None,Some("someref"))))
-    val d = FieldDifference("Hi","ST0203", presence = Some((true,false)))
-    val e = FieldDifference("Bye","ST0204", presence = Some((false,true)))
-    val cc = CompositeFieldDifference("blah","ST02", List(b,c,d,e))
-    val cells = a.render("ST",Nil) ++ cc.render("ST",Nil)
-//      ++ List(List("ST.ST03","!present in source - missing in target"))
-//      ++ List(List("ST.ST04", "!present in source - missing in target"))
-    val t = Table(
-      "EDI 856 Specification Differences",
-      List("Difference","Source","Target"),
-      List(35,40,40),
-      cells,
-      "color_text"
-    )
-    ZIO.succeed(println(t.toString))
-     */
-//    val filePath = Path("doc856_v5010.json")
-//    refined <- CanonicalParser.toRefined(edi, "TS856", "856", "5010", "Taylor Farms")
-
-
-    def loadCanonicalSpec(path: String, topLevel: String, document: String, version: String, partner: String): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
-      val filePath = Path(path)
-      (for {
-        lines <- Files.readAllLines(filePath)
-        edi <- CanonicalParser.readSpec(lines.mkString("\n"))
-        refined <- CanonicalParser.toRefined(edi, topLevel, document, version, partner)
-      } yield refined)
-        .mapError{
-          case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
-        }
-
-    def loadRefinedSpec(path: String): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
-      val filePath = Path(path)
-      (for {
-        lines <- Files.readAllLines(filePath)
-        refined = sjRefinedSpec.fromJson(lines.mkString("\n"))
-      } yield refined)
-        .mapError {
-          case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
-        }
+*/
 
     /*
     def walkSpec(
@@ -237,31 +304,3 @@ object Main extends ZIOAppDefault {
       case c: RefinedCompositeFieldSpec => c.name
     }
     */
-
-    // Usage in your ZIO program
-    for {
-      std <- loadRefinedSpec("x12_856_5010.json")
-      tf <- loadRefinedSpec("tf_856_5010.json")
-      result <- Walker2.compareSpecs(std, tf)
-      table = "done"
-//      table = {
-//        val cells = result.foldLeft(List.empty[List[String]]) { case (acc, d) => d.render("", acc) }
-//        Table(
-//          "Differences 856",
-//          List("Difference", "Source", "Target"),
-//          List(35, 40, 40),
-//          cells,
-//          "color_text"
-//        ).toString
-//      }
-      _ <- ZIO.succeed(println(table))
-//      _ <- ZIO.succeed(println("-----------"))
-//      _ <- ZIO.succeed(walkSegments("", tf.segments, std.segments))
-      //      _ <- ZIO.succeed(walkSpec(tf.segments))
-      //      diffs <- DifferenceEngine.computeDifference(std, tf)
-      //      table = DifferenceEngine.differenceTable(diffs,"EDI 856 Specification Differences")
-      //      _ <- ZIO.succeed(println(table.toString))
-    } yield ()
-
-  }
-}

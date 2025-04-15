@@ -106,7 +106,7 @@ object Walker2:
     val minDiff = Option.when(a.minRepeats != b.minRepeats)(a.minRepeats,b.minRepeats)
     val maxDiff = Option.when(a.maxRepeats != b.maxRepeats)(a.maxRepeats,b.maxRepeats)
     val pathPrefix = if path.isEmpty then "" else path+"."
-    val bodyAndNest: (Option[List[SegmentDifference]], Option[List[LoopSegmentDifference]]) =
+    val bodyAndNest: (Option[List[SegmentDifference]], Option[List[HLDifference]]) =
       if canonicalNameOf(a) == "HL" then
         val nav = HLNavigator( buildSegmentPathMap(List(a),""), buildSegmentPathMap(List(b),"") )
 
@@ -115,68 +115,53 @@ object Walker2:
         val targetKeys = nav.targetMap.keySet
         val onlyInSource = (sourceKeys -- targetKeys).toList
         val onlyInTarget = (targetKeys -- sourceKeys).toList
+        val inBoth = sourceKeys.intersect(targetKeys).toList
+
         val acc1 = onlyInSource.flatMap { k =>
           nav.srcMap(k).map { case (elemPath, spec) =>
             val (prefix, _) = splitPath(elemPath)
-            LoopSegmentDifference(prefix, nameOf(spec), canonicalNameOf(spec), Some((true, false)), fieldDiff = Nil)
+            HLDifference(prefix, nameOf(spec), canonicalNameOf(spec), Some((true, false)), Nil)
           }
         }
         val acc2 = onlyInTarget.flatMap { k =>
           nav.targetMap(k).map { case (elemPath, spec) =>
             val (prefix, _) = splitPath(elemPath)
-            LoopSegmentDifference(prefix, nameOf(spec), canonicalNameOf(spec), Some((false, true)), fieldDiff = Nil)
+            HLDifference(prefix, nameOf(spec), canonicalNameOf(spec), Some((false, true)), Nil)
           }
         }
-        
-        def compareFoundOnPath()
 
         // Now track "moved" segments (NOTE: unordered!)
-        val foo = sourceKey.map { k =>
+        val acc3 = inBoth.flatMap { k =>
           val srcElemPaths = nav.srcMap(k)
           val targetElemPaths = nav.targetMap(k)
           (srcElemPaths.size, targetElemPaths.size) match {
             // Exact mapping
             case (1,1) =>
-              (srcElemPaths.head._2, targetElemPaths.head._2) match {
-                case (a: RefinedSegmentSpec, b: RefinedSegmentSpec) =>
-                  val (prefix, _) = splitPath(elemPath) // <-- Won't work.... no elemPath here
-                  // We need to do 2 things here:
-                  // 1) Create a LoopDifference object, noting the difference in pathsw
-                  // 2) Compare the actual segments, regardless of their different paths--perhaps put the results (SegmentDifference) in the body of the LoopDifference?
-                  compareTwoSegments("(different paths)", a, b)
-                case (a: RefinedLoopSpec, b: RefinedLoopSpec) =>
-                  val (prefix, _) = splitPath(elemPath)
-                  compareTwoLoopSegments(prefix, a, b)
-                case (a,b) =>
-                  Some(SeriousDifference(path,nameOf(a),canonicalNameOf(a),s"Elements ${srcElemPaths.head._1} and ${targetElemPaths.head._1} have different types!"))
-              }
+              compareFoundOnPath(srcElemPaths.head, targetElemPaths.head).toList
             // Equal mapping (presume same?)
-            case (n,m) if n == m => ???
+            case (n,m) if n == m =>
+              srcElemPaths.zip(targetElemPaths).flatMap { case (s, t) => compareFoundOnPath(s, t) }
             // 1-to-many: Possible nesting HLs from canonical spec
-            case (1,n) => ???
+            case (1,n) =>
+              targetElemPaths.map(tp => compareFoundOnPath(srcElemPaths.head, tp)).toList.flatten
             // n-to-m: Who knows!
             case _ =>
+              Some(HLDifference(path, nameOf(a), canonicalNameOf(a), None, Nil, None,
+                Some((srcElemPaths.map(_._1),targetElemPaths.map(_._1)))))
           }
         }
 
-        val allAcc: List[LoopSegmentDifference] = acc1 ++ acc2
+        val allAcc: List[HLDifference] = acc1 ++ acc2 ++ acc3
         pprint.log(allAcc)
         (None, Some(allAcc))
       /*
-case class LoopSegmentDifference(
-                                  path: String,
-                                  name: String,  // initially canonical name but may be renamed
-                                  canonicalName: String,  // name used in the canonical spec
-                                  presence: Option[(Boolean,Boolean)] = None,
-                                  required: Option[(Boolean,Boolean)] = None,
-                                  assertions: Option[(List[String],List[String])] = None,
-                                  pathDiff: Option[(String,String)],
-                                  fieldDiff: List[FieldDifference],
-                                  minDiff: Option[(Option[Int], Option[Int])] = None,
-                                  maxDiff: Option[(Option[Int], Option[Int])] = None,
-                                  bodyDiff: Option[List[SegmentDifference]] = None,
-                                  nested: Option[List[LoopSegmentDifference]] = None
-                                ) extends SegmentDifference:
+        case class HLDifference(
+                       path: String,
+                       name: String,
+                       canonicalName: String,
+        presence:Option[(Boolean,Boolean)],
+                       targetDiff: List[SegmentDifference]
+                       ) extends Difference:
       */
       else
         (Some(compareSegmentLists(canonicalNameOf(a), a.body, b.body)), None)
@@ -186,6 +171,22 @@ case class LoopSegmentDifference(
       case _ =>
         Some(LoopSegmentDifference(path, nameOf(a), canonicalNameOf(b), None, req, assertions, None, fieldDiffs, minDiff, maxDiff, if (bodyDiff.nonEmpty) bodyDiff else None, nestDiff))
     }
+
+  private def compareFoundOnPath(srcKey: (String, RefinedSegmentSpec | RefinedLoopSpec), targetKey: (String, RefinedSegmentSpec | RefinedLoopSpec)): Option[HLDifference] =
+    (srcKey._2, targetKey._2) match {
+      case (a: RefinedSegmentSpec, b: RefinedSegmentSpec) =>
+        val (srcPrefix, _) = splitPath(srcKey._1) // <-- Won't work.... no elemPath here
+        val (targetPrefix, _) = splitPath(targetKey._1) // <-- Won't work.... no elemPath here
+        compareTwoSegments(targetPrefix, a, b).map(d => HLDifference(srcPrefix, nameOf(srcKey._2), canonicalNameOf(srcKey._2), None, List(d)))
+      case (a: RefinedLoopSpec, b: RefinedLoopSpec) =>
+        val (srcPrefix, _) = splitPath(srcKey._1) // <-- Won't work.... no elemPath here
+        val (targetPrefix, _) = splitPath(targetKey._1) // <-- Won't work.... no elemPath here
+        compareTwoLoopSegments(targetPrefix, a, b).map(d => HLDifference(srcPrefix, nameOf(srcKey._2), canonicalNameOf(srcKey._2), None, List(d)))
+      case (a, b) =>
+        val (srcPrefix, _) = splitPath(srcKey._1) // <-- Won't work.... no elemPath here
+        Some(HLDifference(srcPrefix, nameOf(a), canonicalNameOf(a), None, Nil, Some(s"Corresponding element at ${canonicalNameOf(b)} has different types")))
+    }
+
 
   private def compareSegmentLists(
                                  path: String,
@@ -209,7 +210,7 @@ case class LoopSegmentDifference(
           case (s1: RefinedSegmentSpec, t1: RefinedSegmentSpec) =>
             tracker(s+1, t+1, acc :+ compareTwoSegments(path, s1, t1))
           case (s2: RefinedLoopSpec, t2: RefinedLoopSpec) =>
-            tracker(s+1, t+1, acc :+ compareTwoLoopSegments(path, s2, t2, None))
+            tracker(s+1, t+1, acc :+ compareTwoLoopSegments(path, s2, t2))
           case _ => tracker(s+1, t+1, acc :+ Some(SeriousDifference(path,nameOf(target(t)),canonicalNameOf(target(t)),"Types (loop vs segment) differ. They must match!")))
         }
       else
