@@ -5,9 +5,9 @@ case class RefinedDocumentSpec(
                                 name: String,
                                 version: String,
                                 partner: String,
-                                segments: List[RefinedSegmentSpec | RefinedLoopSpec]
+                                segments: List[RefinedLoopSpec | RefinedSegmentSpec]
+                                // segments: List[RefinedSegmentSpec | RefinedLoopSpec]
                               )
-
 
 case class RefinedSingleFieldSpec(
                                    name: String,  // initially canonical name but may be renamed
@@ -29,8 +29,8 @@ case class RefinedCompositeFieldSpec(
                                       index: Int,
                                       description: String,
                                       required: Boolean,
-                                      components: List[RefinedSingleFieldSpec] )
-
+                                      components: List[RefinedSingleFieldSpec]
+                                    )
 
 case class RefinedSegmentSpec(
                                     name: String,  // initially canonical name but may be renamed

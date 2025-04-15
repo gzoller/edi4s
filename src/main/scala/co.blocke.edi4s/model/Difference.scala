@@ -9,9 +9,10 @@ sealed trait Difference:
 
   def subRender(path: String, soFar: List[List[String]], nestLevel: Int): List[List[String]]
   def render(path: String, soFar: List[List[String]], nestLevel: Int = -1): List[List[String]] =
+    val pathPrefix = if path.isEmpty then "" else path+"."
     val presenceList = presence match {
-      case Some((true, false)) => List(s"${path}.$canonicalName ($name)", "!present in source - missing in target")
-      case Some((false, true)) => List(s"${path}.$canonicalName ($name)", "!missing in source - present in target")
+      case Some((true, false)) => List(s"!$pathPrefix$canonicalName ($name)", "~present in source - missing in target")
+      case Some((false, true)) => List(s"!$pathPrefix$canonicalName ($name)", "~missing in source - present in target")
       case _ => Nil
     }
     val requiredList = required match {
@@ -23,23 +24,11 @@ sealed trait Difference:
       soFar ++ List(presenceList)
     else if allDiffs.nonEmpty then
       if nestLevel >= 0 then
-        soFar ++ List(List(s"!(nest level $nestLevel) ${path}.$canonicalName ($name)")) ++ allDiffs ++ List(List(s"!(end loop ${path}.$canonicalName})"))
+        soFar ++ List(List(s"!(nest level $nestLevel) $pathPrefix$canonicalName ($name)")) ++ allDiffs ++ List(List(s"!(end loop $pathPrefix$canonicalName})"))
       else
-        soFar ++ List(List(s"!${path}.$canonicalName ($name)")) ++ allDiffs
+        soFar ++ List(List(s"!x$pathPrefix$canonicalName ($name)","","")) ++ allDiffs
     else
       soFar
-
-
-sealed trait SegmentDifference extends Difference:
-  val assertions: Option[(List[String], List[String])]
-  val fieldDiff: List[FieldDifference]
-  def subRender(path: String, soFar: List[List[String]], nestLevel: Int): List[List[String]] =
-    val assertionsList = assertions match {
-      case Some((s, t)) => List(">Assertions", s.mkString(","), t.mkString(","))
-      case _ => Nil
-    }
-    val fieldDiffList = fieldDiff.foldLeft(List.empty[List[String]]) { case (acc, oneFieldDiff) => oneFieldDiff.render(s"${path}.$canonicalName", acc, nestLevel) }
-    List(assertionsList) ++ fieldDiffList
 
 
 sealed trait FieldDifference extends Difference
@@ -91,22 +80,45 @@ case class CompositeFieldDifference(
     fieldDiff.foldLeft(List.empty[List[String]]){ case (acc,fieldDiff) => fieldDiff.render(s"${path}.$canonicalName", acc) }
 
 
+sealed trait SegmentDifference extends Difference:
+  val assertions: Option[(List[String], List[String])]
+  val fieldDiff: List[FieldDifference]
+  val pathDiff: Option[(String,String)]
+
+  def subRender(path: String, soFar: List[List[String]], nestLevel: Int): List[List[String]] =
+    val assertionsList = assertions match {
+      case Some((s, t)) => List(">Assertions", s.mkString(","), t.mkString(","))
+      case _ => Nil
+    }
+    val pathList = pathDiff match {
+      case Some((a,b)) => List("> Path", a, b)
+      case _ => Nil
+    }
+    val pathPrefix = if path.isEmpty then "" else path+"."
+    val fieldDiffList = fieldDiff.foldLeft(List.empty[List[String]]) { case (acc, oneFieldDiff) => oneFieldDiff.render(s"$pathPrefix$canonicalName", acc, nestLevel) }
+    List(assertionsList) ++ List(pathList) ++ fieldDiffList
+
+
 case class SimpleSegmentDifference(
+                                    path: String,
                                     name: String,
                                     canonicalName: String,
                                     presence: Option[(Boolean,Boolean)] = None,
                                     required: Option[(Boolean,Boolean)] = None,
                                     assertions: Option[(List[String],List[String])] = None,
+                                    pathDiff: Option[(String,String)],
                                     fieldDiff: List[FieldDifference]
                                   ) extends SegmentDifference
 
 
 case class LoopSegmentDifference(
+                                  path: String,
                                   name: String,  // initially canonical name but may be renamed
                                   canonicalName: String,  // name used in the canonical spec
                                   presence: Option[(Boolean,Boolean)] = None,
                                   required: Option[(Boolean,Boolean)] = None,
                                   assertions: Option[(List[String],List[String])] = None,
+                                  pathDiff: Option[(String,String)],
                                   fieldDiff: List[FieldDifference],
                                   minDiff: Option[(Option[Int], Option[Int])] = None,
                                   maxDiff: Option[(Option[Int], Option[Int])] = None,
@@ -147,3 +159,16 @@ case class LoopSegmentDifference(
         soFar ++ superList ++ List(List(s"!${path}.$canonicalName ($name)")) ++ allLoopDiff ++ List(List(s"!(end loop ${path}.$canonicalName})"))
 
 
+case class SeriousDifference(
+                                    path: String,
+                                    name: String,
+                                    canonicalName: String,
+                                    message: String
+                          ) extends SegmentDifference:
+  val presence: Option[(Boolean,Boolean)] = None
+  val required: Option[(Boolean,Boolean)] = None
+  val assertions: Option[(List[String], List[String])] = None
+  val pathDiff: Option[(String, String)] = None
+  val fieldDiff: List[FieldDifference] = Nil
+  override def subRender(path: String, soFar: List[List[String]], nestLevel: Int): List[List[String]] =
+    soFar ++ List(List(s"!{path}.$canonicalName ($name) serious error: "+message))

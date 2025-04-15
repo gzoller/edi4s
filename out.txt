@@ -1,0 +1,27 @@
+[GAP] Segment .DTM is missing in target
+[GAP] Field .ST.ImplementationConventionPreference_03 is missing in target
+[GAP] Field .BSN.TransactionTypeCode_06 is missing in target
+[GAP] Field .BSN.StatusReasonCode_07 is missing in target
+[GAP] Segment .HL.TD3.AT9 is missing in target
+[GAP] Segment .HL.TSD is missing in target
+[GAP] Segment .HL.LH1.LHE is missing in target
+[GAP] Segment .HL.CLD.DTP is missing in target
+[GAP] Segment .HL.PAL is missing in target
+[GAP] Segment .HL.ETD is missing in target
+[GAP] Segment .HL.CUR is missing in target
+[GAP] Segment .HL.SAC.CUR is missing in target
+[GAP] Segment .HL.GF is missing in target
+[MOVED] Segment 'LIN' is at .HL.LIN in source but found at .HL[Shipment].HL[Order].HL[Tare].HL[Pack].LIN, .HL[Shipment].HL[Order].HL[Tare].HL[Pack].HL[Item].LIN in target
+[MOVED] Segment 'SN1' is at .HL.SN1 in source but found at .HL[Shipment].HL[Order].HL[Tare].HL[Pack].SN1, .HL[Shipment].HL[Order].HL[Tare].HL[Pack].HL[Item].SN1 in target
+[MOVED] Segment 'PRF' is at .HL.PRF in source but found at .HL[Shipment].HL[Order].PRF in target
+[MOVED] Segment 'PO4' is at .HL.PO4 in source but found at .HL[Shipment].HL[Order].HL[Tare].HL[Pack].PO4 in target
+[MOVED] Segment 'FOB' is at .HL.FOB in source but found at .HL[Shipment].FOB in target
+[MOVED] Segment 'FOB' is at .HL.N1.FOB in source but found at .HL[Shipment].FOB in target
+[MOVED] Segment 'N4' is at .HL.N1.N4 in source but found at .HL[Shipment].N1.N4 in target
+[GAP] Nested loop .HL>HL only in target
+[GAP] Field .CTT.HashTotal_02 is missing in target
+[GAP] Field .CTT.Weight_03 is missing in target
+[GAP] Field .CTT.UnitorBasisforMeasurementCode_04 is missing in target
+[GAP] Field .CTT.Volume_05 is missing in target
+[GAP] Field .CTT.UnitorBasisforMeasurementCode_06 is missing in target
+[GAP] Field .CTT.Description_07 is missing in target

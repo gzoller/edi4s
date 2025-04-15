@@ -116,14 +116,152 @@ object Main extends ZIOAppDefault {
           case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
         }
 
+    /*
+    def walkSpec(
+                  segments: List[RefinedSegmentSpec | RefinedLoopSpec],
+                  path: String = ""
+                ): Unit = {
+      segments.foreach {
+        case seg: RefinedSegmentSpec =>
+          println(s"[Segment] $path.${seg.name}")
+          walkFields(seg.fields, s"$path.${seg.name}")
+
+        case loop: RefinedLoopSpec =>
+          println(s"[Loop] $path.${loop.name}\n  └─ body size: ${loop.body.size}, nested size: ${loop.nested.map(_.size).getOrElse(0)}")
+          walkFields(loop.fields, s"$path.${loop.name}")
+          walkSpec(loop.body, s"$path.${loop.name}.body")
+          loop.nested.foreach(n => walkSpec(n, s"$path.${loop.name}.nested"))
+      }
+    }
+
+    def walkFields(
+                    fields: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                    path: String
+                  ): Unit = {
+      fields.foreach {
+        case field: RefinedSingleFieldSpec =>
+          println(s"[Field] $path.${field.name} (single)")
+
+        case comp: RefinedCompositeFieldSpec =>
+          println(s"[Field] $path.${comp.name} (composite with ${comp.components.size} components)")
+          comp.components.foreach { subfield =>
+            println(s"  └─ [Subfield] $path.${comp.name}.${subfield.name}")
+          }
+      }
+    }
+     */
+
+    /*
+    def identifyGaps(source: List[String], target: List[String]): (List[String], List[String]) = {
+      val inSourceOnly = source.filterNot(target.contains)
+      val inTargetOnly = target.filterNot(source.contains)
+      (inSourceOnly, inTargetOnly)
+    }
+
+    def walkSegments(
+                      path: String,
+                      src: List[RefinedSegmentSpec | RefinedLoopSpec],
+                      tgt: List[RefinedSegmentSpec | RefinedLoopSpec]
+                    ): Unit = {
+      val srcNames = src.map(nameOf)
+      val tgtNames = tgt.map(nameOf)
+      val (inSrcOnly, inTgtOnly) = identifyGaps(srcNames, tgtNames)
+
+      inSrcOnly.foreach(name => println(s"[GAP] Segment '$name' is only in source at $path"))
+      inTgtOnly.foreach(name => println(s"[GAP] Segment '$name' is only in target at $path"))
+
+      srcNames.intersect(tgtNames).foreach { name =>
+        val s = src.find(nameOf(_) == name).get
+        val t = tgt.find(nameOf(_) == name).get
+        val newPath = s"$path.$name"
+        (s, t) match {
+          case (ss: RefinedSegmentSpec, ts: RefinedSegmentSpec) =>
+            walkFields(newPath, ss.fields, ts.fields)
+
+          case (sl: RefinedLoopSpec, tl: RefinedLoopSpec) =>
+            walkFields(newPath, sl.fields, tl.fields)
+            walkSegments(s"$newPath.body", sl.body, tl.body)
+
+            val slNested = sl.nested.getOrElse(Nil)
+            val tlNested = tl.nested.getOrElse(Nil)
+            val slNames = slNested.map(nameOf)
+            val tlNames = tlNested.map(nameOf)
+            val (nestedSrcOnly, nestedTgtOnly) = identifyGaps(slNames, tlNames)
+
+            nestedSrcOnly.foreach(n => println(s"[GAP] Nested loop '$n' only in source at $newPath"))
+            nestedTgtOnly.foreach(n => println(s"[GAP] Nested loop '$n' only in target at $newPath"))
+
+            slNames.intersect(tlNames).foreach { nestedName =>
+              val sloop = slNested.find(nameOf(_) == nestedName).get
+              val tloop = tlNested.find(nameOf(_) == nestedName).get
+              walkSegments(s"$newPath.nested.$nestedName", List(sloop), List(tloop))
+            }
+
+          case _ => // shouldn't happen in well-formed specs
+        }
+      }
+    }
+
+    def walkFields(
+                    path: String,
+                    src: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                    tgt: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
+                  ): Unit = {
+      val srcNames = src.map(nameOfField)
+      val tgtNames = tgt.map(nameOfField)
+      val (inSrcOnly, inTgtOnly) = identifyGaps(srcNames, tgtNames)
+
+      inSrcOnly.foreach(name => println(s"[GAP] Field '$name' is only in source at $path"))
+      inTgtOnly.foreach(name => println(s"[GAP] Field '$name' is only in target at $path"))
+
+      srcNames.intersect(tgtNames).foreach { name =>
+        val s = src.find(n => nameOfField(n) == name).get
+        val t = tgt.find(n => nameOfField(n) == name).get
+        val newPath = s"$path.$name"
+
+        (s, t) match {
+          case (sc: RefinedCompositeFieldSpec, tc: RefinedCompositeFieldSpec) =>
+            walkFields(newPath, sc.components, tc.components)
+          case _ => // skip singles
+        }
+      }
+    }
+
+    def nameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
+      case s: RefinedSegmentSpec => s.name
+      case l: RefinedLoopSpec => l.name
+    }
+
+    def nameOfField(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): String = x match {
+      case s: RefinedSingleFieldSpec => s.name
+      case c: RefinedCompositeFieldSpec => c.name
+    }
+    */
+
+    // Usage in your ZIO program
     for {
       std <- loadRefinedSpec("x12_856_5010.json")
       tf <- loadRefinedSpec("tf_856_5010.json")
-      diffs <- DifferenceEngine.computeDifference(std, tf)
-      table = DifferenceEngine.differenceTable(diffs,"EDI 856 Specification Differences")
-      _ <- ZIO.succeed(println(table.toString))
+      result <- Walker2.compareSpecs(std, tf)
+      table = "done"
+//      table = {
+//        val cells = result.foldLeft(List.empty[List[String]]) { case (acc, d) => d.render("", acc) }
+//        Table(
+//          "Differences 856",
+//          List("Difference", "Source", "Target"),
+//          List(35, 40, 40),
+//          cells,
+//          "color_text"
+//        ).toString
+//      }
+      _ <- ZIO.succeed(println(table))
+//      _ <- ZIO.succeed(println("-----------"))
+//      _ <- ZIO.succeed(walkSegments("", tf.segments, std.segments))
+      //      _ <- ZIO.succeed(walkSpec(tf.segments))
+      //      diffs <- DifferenceEngine.computeDifference(std, tf)
+      //      table = DifferenceEngine.differenceTable(diffs,"EDI 856 Specification Differences")
+      //      _ <- ZIO.succeed(println(table.toString))
     } yield ()
-
 
   }
 }

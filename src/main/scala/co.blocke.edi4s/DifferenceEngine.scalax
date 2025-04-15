@@ -1,0 +1,301 @@
+package co.blocke.edi4s
+
+import model.*
+import zio.*
+
+
+object DifferenceEngine:
+
+  def computeDifference( src: RefinedDocumentSpec, target: RefinedDocumentSpec ): ZIO[Any, DifferenceError, List[SegmentDifference]] =
+    if src.name != target.name then ZIO.fail(DifferenceError(s"These documents represent different EDI specifications (${src.name} and ${target.name})"))
+    else
+      val diffs = diffWalk(src.segments, target.segments)
+//      println("DIFFS: \n"+diffs.mkString("\n"))
+      ZIO.succeed(diffs)
+
+  def differenceTable( diffs: List[SegmentDifference], title: String ): Table =
+    val cells = diffs.foldLeft( List.empty[List[String]] ){ case (acc, d) => d.render("", acc) }
+    Table(
+      title,
+      List("Difference","Source","Target"),
+      List(35,40,40),
+      cells,
+      "color_text"
+    )
+
+  private def diffWalk(
+                        s: List[RefinedSegmentSpec | RefinedLoopSpec],
+                        t: List[RefinedSegmentSpec | RefinedLoopSpec]
+                      ): List[SegmentDifference] = {
+    @annotation.tailrec
+    def loop(
+              a: List[RefinedSegmentSpec | RefinedLoopSpec],
+              b: List[RefinedSegmentSpec | RefinedLoopSpec],
+              acc: List[SegmentDifference]
+            ): List[SegmentDifference] = (a, b) match {
+      case (Nil, Nil) => acc.reverse
+      case (sh :: st, Nil) =>
+        loop(st, Nil, createPresenceOnlyDiff(Some(sh), None).toList ++ acc)
+      case (Nil, th :: tt) =>
+        loop(Nil, tt, createPresenceOnlyDiff(None, Some(th)).toList ++ acc)
+      case (sh :: st, th :: tt) =>
+        println(s"[diffWalk] sh = ${nameOf(sh)}, th = ${nameOf(th)}")
+        println(s"[diffWalk] sIndexInT = ${t.indexWhere(nameOf(_) == nameOf(sh))}, tIndexInS = ${s.indexWhere(nameOf(_) == nameOf(th))}")
+        val sName = nameOf(sh)
+        val tName = nameOf(th)
+        if (sName == tName) {
+          loop(st, tt, createMatchedDiff(sh, th).toList ++ acc)
+        } else {
+          val sIndexInT = b.indexWhere(nameOf(_) == sName)
+          val tIndexInS = a.indexWhere(nameOf(_) == tName)
+          if (sIndexInT != -1) {
+            val missing = b.take(sIndexInT).flatMap(ti => createPresenceOnlyDiff(None, Some(ti)))
+            loop(a, b.drop(sIndexInT), missing ++ acc)
+          } else if (tIndexInS != -1) {
+            val missing = a.take(tIndexInS).flatMap(si => createPresenceOnlyDiff(Some(si), None))
+            loop(a.drop(tIndexInS), b, missing ++ acc)
+          } else {
+            val bothDiff = createMatchedDiff(sh, th)
+            if (bothDiff.isDefined)
+              bothDiff.toList ++ diffWalk(st, tt)
+            else {
+              val left = createPresenceOnlyDiff(Some(sh), None)
+              val right = createPresenceOnlyDiff(None, Some(th))
+              left.toList ++ right.toList ++ diffWalk(st, tt)
+            }
+//            val left = createPresenceOnlyDiff(Some(sh), None).toList
+//            val right = createPresenceOnlyDiff(None, Some(th)).toList
+//            loop(st, tt, (left ++ right) ++ acc)
+          }
+        }
+    }
+
+    loop(s, t, Nil)
+  }
+
+  private def nameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
+    case s: RefinedSegmentSpec => s.canonicalName
+    case l: RefinedLoopSpec => l.canonicalName
+  }
+
+  private def createPresenceOnlyDiff(
+                                      source: Option[RefinedSegmentSpec | RefinedLoopSpec],
+                                      target: Option[RefinedSegmentSpec | RefinedLoopSpec]
+                                    ): Option[SegmentDifference] = (source, target) match {
+    case (Some(s: RefinedSegmentSpec), None) =>
+      println(s"[PresenceOnlyDiff] Segment '${s.name}' is only in source.")
+      Some(SimpleSegmentDifference(s.name, s.canonicalName, presence = Some(true -> false), required = Some(s.required -> false), assertions = Some(s.assertions -> Nil), fieldDiff = s.fields.flatMap(f => createFieldDiff(Some(f), None))))
+    case (None, Some(t: RefinedSegmentSpec)) =>
+      println(s"[PresenceOnlyDiff] Segment '${t.name}' is only in target.")
+      Some(SimpleSegmentDifference(t.name, t.canonicalName, presence = Some(false -> true), required = Some(false -> t.required), assertions = Some(Nil -> t.assertions), fieldDiff = t.fields.flatMap(f => createFieldDiff(None, Some(f)))))
+    case (Some(l: RefinedLoopSpec), None) =>
+      println(s"[createPresenceOnlyDiff] Source-only loop: ${l.name}")
+      println(s"[createPresenceOnlyDiff]   body = ${l.body.map(nameOf).mkString(", ")}")
+      println(s"[createPresenceOnlyDiff]   nested = ${l.nested.map(_.map(_.name)).getOrElse(Nil)}")
+      Some(
+        LoopSegmentDifference(
+          l.name,
+          l.canonicalName,
+          presence = Some(true -> false),
+          required = Some(l.required -> false),
+          assertions = Some(l.assertions -> Nil),
+          fieldDiff = l.fields.flatMap(f => createFieldDiff(Some(f), None)),
+          minDiff = None,
+          maxDiff = None,
+          bodyDiff = Some(diffWalk(l.body, Nil)),
+          nested = l.nested.map(n => diffWalk(n, Nil).collect { case d: LoopSegmentDifference => d })
+        )
+      )
+
+    case (None, Some(r: RefinedLoopSpec)) =>
+      println(s"[createPresenceOnlyDiff] Target-only loop: ${r.name}")
+      println(s"[createPresenceOnlyDiff]   body = ${r.body.map(nameOf).mkString(", ")}")
+      println(s"[createPresenceOnlyDiff]   nested = ${r.nested.map(_.map(_.name)).getOrElse(Nil)}")
+      Some(
+        LoopSegmentDifference(
+          r.name,
+          r.canonicalName,
+          presence = Some(false -> true),
+          required = Some(false -> r.required),
+          assertions = Some(Nil -> r.assertions),
+          fieldDiff = r.fields.flatMap(f => createFieldDiff(None, Some(f))),
+          minDiff = None,
+          maxDiff = None,
+          bodyDiff = Some(diffWalk(Nil, r.body)),
+          nested = r.nested.map(n => diffWalk(Nil, n).collect { case d: LoopSegmentDifference => d })
+        )
+      )
+    case _ =>
+      None
+  }
+
+  private def createMatchedDiff(
+                                 s: RefinedSegmentSpec | RefinedLoopSpec,
+                                 t: RefinedSegmentSpec | RefinedLoopSpec
+                               ): Option[SegmentDifference] = (s, t) match {
+
+    case (sl: RefinedLoopSpec, tl: RefinedLoopSpec) =>
+      println(s"[createMatchedDiff] Comparing loop '${sl.name}'")
+      val required = Some(sl.required -> tl.required).filter(_ != _)
+      val assertions = Some(sl.assertions -> tl.assertions).filter(_ != _)
+      val fields = diffFields(sl.fields, tl.fields)
+      val minDiff = Some(sl.minRepeats -> tl.minRepeats).filter(_ != _)
+      val maxDiff = Some(sl.maxRepeats -> tl.maxRepeats).filter(_ != _)
+
+      // Determine how to compare body vs nested
+      val (bodyDiffs, nestedDiffs): (Option[List[SegmentDifference]], Option[List[LoopSegmentDifference]]) = (sl.nested, tl.nested) match {
+        case (None, None) =>
+          (
+            diffWalk(sl.body, tl.body) match {
+              case Nil => None
+              case diffs => Some(diffs)
+            },
+            None
+          )
+
+        case (Some(sNested), Some(tNested)) =>
+          (
+            diffWalk(sl.body, tl.body) match {
+              case Nil => None
+              case diffs => Some(diffs)
+            },
+            diffWalk(sNested, tNested).collect { case l: LoopSegmentDifference => l } match {
+              case Nil => None
+              case diffs => Some(diffs)
+            }
+          )
+
+        case (None, Some(tNested)) =>
+          (
+            // compare sl.body (flat) with tNested (partner HL structure)
+            diffWalk(sl.body, tNested) match {
+              case Nil => None
+              case diffs => Some(diffs)
+            },
+            None
+          )
+
+        case (Some(sNested), None) =>
+          (
+            // compare sNested (canonical HL structure) with tl.body (flat)
+            diffWalk(sNested, tl.body) match {
+              case Nil => None
+              case diffs => Some(diffs)
+            },
+            None
+          )
+      }
+
+      if (required.nonEmpty || assertions.nonEmpty || fields.nonEmpty || minDiff.nonEmpty || maxDiff.nonEmpty || bodyDiffs.nonEmpty || nestedDiffs.nonEmpty)
+        Some(
+          LoopSegmentDifference(
+            sl.name,
+            sl.canonicalName,
+            presence = None,
+            required = required,
+            assertions = assertions,
+            fieldDiff = fields,
+            minDiff = minDiff,
+            maxDiff = maxDiff,
+            bodyDiff = bodyDiffs,
+            nested = nestedDiffs
+          )
+        )
+      else None
+
+    case (ss: RefinedSegmentSpec, ts: RefinedSegmentSpec) =>
+      val required = Some(ss.required -> ts.required).filter(_ != _)
+      val assertions = Some(ss.assertions -> ts.assertions).filter(_ != _)
+      val fields = diffFields(ss.fields, ts.fields)
+
+      if (required.nonEmpty || assertions.nonEmpty || fields.nonEmpty)
+        Some(
+          SimpleSegmentDifference(
+            ss.name,
+            ss.canonicalName,
+            presence = None,
+            required = required,
+            assertions = assertions,
+            fieldDiff = fields
+          )
+        )
+      else None
+
+    case _ => None
+  }
+
+  private def diffFields(
+                          a: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                          b: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
+                        ): List[FieldDifference] = (a, b) match {
+    case (Nil, Nil) => Nil
+    case (ah :: at, Nil) => createFieldDiff(Some(ah), None).toList ++ diffFields(at, Nil)
+    case (Nil, bh :: bt) => createFieldDiff(None, Some(bh)).toList ++ diffFields(Nil, bt)
+    case (ah :: at, bh :: bt) =>
+      val aName = ah match {
+        case f: RefinedSingleFieldSpec => f.name
+        case c: RefinedCompositeFieldSpec => c.name
+      }
+      val bName = bh match {
+        case f: RefinedSingleFieldSpec => f.name
+        case c: RefinedCompositeFieldSpec => c.name
+      }
+      if (aName == bName) {
+        createFieldDiff(Some(ah), Some(bh)).toList ++ diffFields(at, bt)
+      } else {
+        val aIndexInB = b.indexWhere(f => (f match {
+          case x: RefinedSingleFieldSpec => x.name
+          case x: RefinedCompositeFieldSpec => x.name
+        }) == aName)
+        val bIndexInA = a.indexWhere(f => (f match {
+          case x: RefinedSingleFieldSpec => x.name
+          case x: RefinedCompositeFieldSpec => x.name
+        }) == bName)
+        if (aIndexInB != -1) {
+          b.take(aIndexInB).flatMap(f => createFieldDiff(None, Some(f))) ++ diffFields(a, b.drop(aIndexInB))
+        } else if (bIndexInA != -1) {
+          a.take(bIndexInA).flatMap(f => createFieldDiff(Some(f), None)) ++ diffFields(a.drop(bIndexInA), b)
+        } else {
+          createFieldDiff(Some(ah), None).toList ++ createFieldDiff(None, Some(bh)).toList ++ diffFields(at, bt)
+        }
+      }
+  }
+
+  private def createFieldDiff(
+                               s: Option[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                               t: Option[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
+                             ): Option[FieldDifference] = (s, t) match {
+    case (Some(ss: RefinedSingleFieldSpec), Some(st: RefinedSingleFieldSpec)) =>
+      val presence = None
+      val required = Some(ss.required -> st.required).filter(_ != _)
+      val dataType = Some(ss.dataType -> st.dataType).filter(_ != _)
+      val format = Some(ss.format -> st.format).filter(_ != _)
+      val elementId = Some(ss.elementId -> st.elementId).filter(_ != _)
+      val validValues = Some(ss.validValues -> st.validValues).filter(_ != _)
+      val validValuesRef = Some(ss.validValuesRef -> st.validValuesRef).filter(_ != _)
+
+      if (List(required, dataType, format, elementId, validValues, validValuesRef).exists(_.nonEmpty))
+        Some(SingleFieldDifference(ss.name, ss.canonicalName, presence, required, dataType, format, elementId, validValues, validValuesRef))
+      else None
+
+    case (Some(sc: RefinedCompositeFieldSpec), Some(tc: RefinedCompositeFieldSpec)) =>
+      val presence = None
+      val required = Some(sc.required -> tc.required).filter(_ != _)
+      val innerFieldDiffs = diffFields(sc.components, tc.components)
+      if (required.nonEmpty || innerFieldDiffs.nonEmpty)
+        Some(CompositeFieldDifference(sc.name, sc.canonicalName, presence, required, innerFieldDiffs))
+      else None
+
+    case (Some(sf: RefinedSingleFieldSpec), None) =>
+      Some(SingleFieldDifference(sf.name, sf.canonicalName, presence = Some(true -> false), required = Some(sf.required -> false), dataType = None, format = None, elementId = None, validValues = None, validValuesRef = None))
+    case (None, Some(sf: RefinedSingleFieldSpec)) =>
+      Some(SingleFieldDifference(sf.name, sf.canonicalName, presence = Some(false -> true), required = Some(false -> sf.required), dataType = None, format = None, elementId = None, validValues = None, validValuesRef = None))
+
+    case (Some(cf: RefinedCompositeFieldSpec), None) =>
+      Some(CompositeFieldDifference(cf.name, cf.canonicalName, presence = Some(true -> false), required = Some(cf.required -> false), fieldDiff = cf.components.map(c => createFieldDiff(Some(c), None)).flatten))
+    case (None, Some(cf: RefinedCompositeFieldSpec)) =>
+      Some(CompositeFieldDifference(cf.name, cf.canonicalName, presence = Some(false -> true), required = Some(false -> cf.required), fieldDiff = cf.components.map(c => createFieldDiff(None, Some(c)).get)))
+
+    case _ => None
+  }
+
