@@ -48,6 +48,8 @@ object Main extends ZIOAppDefault {
       tf <- loadRefinedSpec("specs/tf_856_5010.json")
       std <- loadRefinedSpec("specs/x12_856_5010.json")
       result <- DiffEngine.compareSpecs(std, tf)
+
+      /*
       _ <- ZIO.succeed{
         val foo = result.map(_ match {
           case s: LoopSegmentDifference =>
@@ -55,14 +57,15 @@ object Main extends ZIOAppDefault {
 //              s.bodyDiff.get.map(d => s.canonicalName+"."+d.path+"*"+d.canonicalName)
             if s.nested.isDefined then
               s.nested.get.map(n => s.canonicalName+"."+n.path+"&"+n.canonicalName)
-            else List(s.path+"."+s.canonicalName)
+            else List(s.path.toString+"."+s.canonicalName)
           case s: SimpleSegmentDifference =>
-            List(s.path+"*"+s.canonicalName)
+            List(s.path.toString+"*"+s.canonicalName)
           case _ => List("unknown")
         })
         println(foo.flatten.mkString("\n"))
       }
-      /*
+      */
+
       titles = List(
           Title(List(Cell("📦 EDI Segment Comparison Report"))),
           Title(List(Cell("856 Canonical -to- Taylor Farms")))
@@ -78,12 +81,11 @@ object Main extends ZIOAppDefault {
           title = titles,
           columns = 3,
           columnWidthPct = List(60, 30, 30),
-          tableWidth = 120,
+          tableWidth = 200,
           header,
           rows
         )
       _ <- ZIO.succeed(println(table.toString))
-       */
     } yield ()
   }
 }

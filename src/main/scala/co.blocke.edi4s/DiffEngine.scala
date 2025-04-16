@@ -15,11 +15,11 @@ object DiffEngine:
                     src: RefinedDocumentSpec,
                     target: RefinedDocumentSpec
                   ): ZIO[Any, DifferenceError, List[Difference]] =
-    ZIO.succeed(compareSegmentLists("", src.segments, target.segments))
+    ZIO.succeed(compareSegmentLists(Path(), src.segments, target.segments))
 
 
   private def compareSegmentLists(
-                                   path: String,
+                                   path: Path,
                                    src: List[RefinedSegmentSpec | RefinedLoopSpec],
                                    target: List[RefinedSegmentSpec | RefinedLoopSpec]
                                  ): List[SegmentDifference] = {
@@ -84,85 +84,112 @@ object DiffEngine:
     tracker(0, 0, Nil).flatten
   }
 
-  
-  private def compareTwoSegments(path: String, a: RefinedSegmentSpec, b: RefinedSegmentSpec): Option[SimpleSegmentDifference] =
+
+  private def compareTwoSegments(path: Path, a: RefinedSegmentSpec, b: RefinedSegmentSpec): Option[SimpleSegmentDifference] =
     val req = Option.when(a.required != b.required)((a.required, b.required))
     val assertions = Option.when(a.assertions.toSet != b.assertions.toSet)((a.assertions, b.assertions))
-    val fieldDiffs = compareSegmentFields(getFields(a), getFields(b))
+    val fieldDiffs = compareSegmentFields(path.dot(canonicalNameOf(a)), getFields(a), getFields(b))
     (req, assertions, fieldDiffs) match {
       case (None, None, Nil) => None
-      case _ => Some(SimpleSegmentDifference(path, nameOf(a), canonicalNameOf(b), None, req, assertions, None, fieldDiffs))
+      case _ => Some(SimpleSegmentDifference(path, nameOf(a), canonicalNameOf(a), None, req, assertions, None, fieldDiffs))
     }
 
-  private case class HLNavigator(
-                          srcMap: Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]],
-                          targetMap: Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]]
-                        )
+//  private def printMap(label: String, m: Map[String, List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]]): Unit =
+//    println(s"=== $label Segment Map ===")
+//    val maxKeyLen = m.keys.map(_.length).maxOption.getOrElse(0)
+//    m.foreach { case (key, entries) =>
+//      entries.zipWithIndex.foreach {
+//        case ((path, _), 0) => println(f"${key.padTo(maxKeyLen, ' ')}  ${path.toString}")
+//        case ((path, _), _) => println(f"${" " * maxKeyLen}  ${path.toString}")
+//      }
+//    }
 
-  private inline def splitPath(path: String): (String,String) =
-    val (prefix, last) = path.splitAt(path.lastIndexOf('.'))
-    (prefix.stripSuffix("."), last.stripPrefix("."))
-
-  private def compareTwoLoopSegments(path: String, a: RefinedLoopSpec, b: RefinedLoopSpec, descendNesting: Boolean = true): Option[LoopSegmentDifference] =
+  private def compareTwoLoopSegments(path: Path, a: RefinedLoopSpec, b: RefinedLoopSpec, descendNesting: Boolean = true): Option[LoopSegmentDifference] =
     val req = Option.when(a.required != b.required)((a.required, b.required))
     val assertions = Option.when(a.assertions.toSet != b.assertions.toSet)((a.assertions, b.assertions))
-    val fieldDiffs = compareSegmentFields(getFields(a), getFields(b))
+    val fieldDiffs = compareSegmentFields(path.dot(canonicalNameOf(a)), getFields(a), getFields(b))
     val minDiff = Option.when(a.minRepeats != b.minRepeats)(a.minRepeats,b.minRepeats)
     val maxDiff = Option.when(a.maxRepeats != b.maxRepeats)(a.maxRepeats,b.maxRepeats)
-    val pathPrefix = if path.isEmpty then "" else path+"."
     val bodyAndNest: (Option[List[SegmentDifference]], Option[List[HLDifference]]) =
       if canonicalNameOf(a) == "HL" && descendNesting then
-        val nav = HLNavigator( buildSegmentPathMap(List(a),""), buildSegmentPathMap(List(b),"") )
+        val srcMap = buildSegmentPathMap(List(a), path)
+        val targetMap = buildSegmentPathMap(List(b), path)
+
+//        Show all the deep paths discovered for each element
+//        printMap("Source",srcMap)
+//        printMap("Target",targetMap)
 
         // Find any missing segments, regardless of path in src and target
-        val sourceKeys = nav.srcMap.keySet
-        val targetKeys = nav.targetMap.keySet
+        val sourceKeys = srcMap.keySet
+        val targetKeys = targetMap.keySet
         val onlyInSource = (sourceKeys -- targetKeys).toList
         val onlyInTarget = (targetKeys -- sourceKeys).toList
         val inBoth = sourceKeys.intersect(targetKeys).toList
 
         val acc1 = onlyInSource.flatMap { k =>
-          nav.srcMap(k).map { case (elemPath, spec) =>
-            val (prefix, _) = splitPath(elemPath)
-            val pathPrefix = if b.description.nonEmpty then prefix+s"[${b.description}]" else prefix
-            HLDifference(pathPrefix, nameOf(spec), canonicalNameOf(spec), Some((true, false)), Nil)
+          srcMap(k).map { case (elemPath, spec) =>
+//            val (prefix, _) = splitPath(elemPath)
+//            val pathPrefix = if b.description.nonEmpty then prefix+s"[${b.description}]" else prefix
+            HLDifference(elemPath.prefix, nameOf(spec), canonicalNameOf(spec), Some((true, false)), None, Nil)
           }
         }
         val acc2 = onlyInTarget.flatMap { k =>
-          nav.targetMap(k).map { case (elemPath, spec) =>
-            val (prefix, _) = splitPath(elemPath)
-            val pathPrefix = if a.description.nonEmpty then prefix+s"[${a.description}]" else prefix
-            HLDifference(pathPrefix, nameOf(spec), canonicalNameOf(spec), Some((false, true)), Nil)
+          targetMap(k).map { case (elemPath, spec) =>
+//            val (prefix, _) = splitPath(elemPath)
+//            val pathPrefix = if a.description.nonEmpty then prefix+s"[${a.description}]" else prefix
+            HLDifference(elemPath.prefix, nameOf(spec), canonicalNameOf(spec), Some((false, true)), None, Nil)
           }
         }
 
         // Now track "moved" segments (NOTE: unordered!)
         val acc3 = inBoth.flatMap { k =>
-          val srcElemPaths = nav.srcMap(k)
-          val targetElemPaths = nav.targetMap(k)
+          val srcElemPaths = srcMap(k)
+          val targetElemPaths = targetMap(k)
           (srcElemPaths.size, targetElemPaths.size) match {
             // Exact mapping
             case (1,1) =>
-              compareFoundOnPath(srcElemPaths.head, targetElemPaths.head).toList
+              val (s1, s2) = srcElemPaths.head
+              val (t1, t2) = targetElemPaths.head
+              val loopDiffs = compareFoundOnPath((s1.prefix, s2), (t1.prefix, t2)).toList
+              // See if the paths match and issue a HLDifference if not
+              if equalIgnoringBrackets(s1.toString, t1.toString) then loopDiffs
+                else HLDifference(path.prefix, nameOf(a), canonicalNameOf(a), None, Some((s1.toString, t1.toString)), Nil) :: loopDiffs
+
             // Equal mapping (presume same?)
             case (n,m) if n == m =>
-              srcElemPaths.zip(targetElemPaths).flatMap { case (s, t) => compareFoundOnPath(s, t) }
+              srcElemPaths.zip(targetElemPaths).flatMap { case (s, t) =>
+                val (s1,s2) = s
+                val (t1,t2) = t
+                val loopDiffs = compareFoundOnPath((s1.prefix, s2), (t1.prefix, t2)).toList
+                // See if the paths match and issue a HLDifference if not
+                if equalIgnoringBrackets(s1.toString, t1.toString) then loopDiffs
+                else HLDifference(path.prefix, nameOf(a), canonicalNameOf(a), None, Some((s1.toString, t1.toString)), Nil) :: loopDiffs
+              }
+
             // 1-to-many: Possible nesting HLs from canonical spec
             case (1,n) =>
-              targetElemPaths.map { tp => compareFoundOnPath(srcElemPaths.head, tp) }.toList.flatten
+              val (s1, s2) = srcElemPaths.head
+              targetElemPaths.map { tp =>
+                val (t1,t2) = tp
+                val loopDiffs = compareFoundOnPath((s1.prefix, s2), (t1.prefix, t2)).toList
+                // See if the paths match and issue a HLDifference if not
+                if equalIgnoringBrackets(s1.toString, t1.toString) then loopDiffs
+                else HLDifference(path.prefix, nameOf(a), canonicalNameOf(a), None, Some((s1.toString, t1.toString)), Nil) :: loopDiffs
+              }.toList.flatten
+
             // n-to-m: Who knows!
             case _ =>
-              Some(HLDifference(pathPrefix, nameOf(a), canonicalNameOf(a), None, Nil, None,
-                Some((srcElemPaths.map(_._1),targetElemPaths.map(_._1)))))
+                Some(HLDifference(path.prefix, nameOf(a), canonicalNameOf(a), None, None, Nil, None,
+                Some((srcElemPaths.map(_._1.toString),targetElemPaths.map(_._1.toString))))).toList
           }
         }
 
         val allAcc: List[HLDifference] = acc1 ++ acc2 ++ acc3
-//        pprint.log(allAcc)
+        // pprint.log(allAcc)
         (None, Some(allAcc))
 
       else
-        (Some(compareSegmentLists(canonicalNameOf(a), a.body, b.body)), None)
+        (Some(compareSegmentLists(path.dot(canonicalNameOf(a)), a.body, b.body)), None)
     val (bodyDiff, nestDiff) = bodyAndNest
     (req, assertions, fieldDiffs, minDiff, maxDiff, bodyDiff, nestDiff) match {
       case (None, None, Nil, None, None, None, None) => None
@@ -170,19 +197,14 @@ object DiffEngine:
         Some(LoopSegmentDifference(path, nameOf(a), canonicalNameOf(b), None, req, assertions, None, fieldDiffs, minDiff, maxDiff, if (bodyDiff.nonEmpty) bodyDiff else None, nestDiff))
     }
 
-  private def compareFoundOnPath(srcKey: (String, RefinedSegmentSpec | RefinedLoopSpec), targetKey: (String, RefinedSegmentSpec | RefinedLoopSpec)): Option[HLDifference] =
+  private def compareFoundOnPath(srcKey: (Path, RefinedSegmentSpec | RefinedLoopSpec), targetKey: (Path, RefinedSegmentSpec | RefinedLoopSpec)): Option[HLDifference] =
     (srcKey._2, targetKey._2) match {
       case (a: RefinedSegmentSpec, b: RefinedSegmentSpec) =>
-        val (srcPrefix, _) = splitPath(srcKey._1) // <-- Won't work.... no elemPath here
-        val (targetPrefix, _) = splitPath(targetKey._1) // <-- Won't work.... no elemPath here
-        compareTwoSegments(targetPrefix, a, b).map(d => HLDifference(srcPrefix, nameOf(srcKey._2), canonicalNameOf(srcKey._2), None, List(d)))
+        compareTwoSegments(targetKey._1.prefix, a, b).map(d => HLDifference(srcKey._1.prefix, nameOf(srcKey._2), canonicalNameOf(srcKey._2), None, None, List(d)))
       case (a: RefinedLoopSpec, b: RefinedLoopSpec) =>
-        val (srcPrefix, _) = splitPath(srcKey._1) // <-- Won't work.... no elemPath here
-        val (targetPrefix, _) = splitPath(targetKey._1) // <-- Won't work.... no elemPath here
-        compareTwoLoopSegments(targetPrefix, a, b, false).map(d => HLDifference(srcPrefix, nameOf(srcKey._2), canonicalNameOf(srcKey._2), None, List(d)))
+        compareTwoLoopSegments(targetKey._1.prefix, a, b, false).map(d => HLDifference(srcKey._1.prefix, nameOf(srcKey._2), canonicalNameOf(srcKey._2), None, None, List(d)))
       case (a, b) =>
-        val (srcPrefix, _) = splitPath(srcKey._1) // <-- Won't work.... no elemPath here
-        Some(HLDifference(srcPrefix, nameOf(a), canonicalNameOf(a), None, Nil, Some(s"Corresponding element at ${canonicalNameOf(b)} has different types")))
+        Some(HLDifference(srcKey._1.prefix, nameOf(a), canonicalNameOf(a), None, None, Nil, Some(s"Corresponding element at ${canonicalNameOf(b)} has different types")))
     }
 
 
@@ -193,7 +215,9 @@ object DiffEngine:
       case v: RefinedLoopSpec => v.fields
     }
 
+
   private def compareSegmentFields(
+                     path: Path,
                      fieldsA: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
                      fieldsB: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
                    ): List[FieldDifference] = {
@@ -209,10 +233,10 @@ object DiffEngine:
 
       (fA, fB) match {
         case (Some(a), None) =>
-          Some(SingleFieldDifference(fieldNameOf(a), canonicalFieldNameOf(a), presence = Some(true -> false)))
+          Some(SingleFieldDifference(path, fieldNameOf(a), canonicalFieldNameOf(a), presence = Some(true -> false)))
 
         case (None, Some(b)) =>
-          Some(SingleFieldDifference(fieldNameOf(b), canonicalFieldNameOf(b), presence = Some(false -> true)))
+          Some(SingleFieldDifference(path, fieldNameOf(b), canonicalFieldNameOf(b), presence = Some(false -> true)))
 
         case (Some(a: RefinedSingleFieldSpec), Some(b: RefinedSingleFieldSpec)) =>
           val required = if (a.required != b.required) Some(a.required -> b.required) else None
@@ -223,14 +247,14 @@ object DiffEngine:
           val validValuesRef = if (a.validValuesRef != b.validValuesRef) Some(a.validValuesRef -> b.validValuesRef) else None
 
           if (List(required, dataType, format, elementId, validValues, validValuesRef).exists(_.isDefined))
-            Some(SingleFieldDifference(name, a.canonicalName, None, required, dataType, format, elementId, validValues, validValuesRef))
+            Some(SingleFieldDifference(path, name, a.canonicalName, None, required, dataType, format, elementId, validValues, validValuesRef))
           else None
 
         case (Some(a: RefinedCompositeFieldSpec), Some(b: RefinedCompositeFieldSpec)) =>
           val required = if (a.required != b.required) Some(a.required -> b.required) else None
-          val subDiffs = compareSegmentFields(a.components, b.components)
+          val subDiffs = compareSegmentFields(path.dot(a.canonicalName), a.components, b.components)
           if (required.isDefined || subDiffs.nonEmpty)
-            Some(CompositeFieldDifference(a.name, a.canonicalName, presence = None, required = required, fieldDiff = subDiffs))
+            Some(CompositeFieldDifference(path, a.name, a.canonicalName, presence = None, required = required, fieldDiff = subDiffs))
           else None
 
         case _ => None
@@ -239,8 +263,8 @@ object DiffEngine:
   }
 
   private def mergePathMaps(
-                     maps: List[Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]]]
-                   ): Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]] = {
+                     maps: List[Map[String, List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]]]
+                   ): Map[String, List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]] = {
     maps.flatten
       .groupBy(_._1)
       .view
@@ -248,22 +272,22 @@ object DiffEngine:
       .toMap
   }
 
-  private def cleanPath(path: String): String =
-    path.replaceAll(">(HL\\.HL)+", ">HL")
+//  private def cleanPath(path: String): String =
+//    path.replaceAll(">(HL\\.HL)+", ">HL")
 
   private def buildSegmentPathMap(
                            specs: List[RefinedSegmentSpec | RefinedLoopSpec],
-                           path: String = ""
-                         ): Map[String, List[(String, RefinedSegmentSpec | RefinedLoopSpec)]] = {
+                           path: Path
+                         ): Map[String, List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]] = {
     specs.flatMap {
       case s: RefinedSegmentSpec =>
         val pathName = if s.canonicalName == "HL" && s.description.nonEmpty then s.canonicalName+s"[${s.description}]" else s.canonicalName
-        val segPath = cleanPath(if path.isEmpty then s.canonicalName else s"$path.$pathName")
-        Map(pathName -> List((segPath, s)))
+        val segPath = path.dot(canonicalNameOf(s))
+        Map(canonicalNameOf(s) -> List((segPath, s)))
 
       case loop: RefinedLoopSpec =>
         val loopName = loop.canonicalName
-        val newPath = if path.isEmpty then loopName else s"$path.$loopName"
+        val newPath = path.dot(canonicalNameOf(loop))
 
         // Traverse body
         val bodyMap = buildSegmentPathMap(loop.body, newPath)
@@ -272,9 +296,7 @@ object DiffEngine:
         val nestedMap = loop.nested match {
           case Some(nestedLoops) =>
             nestedLoops.flatMap { nestedLoop =>
-              val pathName = if nestedLoop.canonicalName == "HL" && nestedLoop.description.nonEmpty then nestedLoop.canonicalName+s"[${nestedLoop.description}]" else nestedLoop.canonicalName
-              val newnewPath = if loop.description.isEmpty then newPath else s"$newPath[${loop.description}]"
-              val nestedPath = cleanPath(s"$newnewPath>$pathName")
+              val nestedPath = newPath //newPath.nest(canonicalNameOf(nestedLoop)) //cleanPath(s"$newnewPath>$pathName")
               buildSegmentPathMap(List(nestedLoop), nestedPath)
             }.groupBy(_._1).map { case (k, v) => k -> v.flatMap(_._2) }
 
@@ -305,10 +327,21 @@ object DiffEngine:
 
   private def canonicalNameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
     case s: RefinedSegmentSpec => s.canonicalName
-    case l: RefinedLoopSpec => l.canonicalName
+    case l: RefinedLoopSpec =>
+      if l.canonicalName == "HL" && l.description.nonEmpty then
+        l.canonicalName + s"[${l.description}]"
+      else
+        l.canonicalName
   }
 
   private def canonicalFieldNameOf(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): String = x match {
     case s: RefinedSingleFieldSpec => s.canonicalName
     case l: RefinedCompositeFieldSpec => l.canonicalName
+  }
+
+  private def equalIgnoringBrackets(a: String, b: String): Boolean = {
+    def stripBrackets(s: String): String =
+      s.replaceAll("\\[.*?\\]", "")
+
+    stripBrackets(a) == stripBrackets(b)
   }
