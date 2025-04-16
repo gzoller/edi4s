@@ -82,21 +82,33 @@ case class TextRenderer(table: Table) extends Renderer:
       case Array(intP) => (intP, "")
 
     val contentWithDot = if fracPart.nonEmpty then s"$intPart.$fracPart" else intPart
-    val totalLength = contentWithDot.length
+
+    val truncated =
+      if contentWithDot.length > width then
+        val cutoff = width - 3
+        if cutoff <= 0 then "..." else contentWithDot.take(cutoff) + "..."
+      else contentWithDot
+
+    val totalLength = truncated.length
     val leftPad = width - math.max(totalLength, rightOffset + intPart.length + (if fracPart.nonEmpty then 1 else 0))
     val rightPad = width - (leftPad + totalLength)
 
-    " " * leftPad + contentWithDot + " " * rightPad
+    " " * leftPad + truncated + " " * rightPad
 
   private def pad(content: String, width: Int, align: Align): String =
+    val truncated = if content.length > width then content.take(width - 3) + "..." else content
+
     align match
-      case Align.LEFT    => content.padTo(width, ' ')
-      case Align.CENTER  =>
-        val padLeft = (width - content.length) / 2
-        val padRight = width - content.length - padLeft
-        " " * padLeft + content + " " * padRight
-      case Align.RIGHT   => " " * (width - content.length) + content
-      case Align.DECIMAL => pad(content, width, Align.RIGHT) // fallback if no offset known
+      case Align.LEFT =>
+        truncated.padTo(width, ' ')
+      case Align.CENTER =>
+        val padLeft = (width - truncated.length) / 2
+        val padRight = width - truncated.length - padLeft
+        " " * padLeft + truncated + " " * padRight
+      case Align.RIGHT =>
+        " " * (width - truncated.length) + truncated
+      case Align.DECIMAL =>
+        pad(truncated, width, Align.RIGHT) // fallback if no decimal info is known
 
   private def renderRow(row: TableRow, widths: List[Int], decimalAlignOffsets: List[(Int, Int)]): String =
     val sb = new StringBuilder

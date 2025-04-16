@@ -25,9 +25,11 @@ case class HtmlRenderer(table: Table) extends Renderer:
       }
       .primary { background-color: #cce5ff; font-weight: bold; }
       .secondary { background-color: #e2e3e5; font-weight: bold; }
+      .tertiary { background-color:#d4edda; color:#155724; }
       .neutral { background-color: #ffffff; }
       .muted { background-color: #f9f9f9; color: #666; }
       .alert { background-color: #f8d7da; color: #721c24; font-weight: bold; }
+      .warn { background-color: #ffeeba; color: #856404; font-weight: bold; }
       .left { text-align: left; }
       .center { text-align: center; }
       .right { text-align: right; }

@@ -7,6 +7,7 @@ import zio.*
 
 import scala.collection.mutable
 import scala.collection.mutable.LinkedHashMap
+import pprint.*
 
 object CanonicalParser:
   // Let compile-time macros deep-dive and generate JSON serilalizer for EdiObject and all subclasses...
@@ -130,17 +131,58 @@ object CanonicalParser:
 
         case ((fname, sp: EdiRefProperty),i) =>
           convertCompositeField(fname, segment.getId, i, sp, catalog)
-        case ((fname, _),_) =>
-          ZIO.fail(CanonicalError(s"Unexpected property type $fname"))
+
+        case ((fname, p),_) =>
+          ZIO.fail(CanonicalError(s"Unexpected property type $fname with property $p"))
       }
     } yield fields
 
-  private def convertSegmentProperty( name: String, isRequired: Boolean, prop: EdiRefProperty, catalog: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, RefinedSegmentSpec] =
+  private def convertNestedLoopSegment(name: String, isRequired: Boolean, loopSchema: EdiSchema, catalog: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, RefinedSegmentSpec | RefinedLoopSpec] =
     for {
-//      _ <- ZIO.succeed(println("SEGMENT PROPERTY: "+name))
+      (loopFirstProp, loopBodyProp) <- loopSchema.properties.toList match
+        case head :: tail => ZIO.succeed((head,tail))
+        case _ => ZIO.fail(CanonicalError(s"Malformed list spec for $name"))
+      loopSegmentSchema <- loopFirstProp match {
+        case (_, e: EdiRefProperty) => e.dereferenceSegment(catalog)
+        case _ => ZIO.fail(CanonicalError(s"Expected EdiRefProperty for first property of a loop with body ($name)"))
+      }
+      fields <- convertFields(loopSegmentSchema, catalog)
+      bodySegments <- ZIO.foreach(loopBodyProp) {
+        case (name, prop: EdiRefProperty) => convertSegmentProperty(name, loopSegmentSchema.required.exists(_.contains(name)), prop, catalog)
+        case (name, prop: EdiItemsProperty) =>
+          prop.loopHasBody(catalog).flatMap { hasBody =>
+            if hasBody then
+              convertLoopProperty(name, loopSegmentSchema.required.exists(_.contains(name)), prop, catalog)
+            else
+              convertLoopPropertyNoBody(name, loopSegmentSchema.required.exists(_.contains(name)), prop, catalog)
+          }
+        case _ => ZIO.fail(CanonicalError(s"Element property not allowed in a loop body ($name)"))
+      }
+      //      _ <- ZIO.succeed(println(s"  === LOOP BODY END ($name) === "))
+      loopName = loopSegmentSchema.getId
+    } yield RefinedLoopSpec(
+      loopName,
+      loopName,
+      None,
+      "",
+      isRequired,
+      loopSegmentSchema.`x-openedi-syntax`.getOrElse(Nil),
+      fields,
+      Some(1),
+      Some(1),
+      bodySegments,
+      {if loopName == "HL" then Some(Nil) else None}
+    )
+
+  private def convertSegmentProperty( name: String, isRequired: Boolean, prop: EdiRefProperty, catalog: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, RefinedSegmentSpec | RefinedLoopSpec] =
+    for {
       segment <- prop.dereferenceSegment(catalog)
-      fields  <- convertFields( segment, catalog )
-    } yield RefinedSegmentSpec(name, name, None, "", isRequired, segment.`x-openedi-syntax`.getOrElse(Nil), fields)
+      refinedSpec <- if segment.isLoop then convertNestedLoopSegment(name, isRequired, segment, catalog)
+          else
+            convertFields( segment, catalog ).map( fields =>
+              RefinedSegmentSpec(name, name, None, "", isRequired, segment.`x-openedi-syntax`.getOrElse(Nil), fields)
+            )
+    } yield refinedSpec
 
   private def convertLoopProperty(
                                    name: String,

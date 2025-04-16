@@ -10,7 +10,7 @@ package table
 import scala.Console._
 
 enum Style:
-  case PRIMARY, SECONDARY, NEUTRAL, MUTED, ALERT
+  case PRIMARY, SECONDARY, TERTIARY, NEUTRAL, MUTED, ALERT, WARN
 
 enum Align:
   case LEFT, CENTER, RIGHT, DECIMAL
@@ -42,12 +42,13 @@ val defaultStyleMap: Map[String, Map[Style, String]] = Map(
   "text" -> Map(
     Style.PRIMARY -> "\u001b[1m\u001b[34m", // Bold Blue
     Style.SECONDARY -> "\u001b[1m\u001b[36m", // Bold Cyan
+    Style.TERTIARY -> "\u001b[32m", // Green
     Style.NEUTRAL -> "",
     Style.MUTED -> "\u001b[2m", // Dim
-    Style.ALERT -> "\u001b[31m" // Red
+    Style.ALERT -> "\u001b[31m", // Red
+    Style.WARN -> "\u001b[38;5;226m"
   )
 )
-
 
 trait Renderer:
   def render(): String

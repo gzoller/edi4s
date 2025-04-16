@@ -1,10 +1,13 @@
 package co.blocke.edi4s
 
-import zio._
+import co.blocke.edi4s.CanonicalParser.show
+import zio.*
 import zio.nio.file.{Files, Path}
 import model.*
 import tokenizer.*
 import table.*
+
+import java.io.FileNotFoundException
 
 /*
 Key takeaways:
@@ -20,31 +23,71 @@ object Main extends ZIOAppDefault {
 
   def loadCanonicalSpec(path: String, topLevel: String, document: String, version: String, partner: String): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
     val filePath = Path(path)
-    (for {
-      lines <- Files.readAllLines(filePath)
+    for {
+      lines <- Files.readAllLines(filePath).mapError{
+        case ioe: Throwable => CanonicalError("Can't read file: "+ioe.getMessage)
+      }
       edi <- CanonicalParser.readSpec(lines.mkString("\n"))
       refined <- CanonicalParser.toRefined(edi, topLevel, document, version, partner)
-    } yield refined)
-      .mapError{
-        case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
-      }
+    } yield refined
 
   def loadRefinedSpec(path: String): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
     val filePath = Path(path)
-    (for {
-      lines <- Files.readAllLines(filePath)
-      refined = sjRefinedSpec.fromJson(lines.mkString("\n"))
-    } yield refined)
-      .mapError {
-        case ioe: java.io.IOException => CanonicalError(ioe.getMessage)
+    for {
+      lines <- Files.readAllLines(filePath).mapError{
+        case ioe: Throwable => CanonicalError("Can't read file: "+ioe.getMessage)
       }
+      refined = sjRefinedSpec.fromJson(lines.mkString("\n"))
+    } yield refined
 
   def run = {
     for {
-      std <- loadRefinedSpec("x12_856_5010.json")
-      tf <- loadRefinedSpec("tf_856_5010.json")
-      //      result <- Walker2.compareSpecs(std, tf)
-      table = "done"
+//      foo <- loadCanonicalSpec("doc850_v5010.json", "TS850", "850", "5010", "ANSI")
+//      _ <- ZIO.succeed(println(sjRefinedSpec.toJson(foo)))
+
+      tf <- loadRefinedSpec("specs/tf_856_5010.json")
+      std <- loadRefinedSpec("specs/x12_856_5010.json")
+      result <- DiffEngine.compareSpecs(std, tf)
+      _ <- ZIO.succeed{
+        val foo = result.map(_ match {
+          case s: LoopSegmentDifference =>
+//            if s.bodyDiff.isDefined then
+//              s.bodyDiff.get.map(d => s.canonicalName+"."+d.path+"*"+d.canonicalName)
+            if s.nested.isDefined then
+              s.nested.get.map(n => s.canonicalName+"."+n.path+"&"+n.canonicalName)
+            else List(s.path+"."+s.canonicalName)
+          case s: SimpleSegmentDifference =>
+            List(s.path+"*"+s.canonicalName)
+          case _ => List("unknown")
+        })
+        println(foo.flatten.mkString("\n"))
+      }
+      /*
+      titles = List(
+          Title(List(Cell("📦 EDI Segment Comparison Report"))),
+          Title(List(Cell("856 Canonical -to- Taylor Farms")))
+        )
+      header = Header(List(
+          Cell("Segment"),
+          Cell("Source"),
+          Cell("Target")
+        ))
+      rows = result.foldLeft(List.empty[BodyRow]){ case (acc,diff) => acc ++ diff.render() }
+//      _ <- ZIO.succeed(pprint.log(result))
+      table = Table(
+          title = titles,
+          columns = 3,
+          columnWidthPct = List(60, 30, 30),
+          tableWidth = 120,
+          header,
+          rows
+        )
+      _ <- ZIO.succeed(println(table.toString))
+       */
+    } yield ()
+  }
+}
+      /*
       _ <- ZIO.succeed {
         val titles = List(
           Title(List(Cell("📦 EDI Segment Comparison Report")))
@@ -87,7 +130,7 @@ object Main extends ZIOAppDefault {
           Row(List(
             Cell("SE03"),
             Cell("0009.444", align = Some(Align.DECIMAL)),
-            Cell("stuff", align = Some(Align.RIGHT))
+            Cell("stuff", style = Some(Style.WARN), align = Some(Align.RIGHT))
           )),
 
           // --- New Colspan Examples ---
@@ -122,9 +165,8 @@ object Main extends ZIOAppDefault {
 
         println(table.toHtml)
       }
-    } yield ()
-  }
-}
+       */
+
 
   /*
   val sampleEDI1 = "ST*855*0001*0002*4010~"

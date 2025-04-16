@@ -45,7 +45,7 @@ case class EdiSchema(
 
 // Segment property with a reference the details in schemas (segment catalog)
 case class EdiRefProperty(`$ref`: String) extends Showable with Property:
-  def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema] =
+  def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema ] =
     Canonical.extractRefKey(`$ref`).flatMap{ key =>
       schemas.get(key) match {
         case Some(v) => ZIO.succeed(v)
@@ -60,7 +60,7 @@ case class EdiItemsProperty(
                              maxItems: Option[Int],
                              items: EdiRefProperty
                            ) extends Showable with Property:
-  def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema] =
+  def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema ] =
     items.dereference(schemas)
   def loopHasBody(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, Boolean] =
     dereference(schemas).flatMap {
