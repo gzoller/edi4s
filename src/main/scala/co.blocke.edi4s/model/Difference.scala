@@ -38,14 +38,16 @@ sealed trait Difference:
           SubHeader(
             List(
               Cell(path.toStringWith(rationalName), indent = nestLevel),
-              Cell("present in source <- missing in target", style = Some(Style.WARN)),
+              Cell("present", style = Some(Style.NEUTRAL)),
+              Cell("missing", style = Some(Style.WARN))
             )
           )
         else
           Row(
             List(
               Cell(path.toStringWith(rationalName), indent = nestLevel, style = Some(Style.TERTIARY)),
-              Cell("present in source <- missing in target", style = Some(Style.WARN)),
+              Cell("present", style = Some(Style.NEUTRAL)),
+              Cell("missing", style = Some(Style.WARN))
             )
           )
       )
@@ -54,14 +56,16 @@ sealed trait Difference:
           SubHeader(
             List(
               Cell(path.toStringWith(rationalName), indent = nestLevel),
-              Cell("missing in source -> present in target", style = Some(Style.WARN)),
+              Cell("missing", style = Some(Style.WARN)),
+              Cell("present", style = Some(Style.NEUTRAL))
             )
           )
         else
           Row(
             List(
               Cell(path.toStringWith(rationalName), indent = nestLevel, style = Some(Style.TERTIARY)),
-              Cell("missing in source -> present in target", style = Some(Style.WARN)),
+              Cell("missing", style = Some(Style.WARN)),
+              Cell("present", style = Some(Style.NEUTRAL))
             )
           )
       )
@@ -249,11 +253,11 @@ case class HLDifference(
         Cell(errMsg.get, style=Some(Style.ALERT))
       )))
     else if unknownMappings.isDefined then
-      buildPairedRows("Can't match", unknownMappings.get, nestLevel)
+      buildPairedRows(s"Can't match for element ${canonicalName}", unknownMappings.get, nestLevel)
     else
       pathItem.toList ++
         List(Row(List(
-          Cell(path.toStringWith(canonicalName),indent=nestLevel,style=Some(Style.ALERT))
+          Cell(path.toStringWith(canonicalName),indent=nestLevel,style=Some(Style.SECONDARY))
         )) ) ++
         targetDiff.foldLeft(List.empty[BodyRow]) { case (acc, oneBodyDiff) =>
           // TODO: Fix path here

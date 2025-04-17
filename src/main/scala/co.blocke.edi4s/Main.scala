@@ -46,8 +46,8 @@ object Main extends ZIOAppDefault {
 //      _ <- ZIO.succeed(println(sjRefinedSpec.toJson(foo)))
 
       tf <- loadRefinedSpec("specs/tf_856_5010.json")
-      std <- loadRefinedSpec("specs/x12_856_5010.json")
-      result <- DiffEngine.compareSpecs(std, tf)
+      std <- loadRefinedSpec("specs/cm_856_5010.json")
+      result <- DiffEngine.compareSpecs(tf, std)
 
       /*
       _ <- ZIO.succeed{
@@ -68,12 +68,12 @@ object Main extends ZIOAppDefault {
 
       titles = List(
           Title(List(Cell("📦 EDI Segment Comparison Report"))),
-          Title(List(Cell("856 Canonical -to- Taylor Farms")))
+          Title(List(Cell("Taylor Farms -to- Core-Mark")))
         )
       header = Header(List(
           Cell("Segment"),
-          Cell("Source"),
-          Cell("Target")
+          Cell("Source (Taylor Farms)"),
+          Cell("Target (Core-Mark")
         ))
       rows = result.foldLeft(List.empty[BodyRow]){ case (acc,diff) => acc ++ diff.render() }
 //      _ <- ZIO.succeed(pprint.log(result))
@@ -85,7 +85,7 @@ object Main extends ZIOAppDefault {
           header,
           rows
         )
-      _ <- ZIO.succeed(println(table.toString))
+      _ <- ZIO.succeed(println(table.toHtml))
     } yield ()
   }
 }

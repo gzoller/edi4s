@@ -46,7 +46,7 @@ val defaultStyleMap: Map[String, Map[Style, String]] = Map(
     Style.NEUTRAL -> "",
     Style.MUTED -> "\u001b[2m", // Dim
     Style.ALERT -> "\u001b[31m", // Red
-    Style.WARN -> "\u001b[38;5;226m"
+    Style.WARN -> "\u001b[38;5;180m"
   )
 )
 
