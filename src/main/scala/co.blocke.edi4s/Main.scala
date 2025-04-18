@@ -42,30 +42,17 @@ object Main extends ZIOAppDefault {
 
   def run = {
     for {
-//      foo <- loadCanonicalSpec("doc850_v5010.json", "TS850", "850", "5010", "ANSI")
-//      _ <- ZIO.succeed(println(sjRefinedSpec.toJson(foo)))
-
-      tf <- loadRefinedSpec("specs/tf_856_5010.json")
-      std <- loadRefinedSpec("specs/cm_856_5010.json")
-      result <- DiffEngine.compareSpecs(tf, std)
-
       /*
-      _ <- ZIO.succeed{
-        val foo = result.map(_ match {
-          case s: LoopSegmentDifference =>
-//            if s.bodyDiff.isDefined then
-//              s.bodyDiff.get.map(d => s.canonicalName+"."+d.path+"*"+d.canonicalName)
-            if s.nested.isDefined then
-              s.nested.get.map(n => s.canonicalName+"."+n.path+"&"+n.canonicalName)
-            else List(s.path.toString+"."+s.canonicalName)
-          case s: SimpleSegmentDifference =>
-            List(s.path.toString+"*"+s.canonicalName)
-          case _ => List("unknown")
-        })
-        println(foo.flatten.mkString("\n"))
-      }
+      foo <- loadCanonicalSpec("specs/canonical/doc856_v4030.json", "TS856", "850", "4030", "ANSI")
+      _ <- ZIO.succeed(println(sjRefinedSpec.toJson(foo)))
+       */
+
+      /* Un-comment to do a comparison run
       */
 
+      tf <- loadRefinedSpec("specs/tf_856_5010.json")
+      std <- loadRefinedSpec("specs/pfg_856_5010.json")
+      result <- DiffEngine.compareSpecs(tf, std)
       titles = List(
           Title(List(Cell("📦 EDI Segment Comparison Report"))),
           Title(List(Cell("Taylor Farms -to- Core-Mark")))
@@ -86,6 +73,25 @@ object Main extends ZIOAppDefault {
           rows
         )
       _ <- ZIO.succeed(println(table.toHtml))
+
+
+      /*
+      _ <- ZIO.succeed{
+        val foo = result.map(_ match {
+          case s: LoopSegmentDifference =>
+//            if s.bodyDiff.isDefined then
+//              s.bodyDiff.get.map(d => s.canonicalName+"."+d.path+"*"+d.canonicalName)
+            if s.nested.isDefined then
+              s.nested.get.map(n => s.canonicalName+"."+n.path+"&"+n.canonicalName)
+            else List(s.path.toString+"."+s.canonicalName)
+          case s: SimpleSegmentDifference =>
+            List(s.path.toString+"*"+s.canonicalName)
+          case _ => List("unknown")
+        })
+        println(foo.flatten.mkString("\n"))
+      }
+      */
+
     } yield ()
   }
 }

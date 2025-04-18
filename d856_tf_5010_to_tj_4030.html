@@ -1,0 +1,308 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-family: Arial, sans-serif;
+      }
+      th, td {
+        border: 1px solid #ccc;
+        padding: 6px 12px;
+        vertical-align: top;
+      }
+      th {
+        background-color: #003366;
+        color: white;
+        text-align: center;
+      }
+      .primary { background-color: #cce5ff; font-weight: bold; }
+      .secondary { background-color: #e2e3e5; font-weight: bold; }
+      .tertiary { background-color:#d4edda; color:#155724; }
+      .neutral { background-color: #ffffff; }
+      .muted { background-color: #f9f9f9; color: #666; }
+      .alert { background-color: #f8d7da; color: #721c24; font-weight: bold; }
+      .warn { background-color: #ffeeba; color: #856404; font-weight: bold; }
+      .left { text-align: left; }
+      .center { text-align: center; }
+      .right { text-align: right; }
+      .decimal { text-align: right; } /* Decimal handled as right in HTML */
+    </style></head><body>
+<h3>📦 EDI Segment Comparison Report</h3>
+<h3>Taylor Farms -to- Core-Mark</h3>
+<table>
+<thead>
+<tr><th class='center'>Segment</th><th class='center'>Source (Taylor Farms)</th><th class='center'>Target (Core-Mark</th></tr>
+</thead>
+<tbody>
+<tr><td class='secondary left' colspan='3'>BSN</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;Assertions</td><td class='neutral left'></td><td class='neutral left'>C0706</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;BSN.BSN05 (HierarchicalStructureCode_05)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>ZZZZ</td><td class='neutral left'>0001</td></tr>
+<tr><td class='secondary left' colspan='3'>HL[Shipment] (HL)</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;HL[Shipment].HL02 (HierarchicalParentIDNumber_02)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;HL[Shipment].HL04 (HierarchicalChildCode_04)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment] (HL)</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;HL[Shipment].FOB</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].TD5</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].TD5</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD5</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assertions</td><td class='neutral left'>R0204050612,C0203,C0708,C1011,C1312,C1413,C1512</td><td class='neutral left'>R0204050612,C0203</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD5.TD502 (IdentificationCodeQualifier_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'></td><td class='neutral left'>2</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD5.TD504 (TransportationMethodTypeCode_04)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>M</td><td class='neutral left'>A,C,D,E,H,K,L,M,R,S,T,U,AE,CE,MP</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD5.TD506 (ShipmentOrderStatusCode_06)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment] (HL)</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;Element Path Difference</td><td class='tertiary left'>HL[Shipment].HL[Order].HL[Tare].HL[Pack].HL[Item].SN1</td><td class='tertiary left'>HL[Shipment].HL[Order].HL[Tare].HL[Pack].SN1</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment]</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment] (HL)</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;Element Path Difference</td><td class='tertiary left'>HL[Shipment].HL[Order].HL[Tare].HL[Pack].HL[Item].LIN</td><td class='tertiary left'>HL[Shipment].HL[Order].HL[Tare].HL[Pack].LIN</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment]</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].HL[Pack].LIN</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].HL[Pack].LIN</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].LIN</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].LIN.LIN02 (ProductServiceIDQualifier_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>LT</td><td class='neutral left'>IN,VN,UK,UP</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].LIN.LIN04 (ProductServiceIDQualifier_04)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>CH</td><td class='neutral left'>IN,VN,UK,UP</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].LIN.LIN06 (ProductServiceIDQualifier_06)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].LIN.LIN07 (ProductServiceID_07)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].LIN.LIN08 (ProductServiceIDQualifier_08)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].LIN.LIN09 (ProductServiceID_09)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment] (HL)</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;Element Path Difference</td><td class='tertiary left'>HL[Shipment].HL[Order].HL[Tare].HL[Pack].PO4</td><td class='tertiary left'>HL[Shipment].HL[Order].HL[Pack].PO4</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment]</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].PO4</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].PO4</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].PO4</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].PO4.PO401 (Pack_01)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].PO4.PO405 (WeightQualifier_05)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].PO4.PO406 (GrossWeightperPack_06)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].PO4.PO407 (UnitorBasisforMeasurementCode_07)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].PO4</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].PO4</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PO4</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PO4.PO402 (Size_02)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PO4.PO403 (UnitorBasisforMeasurementCode_03)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PO4.PO405 (WeightQualifier_05)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PO4.PO406 (GrossWeightperPack_06)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PO4.PO407 (UnitorBasisforMeasurementCode_07)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PO4.PO414 (InnerPack_14)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].PID</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].PID</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PID</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PID.PID05 (Description_05)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].PID.PID02 (ProductProcessCharacteristicCode_02)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment] (HL)</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;Element Path Difference</td><td class='tertiary left'>HL[Shipment].HL[Order].HL[Tare].MAN</td><td class='tertiary left'>HL[Shipment].MAN</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment]</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].MAN</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].MAN</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].MAN</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].MAN.MAN01 (MarksandNumbersQualifier_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>GM</td><td class='neutral left'></td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].MAN.MAN03 (MarksandNumbers_03)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].MAN.MAN04 (MarksandNumbersQualifier_04)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].MAN.MAN05 (MarksandNumbers_05)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].MAN.MAN06 (MarksandNumbers_06)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Shipment] (HL)</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Shipment]</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment] (HL)</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].HL02 (HierarchicalParentIDNumber_02)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].HL04 (HierarchicalChildCode_04)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment] (HL)</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD1</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD1.TD101 (PackagingCode_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>CTN25</td><td class='neutral left'>CTN,CTN25,PLT,PLT94</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD1.TD102 (LadingQuantity_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD5</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assertions</td><td class='neutral left'>R0204050612,C0203,C0708,C1011,C1312,C1413,C1512</td><td class='neutral left'>R0204050612,C0203</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD5.TD502 (IdentificationCodeQualifier_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'></td><td class='neutral left'>2</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD5.TD504 (TransportationMethodTypeCode_04)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>M</td><td class='neutral left'>A,C,D,E,H,K,L,M,R,S,T,U,AE,CE,MP</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD5.TD506 (ShipmentOrderStatusCode_06)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD3</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assertions</td><td class='neutral left'>E0110,C0203,C0405,P0506</td><td class='neutral left'>E0110,C0203</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD3.TD301 (EquipmentDescriptionCode_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'></td><td class='neutral left'>TL</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD3.TD302 (EquipmentInitial_02)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].TD3.TD303 (EquipmentNumber_03)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].REF</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].REF.REF01 (ReferenceIdentificationQualifier_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>BM</td><td class='neutral left'>2I,BM,CN,P8</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].REF.REF02 (ReferenceIdentification_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].MAN</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].DTM</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].DTM.DTM01 (DateTimeQualifier_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>011,067</td><td class='neutral left'>011,035,067,118</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].DTM.DTM02 (Date_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].DTM.DTM03 (Time_03)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].FOB</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].N1</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].N1.N102 (Name_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Element ID</td><td class='neutral left'>98</td><td class='neutral left'>93</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Shipment].N1.N103 (IdentificationCodeQualifier_03)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>92,UL</td><td class='neutral left'>1,9,92</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order] (HL)</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order]</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order] (HL)</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL02 (HierarchicalParentIDNumber_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL04 (HierarchicalChildCode_04)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order] (HL)</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].PRF</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].REF</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].REF.REF01 (ReferenceIdentificationQualifier_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>IA,IV</td><td class='neutral left'>IV,VR</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].REF.REF02 (ReferenceIdentification_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare] (HL)</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare]</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack] (HL)</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].HL02 (HierarchicalParentIDNumber_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].HL03 (HierarchicalLevelCode_03)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>T</td><td class='neutral left'>P,T</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].HL04 (HierarchicalChildCode_04)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack] (HL)</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].PO4</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].REF</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].MAN</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].MAN.MAN01 (MarksandNumbersQualifier_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>GM</td><td class='neutral left'>CP,GM</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].MAN.MAN04 (MarksandNumbersQualifier_04)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].MAN.MAN05 (MarksandNumbers_05)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].DTM</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].N1</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].HL[Pack] (HL)</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Tare].HL[Pack]</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Item] (HL)</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].HL02 (HierarchicalParentIDNumber_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].HL03 (HierarchicalLevelCode_03)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>P</td><td class='neutral left'>I</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].HL04 (HierarchicalChildCode_04)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Item] (HL)</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN.LIN02 (ProductServiceIDQualifier_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>IN,VN,UK,UP</td><td class='neutral left'>IN,UA,UK,UP</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN.LIN04 (ProductServiceIDQualifier_04)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>IN,VN,UK,UP</td><td class='neutral left'>EN,IN,UA,UK,UP,VN</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN.LIN06 (ProductServiceIDQualifier_06)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>IN,VN,UK,UP</td><td class='neutral left'>EN,IN,UA,UK,UP,VN</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN.LIN08 (ProductServiceIDQualifier_08)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>IN,VN,UK,UP</td><td class='neutral left'>EN,IN,UA,UK,UP,VN</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN.LIN10 (ProductServiceIDQualifier_10)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN.LIN11 (ProductServiceID_11)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN.LIN12 (ProductServiceIDQualifier_12)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].LIN.LIN13 (ProductServiceID_13)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].SN1</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].SN1.SN102 (NumberofUnitsShipped_02)</td><td class='neutral left'>present</td><td class='warn left'>missing</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].SN1.SN103 (UnitorBasisforMeasurementCode_03)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>CA</td><td class='neutral left'>CA,EA</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].SN1.SN101 (AssignedIdentification_01)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PO4</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PO4.PO402 (Size_02)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PO4.PO403 (UnitorBasisforMeasurementCode_03)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PO4.PO405 (WeightQualifier_05)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PO4.PO406 (GrossWeightperPack_06)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PO4.PO407 (UnitorBasisforMeasurementCode_07)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PO4.PO414 (InnerPack_14)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PID</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PID.PID05 (Description_05)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].PID.PID02 (ProductProcessCharacteristicCode_02)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].REF</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].DTM</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].HL[Pack].HL[Pack].N1</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;Can't match for element HL</td><td class='neutral left'>HL[Shipment].HL[Order].HL[Tare].HL[Pack].HL[Item]</td><td class='neutral left'></td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].DTM</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].DTM</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].DTM</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].DTM.DTM01 (DateTimeQualifier_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>011,067</td><td class='neutral left'>011,035,067,118</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].DTM.DTM02 (Date_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].DTM.DTM03 (Time_03)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;DTM</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;Can't match for element DTM</td><td class='neutral left'>HL[Shipment].HL[Order].HL[Tare].HL[Pack].HL[Item].DTM</td><td class='neutral left'>HL[Shipment].HL[Order].HL[Pack].DTM</td></tr>
+<tr><td class='neutral left'></td><td class='neutral left'></td><td class='neutral left'>HL[Shipment].HL[Order].HL[Pack].HL[Item].DTM</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].TD3</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].TD3</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD3</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assertions</td><td class='neutral left'>E0110,C0203,C0405,P0506</td><td class='neutral left'>E0110,C0203</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD3.TD301 (EquipmentDescriptionCode_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'></td><td class='neutral left'>TL</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD3.TD302 (EquipmentInitial_02)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='tertiary left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD3.TD303 (EquipmentNumber_03)</td><td class='warn left'>missing</td><td class='neutral left'>present</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].PRF</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].PRF</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].PRF</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].N1</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].N1</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].N1</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].N1.N102 (Name_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Element ID</td><td class='neutral left'>98</td><td class='neutral left'>93</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].N1.N103 (IdentificationCodeQualifier_03)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>92,UL</td><td class='neutral left'>1,9,92</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;N1</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;Can't match for element N1</td><td class='neutral left'>HL[Shipment].HL[Order].HL[Tare].HL[Pack].HL[Item].N1</td><td class='neutral left'>HL[Shipment].HL[Order].HL[Pack].N1</td></tr>
+<tr><td class='neutral left'></td><td class='neutral left'></td><td class='neutral left'>HL[Shipment].HL[Order].HL[Pack].HL[Item].N1</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].REF</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].REF</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].REF</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].REF.REF01 (ReferenceIdentificationQualifier_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>BM</td><td class='neutral left'>2I,BM,CN,P8</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].REF.REF02 (ReferenceIdentification_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].REF</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].HL[Order].REF</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].REF</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].REF.REF01 (ReferenceIdentificationQualifier_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>IA,IV</td><td class='neutral left'>IV,VR</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].HL[Order].REF.REF02 (ReferenceIdentification_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;REF</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;Can't match for element REF</td><td class='neutral left'></td><td class='neutral left'>HL[Shipment].HL[Order].HL[Pack].REF</td></tr>
+<tr><td class='neutral left'></td><td class='neutral left'></td><td class='neutral left'>HL[Shipment].HL[Order].HL[Pack].HL[Item].REF</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].TD1</td></tr>
+<tr><td class='secondary left' colspan='3'>&nbsp;&nbsp;HL[Shipment].TD1</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD1</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD1.TD101 (PackagingCode_01)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Valid Values</td><td class='neutral left'>CTN25</td><td class='neutral left'>CTN,CTN25,PLT,PLT94</td></tr>
+<tr><td class='tertiary left' colspan='3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HL[Shipment].TD1.TD102 (LadingQuantity_02)</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Required</td><td class='neutral left'>false</td><td class='neutral left'>true</td></tr>
+<tr><td class='secondary left' colspan='3'>CTT</td></tr>
+<tr><td class='neutral left'>&nbsp;&nbsp;Assertions</td><td class='neutral left'></td><td class='neutral left'>P0304,P0506</td></tr>
+</tbody></table>
+</body></html>

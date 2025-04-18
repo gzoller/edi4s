@@ -1,0 +1,1775 @@
+{
+  "name": "850",
+  "version": "4030",
+  "partner": "ANSI",
+  "segments": [
+    {
+      "name": "ST",
+      "canonicalName": "ST",
+      "description": "",
+      "required": true,
+      "assertions": [],
+      "fields": [
+        {
+          "name": "TransactionSetIdentifierCode_01",
+          "canonicalName": "ST01",
+          "index": 1,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_AN",
+          "elementId": 143,
+          "validValues": ["856"]
+        },
+        {
+          "name": "TransactionSetControlNumber_02",
+          "canonicalName": "ST02",
+          "index": 2,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_AN",
+          "elementId": 329,
+          "validValues": []
+        }
+      ]
+    },
+    {
+      "name": "BSN",
+      "canonicalName": "BSN",
+      "description": "",
+      "required": true,
+      "assertions": [
+        "C0706"
+      ],
+      "fields": [
+        {
+          "name": "TransactionSetPurposeCode_01",
+          "canonicalName": "BSN01",
+          "index": 1,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "elementId": 353,
+          "validValues": ["00"],
+          "validValuesRef": "X12_ID_353"
+        },
+        {
+          "name": "ShipmentIdentification_02",
+          "canonicalName": "BSN02",
+          "index": 2,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_AN",
+          "elementId": 396,
+          "validValues": []
+        },
+        {
+          "name": "Date_03",
+          "canonicalName": "BSN03",
+          "index": 3,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_DT",
+          "elementId": 373,
+          "validValues": []
+        },
+        {
+          "name": "Time_04",
+          "canonicalName": "BSN04",
+          "index": 4,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_TM",
+          "elementId": 337,
+          "validValues": []
+        },
+        {
+          "name": "HierarchicalStructureCode_05",
+          "canonicalName": "BSN05",
+          "index": 5,
+          "description": "",
+          "required": false,
+          "dataType": "string",
+          "elementId": 1005,
+          "validValues": ["0001"],
+          "validValuesRef": "X12_ID_1005"
+        }
+      ]
+    },
+    {
+      "name": "HL",
+      "canonicalName": "HL",
+      "description": "Shipment",
+      "required": true,
+      "assertions": [],
+      "fields": [
+        {
+          "name": "HierarchicalIDNumber_01",
+          "canonicalName": "HL01",
+          "index": 1,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_AN",
+          "elementId": 628,
+          "validValues": []
+        },
+        {
+          "name": "HierarchicalLevelCode_03",
+          "canonicalName": "HL03",
+          "index": 3,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "elementId": 735,
+          "validValues": ["S"],
+          "validValuesRef": "X12_ID_735"
+        }
+      ],
+      "maxRepeats": 200000,
+      "body": [
+        {
+          "name": "TD1",
+          "canonicalName": "TD1",
+          "description": "",
+          "required": false,
+          "assertions": [
+            "C0102",
+            "C0304",
+            "C0607",
+            "P0708",
+            "P0910"
+          ],
+          "fields": [
+            {
+              "name": "PackagingCode_01",
+              "canonicalName": "TD101",
+              "index": 1,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 103,
+              "validValues": ["CTN","CTN25","PLT","PLT94"]
+            },
+            {
+              "name": "LadingQuantity_02",
+              "canonicalName": "TD102",
+              "index": 2,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "format": "X12_N0",
+              "elementId": 80,
+              "validValues": []
+            },
+            {
+              "name": "WeightQualifier_06",
+              "canonicalName": "TD106",
+              "index": 6,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "elementId": 187,
+              "validValues": ["G"],
+              "validValuesRef": "X12_ID_187"
+            },
+            {
+              "name": "Weight_07",
+              "canonicalName": "TD107",
+              "index": 7,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "format": "X12_R",
+              "elementId": 81,
+              "validValues": []
+            },
+            {
+              "name": "UnitorBasisforMeasurementCode_08",
+              "canonicalName": "TD108",
+              "index": 8,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "elementId": 355,
+              "validValues": ["LB"],
+              "validValuesRef": "X12_ID_355"
+            }
+          ],
+          "maxRepeats": 2,
+          "body": []
+        },
+        {
+          "name": "TD5",
+          "canonicalName": "TD5",
+          "description": "",
+          "required": true,
+          "assertions": [
+            "R0204050612",
+            "C0203"
+          ],
+          "fields": [
+            {
+              "name": "IdentificationCodeQualifier_02",
+              "canonicalName": "TD502",
+              "index": 2,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "elementId": 66,
+              "validValues": ["2"],
+              "validValuesRef": "X12_ID_66"
+            },
+            {
+              "name": "IdentificationCode_03",
+              "canonicalName": "TD503",
+              "index": 3,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 67,
+              "validValues": []
+            },
+            {
+              "name": "TransportationMethodTypeCode_04",
+              "canonicalName": "TD504",
+              "index": 4,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "elementId": 91,
+              "validValues": ["A","C","D","E","H","K","L","M","R","S","T","U","AE","CE","MP"],
+              "validValuesRef": "X12_ID_91"
+            },
+            {
+              "name": "Routing_05",
+              "canonicalName": "TD505",
+              "index": 5,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 387,
+              "validValues": []
+            }
+          ],
+          "maxRepeats": 12,
+          "body": []
+        },
+        {
+          "name": "TD3",
+          "canonicalName": "TD3",
+          "description": "",
+          "required": false,
+          "assertions": [
+            "E0110",
+            "C0203"
+          ],
+          "fields": [
+            {
+              "name": "EquipmentDescriptionCode_01",
+              "canonicalName": "TD301",
+              "index": 1,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "elementId": 40,
+              "validValues": ["TL"],
+              "validValuesRef": "X12_ID_40"
+            },
+            {
+              "name": "EquipmentInitial_02",
+              "canonicalName": "TD302",
+              "index": 2,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 206,
+              "validValues": []
+            },
+            {
+              "name": "EquipmentNumber_03",
+              "canonicalName": "TD303",
+              "index": 3,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 207,
+              "validValues": []
+            }
+          ],
+          "maxRepeats": 12,
+          "body": [
+            {
+              "name": "AT9",
+              "canonicalName": "AT9",
+              "description": "",
+              "required": false,
+              "assertions": [
+                "P040506",
+                "P0708"
+              ],
+              "fields": [
+                {
+                  "name": "EquipmentLength_01",
+                  "canonicalName": "AT901",
+                  "index": 1,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_N0",
+                  "elementId": 567,
+                  "validValues": []
+                },
+                {
+                  "name": "Height_02",
+                  "canonicalName": "AT902",
+                  "index": 2,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_R",
+                  "elementId": 65,
+                  "validValues": []
+                },
+                {
+                  "name": "Width_03",
+                  "canonicalName": "AT903",
+                  "index": 3,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_R",
+                  "elementId": 189,
+                  "validValues": []
+                },
+                {
+                  "name": "WeightQualifier_04",
+                  "canonicalName": "AT904",
+                  "index": 4,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 187,
+                  "validValues": [],
+                  "validValuesRef": "X12_ID_187"
+                },
+                {
+                  "name": "WeightUnitCode_05",
+                  "canonicalName": "AT905",
+                  "index": 5,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 188,
+                  "validValues": [],
+                  "validValuesRef": "X12_ID_188"
+                },
+                {
+                  "name": "Weight_06",
+                  "canonicalName": "AT906",
+                  "index": 6,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_R",
+                  "elementId": 81,
+                  "validValues": []
+                },
+                {
+                  "name": "VolumeUnitQualifier_07",
+                  "canonicalName": "AT907",
+                  "index": 7,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 184,
+                  "validValues": [],
+                  "validValuesRef": "X12_ID_184"
+                },
+                {
+                  "name": "Volume_08",
+                  "canonicalName": "AT908",
+                  "index": 8,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_R",
+                  "elementId": 183,
+                  "validValues": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "REF",
+          "canonicalName": "REF",
+          "description": "",
+          "required": true,
+          "assertions": [
+            "R0203"
+          ],
+          "fields": [
+            {
+              "name": "ReferenceIdentificationQualifier_01",
+              "canonicalName": "REF01",
+              "index": 1,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "elementId": 128,
+              "validValues": ["2I","BM","CN","P8"],
+              "validValuesRef": "X12_ID_128"
+            },
+            {
+              "name": "ReferenceIdentification_02",
+              "canonicalName": "REF02",
+              "index": 2,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 127,
+              "validValues": []
+            }
+          ],
+          "maxRepeats": 4,
+          "body": []
+        },
+        {
+          "name": "DTM",
+          "canonicalName": "DTM",
+          "description": "",
+          "required": true,
+          "assertions": [
+            "R020305",
+            "C0403",
+            "P0506"
+          ],
+          "fields": [
+            {
+              "name": "DateTimeQualifier_01",
+              "canonicalName": "DTM01",
+              "index": 1,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "elementId": 374,
+              "validValues": ["011","035","067","118"],
+              "validValuesRef": "X12_ID_374"
+            },
+            {
+              "name": "Date_02",
+              "canonicalName": "DTM02",
+              "index": 2,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "format": "X12_DT",
+              "elementId": 373,
+              "validValues": []
+            },
+            {
+              "name": "Time_03",
+              "canonicalName": "DTM03",
+              "index": 3,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "format": "X12_TM",
+              "elementId": 337,
+              "validValues": []
+            }
+          ],
+          "maxRepeats": 4,
+          "body": []
+        },
+        {
+          "name": "N1",
+          "canonicalName": "N1",
+          "description": "",
+          "required": true,
+          "assertions": [
+            "R0203",
+            "P0304"
+          ],
+          "fields": [
+            {
+              "name": "EntityIdentifierCode_01",
+              "canonicalName": "N101",
+              "index": 1,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "elementId": 98,
+              "validValues": ["SF","ST"],
+              "validValuesRef": "X12_ID_98"
+            },
+            {
+              "name": "Name_02",
+              "canonicalName": "N102",
+              "index": 2,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 93,
+              "validValues": []
+            },
+            {
+              "name": "IdentificationCodeQualifier_03",
+              "canonicalName": "N103",
+              "index": 3,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "elementId": 66,
+              "validValues": ["1","9","92"],
+              "validValuesRef": "X12_ID_66"
+            },
+            {
+              "name": "IdentificationCode_04",
+              "canonicalName": "N104",
+              "index": 4,
+              "description": "",
+              "required": false,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 67,
+              "validValues": []
+            }
+          ],
+          "maxRepeats": 2,
+          "body": [
+            {
+              "name": "N3",
+              "canonicalName": "N3",
+              "description": "",
+              "required": true,
+              "assertions": [],
+              "fields": [
+                {
+                  "name": "AddressInformation_01",
+                  "canonicalName": "N301",
+                  "index": 1,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 166,
+                  "validValues": []
+                },
+                {
+                  "name": "AddressInformation_02",
+                  "canonicalName": "N302",
+                  "index": 2,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 166,
+                  "validValues": []
+                }
+              ],
+              "maxRepeats": 2,
+              "body": []
+            },
+            {
+              "name": "N4",
+              "canonicalName": "N4",
+              "description": "",
+              "required": true,
+              "assertions": [
+                "E0207",
+                "C0605",
+                "C0704"
+              ],
+              "fields": [
+                {
+                  "name": "CityName_01",
+                  "canonicalName": "N401",
+                  "index": 1,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 19,
+                  "validValues": []
+                },
+                {
+                  "name": "StateorProvinceCode_02",
+                  "canonicalName": "N402",
+                  "index": 2,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 156,
+                  "validValues": []
+                },
+                {
+                  "name": "PostalCode_03",
+                  "canonicalName": "N403",
+                  "index": 3,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 116,
+                  "validValues": []
+                },
+                {
+                  "name": "CountryCode_04",
+                  "canonicalName": "N404",
+                  "index": 4,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 26,
+                  "validValues": []
+                }
+              ]
+            },
+            {
+              "name": "PER",
+              "canonicalName": "PER",
+              "description": "",
+              "required": false,
+              "assertions": [
+                "P0304",
+                "P0506",
+                "P0708"
+              ],
+              "fields": [
+                {
+                  "name": "ContactFunctionCode_01",
+                  "canonicalName": "PER01",
+                  "index": 1,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "elementId": 366,
+                  "validValues": ["IC"],
+                  "validValuesRef": "X12_ID_366"
+                },
+                {
+                  "name": "Name_02",
+                  "canonicalName": "PER02",
+                  "index": 2,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 93,
+                  "validValues": []
+                },
+                {
+                  "name": "CommunicationNumberQualifier_03",
+                  "canonicalName": "PER03",
+                  "index": 3,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 365,
+                  "validValues": ["TE"],
+                  "validValuesRef": "X12_ID_365"
+                },
+                {
+                  "name": "CommunicationNumber_04",
+                  "canonicalName": "PER04",
+                  "index": 4,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 364,
+                  "validValues": []
+                },
+                {
+                  "name": "CommunicationNumberQualifier_05",
+                  "canonicalName": "PER05",
+                  "index": 5,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 365,
+                  "validValues": ["FX"],
+                  "validValuesRef": "X12_ID_365"
+                },
+                {
+                  "name": "CommunicationNumber_06",
+                  "canonicalName": "PER06",
+                  "index": 6,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 364,
+                  "validValues": []
+                },
+                {
+                  "name": "CommunicationNumberQualifier_07",
+                  "canonicalName": "PER07",
+                  "index": 7,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 365,
+                  "validValues": ["EM"],
+                  "validValuesRef": "X12_ID_365"
+                },
+                {
+                  "name": "CommunicationNumber_08",
+                  "canonicalName": "PER08",
+                  "index": 8,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 364,
+                  "validValues": []
+                }
+              ],
+              "maxRepeats": 1,
+              "body": []
+            }
+          ]
+        }
+      ],
+      "nested": [{
+        "name": "HL",
+        "canonicalName": "HL",
+        "description": "Order",
+        "required": true,
+        "assertions": [],
+        "fields": [
+          {
+            "name": "HierarchicalIDNumber_01",
+            "canonicalName": "HL01",
+            "index": 1,
+            "description": "",
+            "required": true,
+            "dataType": "string",
+            "format": "X12_AN",
+            "elementId": 628,
+            "validValues": []
+          },
+          {
+            "name": "HierarchicalParentIDNumber_02",
+            "canonicalName": "HL02",
+            "index": 2,
+            "description": "",
+            "required": true,
+            "dataType": "string",
+            "format": "X12_AN",
+            "elementId": 734,
+            "validValues": []
+          },
+          {
+            "name": "HierarchicalLevelCode_03",
+            "canonicalName": "HL03",
+            "index": 3,
+            "description": "",
+            "required": true,
+            "dataType": "string",
+            "elementId": 735,
+            "validValues": ["O"],
+            "validValuesRef": "X12_ID_735"
+          }
+        ],
+        "maxRepeats": 200000,
+        "body": [
+          {
+            "name": "PRF",
+            "canonicalName": "PRF",
+            "description": "",
+            "required": true,
+            "assertions": [],
+            "fields": [
+              {
+                "name": "PurchaseOrderNumber_01",
+                "canonicalName": "PRF01",
+                "index": 1,
+                "description": "",
+                "required": true,
+                "dataType": "string",
+                "format": "X12_AN",
+                "elementId": 324,
+                "validValues": []
+              },
+              {
+                "name": "Date_04",
+                "canonicalName": "PRF04",
+                "index": 4,
+                "description": "",
+                "required": false,
+                "dataType": "string",
+                "format": "X12_DT",
+                "elementId": 373,
+                "validValues": []
+              }
+            ]
+          },
+          {
+            "name": "REF",
+            "canonicalName": "REF",
+            "description": "",
+            "required": true,
+            "assertions": [
+              "R0203"
+            ],
+            "fields": [
+              {
+                "name": "ReferenceIdentificationQualifier_01",
+                "canonicalName": "REF01",
+                "index": 1,
+                "description": "",
+                "required": true,
+                "dataType": "string",
+                "elementId": 128,
+                "validValues": ["IV","VR"],
+                "validValuesRef": "X12_ID_128"
+              },
+              {
+                "name": "ReferenceIdentification_02",
+                "canonicalName": "REF02",
+                "index": 2,
+                "description": "",
+                "required": true,
+                "dataType": "string",
+                "format": "X12_AN",
+                "elementId": 127,
+                "validValues": []
+              }
+            ],
+            "maxRepeats": 2,
+            "body": []
+          }
+        ],
+        "nested": [{
+          "name": "HL",
+          "canonicalName": "HL",
+          "description": "Pack",
+          "required": true,
+          "assertions": [],
+          "fields": [
+            {
+              "name": "HierarchicalIDNumber_01",
+              "canonicalName": "HL01",
+              "index": 1,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 628,
+              "validValues": []
+            },
+            {
+              "name": "HierarchicalParentIDNumber_02",
+              "canonicalName": "HL02",
+              "index": 2,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "format": "X12_AN",
+              "elementId": 734,
+              "validValues": []
+            },
+            {
+              "name": "HierarchicalLevelCode_03",
+              "canonicalName": "HL03",
+              "index": 3,
+              "description": "",
+              "required": true,
+              "dataType": "string",
+              "elementId": 735,
+              "validValues": ["P","T"],
+              "validValuesRef": "X12_ID_735"
+            }
+          ],
+          "maxRepeats": 200000,
+          "body": [
+            {
+              "name": "PO4",
+              "canonicalName": "PO4",
+              "description": "",
+              "required": false,
+              "assertions": [
+                "P0203",
+                "C0506",
+                "P0607",
+                "P0809",
+                "C1013",
+                "C1113",
+                "C1213",
+                "L13101112",
+                "C1716",
+                "C1804"
+              ],
+              "fields": [
+                {
+                  "name": "WeightQualifier_05",
+                  "canonicalName": "PO405",
+                  "index": 5,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 187,
+                  "validValues": ["G"],
+                  "validValuesRef": "X12_ID_187"
+                },
+                {
+                  "name": "GrossWeightperPack_06",
+                  "canonicalName": "PO406",
+                  "index": 6,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_R",
+                  "elementId": 384,
+                  "validValues": []
+                },
+                {
+                  "name": "UnitorBasisforMeasurementCode_07",
+                  "canonicalName": "PO407",
+                  "index": 7,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 355,
+                  "validValues": ["LB"],
+                  "validValuesRef": "X12_ID_355"
+                }
+              ]
+            },
+            {
+              "name": "REF",
+              "canonicalName": "REF",
+              "description": "",
+              "required": false,
+              "assertions": [
+                "R0203"
+              ],
+              "fields": [
+                {
+                  "name": "ReferenceIdentificationQualifier_01",
+                  "canonicalName": "REF01",
+                  "index": 1,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "elementId": 128,
+                  "validValues": ["LT"],
+                  "validValuesRef": "X12_ID_128"
+                },
+                {
+                  "name": "ReferenceIdentification_02",
+                  "canonicalName": "REF02",
+                  "index": 2,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 127,
+                  "validValues": []
+                }
+              ],
+              "body": []
+            },
+            {
+              "name": "MAN",
+              "canonicalName": "MAN",
+              "description": "",
+              "required": true,
+              "assertions": [
+                "P0405",
+                "C0605"
+              ],
+              "fields": [
+                {
+                  "name": "MarksandNumbersQualifier_01",
+                  "canonicalName": "MAN01",
+                  "index": 1,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "elementId": 88,
+                  "validValues": ["CP","GM"],
+                  "validValuesRef": "X12_ID_88"
+                },
+                {
+                  "name": "MarksandNumbers_02",
+                  "canonicalName": "MAN02",
+                  "index": 2,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 87,
+                  "validValues": []
+                },
+                {
+                  "name": "MarksandNumbersQualifier_04",
+                  "canonicalName": "MAN04",
+                  "index": 4,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 88,
+                  "validValues": ["CP"],
+                  "validValuesRef": "X12_ID_88"
+                },
+                {
+                  "name": "MarksandNumbers_05",
+                  "canonicalName": "MAN05",
+                  "index": 5,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 87,
+                  "validValues": []
+                }
+              ],
+              "body": []
+            },
+            {
+              "name": "DTM",
+              "canonicalName": "DTM",
+              "description": "",
+              "required": false,
+              "assertions": [
+                "R020305",
+                "C0403",
+                "P0506"
+              ],
+              "fields": [
+                {
+                  "name": "DateTimeQualifier_01",
+                  "canonicalName": "DTM01",
+                  "index": 1,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "elementId": 374,
+                  "validValues": ["036","405","510","511"],
+                  "validValuesRef": "X12_ID_374"
+                },
+                {
+                  "name": "Date_02",
+                  "canonicalName": "DTM02",
+                  "index": 2,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "format": "X12_DT",
+                  "elementId": 373,
+                  "validValues": []
+                }
+              ],
+              "maxRepeats": 10,
+              "body": []
+            },
+            {
+              "name": "N1",
+              "canonicalName": "N1",
+              "description": "",
+              "required": false,
+              "assertions": [
+                "R0203",
+                "P0304"
+              ],
+              "fields": [
+                {
+                  "name": "EntityIdentifierCode_01",
+                  "canonicalName": "N101",
+                  "index": 1,
+                  "description": "",
+                  "required": true,
+                  "dataType": "string",
+                  "elementId": 98,
+                  "validValues": ["CT","MF"],
+                  "validValuesRef": "X12_ID_98"
+                },
+                {
+                  "name": "Name_02",
+                  "canonicalName": "N102",
+                  "index": 2,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 93,
+                  "validValues": []
+                },
+                {
+                  "name": "IdentificationCodeQualifier_03",
+                  "canonicalName": "N103",
+                  "index": 3,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "elementId": 66,
+                  "validValues": ["9","92","UL"],
+                  "validValuesRef": "X12_ID_66"
+                },
+                {
+                  "name": "IdentificationCode_04",
+                  "canonicalName": "N104",
+                  "index": 4,
+                  "description": "",
+                  "required": false,
+                  "dataType": "string",
+                  "format": "X12_AN",
+                  "elementId": 67,
+                  "validValues": []
+                }
+              ],
+              "maxRepeats": 1,
+              "body": [
+                {
+                  "name": "N4",
+                  "canonicalName": "N4",
+                  "description": "",
+                  "required": false,
+                  "assertions": [
+                    "E0207",
+                    "C0605",
+                    "C0704"
+                  ],
+                  "fields": [
+                    {
+                      "name": "CountryCode_04",
+                      "canonicalName": "N404",
+                      "index": 4,
+                      "description": "",
+                      "required": false,
+                      "dataType": "string",
+                      "format": "X12_AN",
+                      "elementId": 26,
+                      "validValues": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "nested": [{
+            "name": "HL",
+            "canonicalName": "HL",
+            "description": "Item",
+            "required": true,
+            "assertions": [],
+            "fields": [
+              {
+                "name": "HierarchicalIDNumber_01",
+                "canonicalName": "HL01",
+                "index": 1,
+                "description": "",
+                "required": true,
+                "dataType": "string",
+                "format": "X12_AN",
+                "elementId": 628,
+                "validValues": []
+              },
+              {
+                "name": "HierarchicalParentIDNumber_02",
+                "canonicalName": "HL02",
+                "index": 2,
+                "description": "",
+                "required": true,
+                "dataType": "string",
+                "format": "X12_AN",
+                "elementId": 734,
+                "validValues": []
+              },
+              {
+                "name": "HierarchicalLevelCode_03",
+                "canonicalName": "HL03",
+                "index": 3,
+                "description": "",
+                "required": true,
+                "dataType": "string",
+                "elementId": 735,
+                "validValues": ["I"],
+                "validValuesRef": "X12_ID_735"
+              }
+            ],
+            "maxRepeats": 200000,
+            "body": [
+              {
+                "name": "LIN",
+                "canonicalName": "LIN",
+                "description": "",
+                "required": true,
+                "assertions": [
+                  "P0405",
+                  "P0607",
+                  "P0809",
+                  "P1011",
+                  "P1213",
+                  "P1415",
+                  "P1617",
+                  "P1819",
+                  "P2021",
+                  "P2223",
+                  "P2425",
+                  "P2627",
+                  "P2829",
+                  "P3031"
+                ],
+                "fields": [
+                  {
+                    "name": "AssignedIdentification_01",
+                    "canonicalName": "LIN01",
+                    "index": 1,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 350,
+                    "validValues": []
+                  },
+                  {
+                    "name": "ProductServiceIDQualifier_02",
+                    "canonicalName": "LIN02",
+                    "index": 2,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "elementId": 235,
+                    "validValues": ["IN","UA","UK","UP"],
+                    "validValuesRef": "X12_ID_235"
+                  },
+                  {
+                    "name": "ProductServiceID_03",
+                    "canonicalName": "LIN03",
+                    "index": 3,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 234,
+                    "validValues": []
+                  },
+                  {
+                    "name": "ProductServiceIDQualifier_04",
+                    "canonicalName": "LIN04",
+                    "index": 4,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 235,
+                    "validValues": ["EN","IN","UA","UK","UP","VN"],
+                    "validValuesRef": "X12_ID_235"
+                  },
+                  {
+                    "name": "ProductServiceID_05",
+                    "canonicalName": "LIN05",
+                    "index": 5,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 234,
+                    "validValues": []
+                  },
+                  {
+                    "name": "ProductServiceIDQualifier_06",
+                    "canonicalName": "LIN06",
+                    "index": 6,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 235,
+                    "validValues": ["EN","IN","UA","UK","UP","VN"],
+                    "validValuesRef": "X12_ID_235"
+                  },
+                  {
+                    "name": "ProductServiceID_07",
+                    "canonicalName": "LIN07",
+                    "index": 7,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 234,
+                    "validValues": []
+                  },
+                  {
+                    "name": "ProductServiceIDQualifier_08",
+                    "canonicalName": "LIN08",
+                    "index": 8,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 235,
+                    "validValues": ["EN","IN","UA","UK","UP","VN"],
+                    "validValuesRef": "X12_ID_235"
+                  },
+                  {
+                    "name": "ProductServiceID_09",
+                    "canonicalName": "LIN09",
+                    "index": 9,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 234,
+                    "validValues": []
+                  },
+                  {
+                    "name": "ProductServiceIDQualifier_10",
+                    "canonicalName": "LIN10",
+                    "index": 10,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 235,
+                    "validValues": ["EN","IN","UA","UK","UP","VN"],
+                    "validValuesRef": "X12_ID_235"
+                  },
+                  {
+                    "name": "ProductServiceID_11",
+                    "canonicalName": "LIN11",
+                    "index": 11,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 234,
+                    "validValues": []
+                  },
+                  {
+                    "name": "ProductServiceIDQualifier_12",
+                    "canonicalName": "LIN12",
+                    "index": 12,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 235,
+                    "validValues": ["EN","IN","UA","UK","UP","VN"],
+                    "validValuesRef": "X12_ID_235"
+                  },
+                  {
+                    "name": "ProductServiceID_13",
+                    "canonicalName": "LIN13",
+                    "index": 13,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 234,
+                    "validValues": []
+                  }
+                ]
+              },
+              {
+                "name": "SN1",
+                "canonicalName": "SN1",
+                "description": "",
+                "required": true,
+                "assertions": [
+                  "P0506"
+                ],
+                "fields": [
+                  {
+                    "name": "AssignedIdentification_01",
+                    "canonicalName": "SN101",
+                    "index": 1,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 350,
+                    "validValues": []
+                  },
+                  {
+                    "name": "UnitorBasisforMeasurementCode_03",
+                    "canonicalName": "SN103",
+                    "index": 3,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "elementId": 355,
+                    "validValues": ["CA","EA"],
+                    "validValuesRef": "X12_ID_355"
+                  }
+                ]
+              },
+              {
+                "name": "PO4",
+                "canonicalName": "PO4",
+                "description": "",
+                "required": false,
+                "assertions": [
+                  "P0203",
+                  "C0506",
+                  "P0607",
+                  "P0809",
+                  "C1013",
+                  "C1113",
+                  "C1213",
+                  "L13101112",
+                  "C1716",
+                  "C1804"
+                ],
+                "fields": [
+                  {
+                    "name": "Pack_01",
+                    "canonicalName": "PO401",
+                    "index": 1,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_N0",
+                    "elementId": 356,
+                    "validValues": []
+                  },
+                  {
+                    "name": "Size_02",
+                    "canonicalName": "PO402",
+                    "index": 2,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_R",
+                    "elementId": 357,
+                    "validValues": []
+                  },
+                  {
+                    "name": "UnitorBasisforMeasurementCode_03",
+                    "canonicalName": "PO403",
+                    "index": 3,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 355,
+                    "validValues": ["BG","DR","DZ","EA","GA","GH","GR","GS","KG","LB","LT","ML","OZ","PT","QT","T3","TY"],
+                    "validValuesRef": "X12_ID_355"
+                  },
+                  {
+                    "name": "WeightQualifier_05",
+                    "canonicalName": "PO405",
+                    "index": 5,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 187,
+                    "validValues": ["G","N"],
+                    "validValuesRef": "X12_ID_187"
+                  },
+                  {
+                    "name": "GrossWeightperPack_06",
+                    "canonicalName": "PO406",
+                    "index": 6,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_R",
+                    "elementId": 384,
+                    "validValues": []
+                  },
+                  {
+                    "name": "UnitorBasisforMeasurementCode_07",
+                    "canonicalName": "PO407",
+                    "index": 7,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 355,
+                    "validValues": ["LB"],
+                    "validValuesRef": "X12_ID_355"
+                  },
+                  {
+                    "name": "InnerPack_14",
+                    "canonicalName": "PO414",
+                    "index": 14,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_N0",
+                    "elementId": 810,
+                    "validValues": []
+                  }
+                ]
+              },
+              {
+                "name": "PID",
+                "canonicalName": "PID",
+                "description": "",
+                "required": true,
+                "assertions": [
+                  "C0403",
+                  "R0405",
+                  "C0703",
+                  "C0804",
+                  "C0905"
+                ],
+                "fields": [
+                  {
+                    "name": "ItemDescriptionType_01",
+                    "canonicalName": "PID01",
+                    "index": 1,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "elementId": 349,
+                    "validValues": ["F"],
+                    "validValuesRef": "X12_ID_349"
+                  },
+                  {
+                    "name": "ProductProcessCharacteristicCode_02",
+                    "canonicalName": "PID02",
+                    "index": 2,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "elementId": 750,
+                    "validValues": ["08"],
+                    "validValuesRef": "X12_ID_750"
+                  },
+                  {
+                    "name": "Description_05",
+                    "canonicalName": "PID05",
+                    "index": 5,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 352,
+                    "validValues": []
+                  }
+                ],
+                "maxRepeats": 1,
+                "body": []
+              },
+              {
+                "name": "REF",
+                "canonicalName": "REF",
+                "description": "",
+                "required": false,
+                "assertions": [
+                  "R0203"
+                ],
+                "fields": [
+                  {
+                    "name": "ReferenceIdentificationQualifier_01",
+                    "canonicalName": "REF01",
+                    "index": 1,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "elementId": 128,
+                    "validValues": ["LT"],
+                    "validValuesRef": "X12_ID_128"
+                  },
+                  {
+                    "name": "ReferenceIdentification_02",
+                    "canonicalName": "REF02",
+                    "index": 2,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 127,
+                    "validValues": []
+                  }
+                ],
+                "body": []
+              },
+              {
+                "name": "DTM",
+                "canonicalName": "DTM",
+                "description": "",
+                "required": false,
+                "assertions": [
+                  "R020305",
+                  "C0403",
+                  "P0506"
+                ],
+                "fields": [
+                  {
+                    "name": "DateTimeQualifier_01",
+                    "canonicalName": "DTM01",
+                    "index": 1,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "elementId": 374,
+                    "validValues": ["036","405","510","511"],
+                    "validValuesRef": "X12_ID_374"
+                  },
+                  {
+                    "name": "Date_02",
+                    "canonicalName": "DTM02",
+                    "index": 2,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "format": "X12_DT",
+                    "elementId": 373,
+                    "validValues": []
+                  }
+                ],
+                "maxRepeats": 10,
+                "body": []
+              },
+              {
+                "name": "N1",
+                "canonicalName": "N1",
+                "description": "",
+                "required": false,
+                "assertions": [
+                  "R0203",
+                  "P0304"
+                ],
+                "fields": [
+                  {
+                    "name": "EntityIdentifierCode_01",
+                    "canonicalName": "N101",
+                    "index": 1,
+                    "description": "",
+                    "required": true,
+                    "dataType": "string",
+                    "elementId": 98,
+                    "validValues": ["CT","MF"],
+                    "validValuesRef": "X12_ID_98"
+                  },
+                  {
+                    "name": "Name_02",
+                    "canonicalName": "N102",
+                    "index": 2,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 93,
+                    "validValues": []
+                  },
+                  {
+                    "name": "IdentificationCodeQualifier_03",
+                    "canonicalName": "N103",
+                    "index": 3,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "elementId": 66,
+                    "validValues": ["9","92","UL"],
+                    "validValuesRef": "X12_ID_66"
+                  },
+                  {
+                    "name": "IdentificationCode_04",
+                    "canonicalName": "N104",
+                    "index": 4,
+                    "description": "",
+                    "required": false,
+                    "dataType": "string",
+                    "format": "X12_AN",
+                    "elementId": 67,
+                    "validValues": []
+                  }
+                ],
+                "maxRepeats": 200,
+                "body": [
+                  {
+                    "name": "N4",
+                    "canonicalName": "N4",
+                    "description": "",
+                    "required": false,
+                    "assertions": [
+                      "E0207",
+                      "C0605",
+                      "C0704"
+                    ],
+                    "fields": [
+                      {
+                        "name": "CountryCode_04",
+                        "canonicalName": "N404",
+                        "index": 4,
+                        "description": "",
+                        "required": false,
+                        "dataType": "string",
+                        "format": "X12_AN",
+                        "elementId": 26,
+                        "validValues": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "nested": []
+          }
+          ]
+        }
+        ]
+      }
+      ]
+    },
+    {
+      "name": "CTT",
+      "canonicalName": "CTT",
+      "description": "",
+      "required": false,
+      "assertions": [
+        "P0304",
+        "P0506"
+      ],
+      "fields": [
+        {
+          "name": "NumberofLineItems_01",
+          "canonicalName": "CTT01",
+          "index": 1,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_N0",
+          "elementId": 354,
+          "validValues": []
+        }
+      ]
+    },
+    {
+      "name": "SE",
+      "canonicalName": "SE",
+      "description": "",
+      "required": true,
+      "assertions": [],
+      "fields": [
+        {
+          "name": "NumberofIncludedSegments_01",
+          "canonicalName": "SE01",
+          "index": 1,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_N0",
+          "elementId": 96,
+          "validValues": []
+        },
+        {
+          "name": "TransactionSetControlNumber_02",
+          "canonicalName": "SE02",
+          "index": 2,
+          "description": "",
+          "required": true,
+          "dataType": "string",
+          "format": "X12_AN",
+          "elementId": 329,
+          "validValues": []
+        }
+      ]
+    }
+  ]
+}
