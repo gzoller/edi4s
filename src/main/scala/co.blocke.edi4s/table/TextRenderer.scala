@@ -1,6 +1,8 @@
 package co.blocke.edi4s
 package table
 
+import scala.annotation.tailrec
+
 case class TextRenderer(table: Table) extends Renderer:
   private val RESET = "\u001b[0m"
 
@@ -95,6 +97,7 @@ case class TextRenderer(table: Table) extends Renderer:
 
     " " * leftPad + truncated + " " * rightPad
 
+  @tailrec
   private def pad(content: String, width: Int, align: Align): String =
     val truncated = if content.length > width then content.take(width - 3) + "..." else content
 

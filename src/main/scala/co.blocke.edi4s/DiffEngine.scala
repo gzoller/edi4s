@@ -45,9 +45,9 @@ object DiffEngine:
         else if rawCName(sH) == rawCName(eH) && rawCName(eH) != rawCName(tH) then
           (sH, eH) match
             case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) =>
-              (sT,eT,target, acc :+ burnSrcSegment(path, sHS, eHS))
+              (sT,eT,target, acc :+ burnSrcSegment(path, sHS))
             case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) =>
-              (sT,eT,target,acc) // TODO: Fix acc
+              (sT,eT,target,acc :+ burnSrcLoop(path, sHS))
             case _ =>
               (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${rawCName(sH)} has a different major types (loop vs segment) than EDI standard"))
 
@@ -55,9 +55,9 @@ object DiffEngine:
         else if rawCName(sH) != rawCName(eH) && rawCName(eH) == rawCName(tH) then
           (eH, tH) match
             case (eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
-              (src,eT,tT, acc :+ burnTargetSegment(path, eHS, tHS))
+              (src,eT,tT, acc :+ burnTargetSegment(path, tHS))
             case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
-              (src,eT,tT,acc :+ burnTargetLoop(path, eHS, tHS)) // TODO: Fix acc
+              (src,eT,tT,acc :+ burnTargetLoop(path, tHS))
             case _ =>
               (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${rawCName(tH)} has a different major types (loop vs segment) than EDI standard"))
 
@@ -68,17 +68,17 @@ object DiffEngine:
       case (Nil, eH :: eT, tH :: tT) =>
         (eH, tH) match
           case (eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
-            (Nil,eT,tT, acc :+ burnTargetSegment(path, eHS, tHS))
+            (Nil,eT,tT, acc :+ burnTargetSegment(path, tHS))
           case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
-            (Nil,eT,tT,acc :+ burnTargetLoop(path, eHS, tHS)) // TODO: Fix acc
+            (Nil,eT,tT,acc :+ burnTargetLoop(path, tHS))
           case _ =>
             (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${rawCName(tH)} has a different major types (loop vs segment) than EDI standard"))
       case (sH :: sT, eH :: eT, Nil) =>
         (sH, eH) match
           case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) =>
-            (sT,eT,Nil, acc :+ burnSrcSegment(path, sHS, eHS))
+            (sT,eT,Nil, acc :+ burnSrcSegment(path, sHS))
           case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) =>
-            (sT,eT,Nil,acc) // TODO: Fix acc
+            (sT,eT,Nil,acc :+ burnSrcLoop(path, sHS))
           case _ =>
             (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${rawCName(sH)} has a different major types (loop vs segment) than EDI standard"))
       case (Nil, eH :: eT, Nil) =>
@@ -159,8 +159,7 @@ object DiffEngine:
   // src exists, target not
   private def burnSrcSegment(
                                   path: Path,
-                                  src: RefinedSegmentSpec,
-                                  edi: RefinedSegmentSpec
+                                  src: RefinedSegmentSpec
                                 ): SegmentDifference =
     SimpleSegmentDifference(
       path,
@@ -169,13 +168,12 @@ object DiffEngine:
       (true,false),
       (src.required, false),
       None,
-      burnSrcSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields)
+      burnSegmentFields(path.dot(src.canonicalName), src.fields, true)
     )
 
   // src exists, target not
   private def burnTargetSegment(
                               path: Path,
-                              edi: RefinedSegmentSpec,
                               target: RefinedSegmentSpec
                             ): SegmentDifference =
     SimpleSegmentDifference(
@@ -185,15 +183,31 @@ object DiffEngine:
       (false,true),
       (false, target.required),
       None,
-      burnTargetSegmentFields(path.dot(target.canonicalName), edi.fields, target.fields)
+      burnSegmentFields(path.dot(target.canonicalName), target.fields, false)
     )
 
-  // src exists, target not
-  private def burnTargetLoop(
+  private def burnSrcLoop(
                                  path: Path,
-                                 edi: RefinedLoopSpec,
-                                 target: RefinedLoopSpec
+                                 src: RefinedLoopSpec
                                ): SegmentDifference =
+    LoopSegmentDifference(
+      path,
+      src.name,
+      src.canonicalName,
+      (true, false),
+      (src.required, false),
+      None,
+      burnSegmentFields(path.dot(src.canonicalName), src.fields, true),
+      None,
+      None,
+      List.empty,
+      None
+    )
+
+  private def burnTargetLoop(
+                              path: Path,
+                              target: RefinedLoopSpec
+                            ): SegmentDifference =
     LoopSegmentDifference(
       path,
       target.name,
@@ -201,7 +215,7 @@ object DiffEngine:
       (false, true),
       (false, target.required),
       None,
-      burnTargetSegmentFields(path.dot(target.canonicalName), edi.fields, target.fields),
+      burnSegmentFields(path.dot(target.canonicalName), target.fields, false),
       None,
       None,
       List.empty,
@@ -228,7 +242,7 @@ object DiffEngine:
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
               (sT, eT, tT, acc :+ compareTwoSingleFields(path, sHS, tHS))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
-              (sT, eT, tT, acc) // TODO: fix acc
+              (sT, eT, tT, acc :+ compareTwoCompositeFields(path, sHS, eHS, tHS))
             case _ =>
               (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
         else if canonicalFieldNameOf(sH) == canonicalFieldNameOf(eH) && canonicalFieldNameOf(eH) != canonicalFieldNameOf(tH) then
@@ -236,7 +250,7 @@ object DiffEngine:
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
               (sT, eT, target, acc :+ burnSingleField(path, sHS, true))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
-              (sT, eT, target, acc) // TODO: fix acc
+              (sT, eT, target, acc :+ burnCompositeField(path, sHS, true))
             case _ =>
               (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
         else if canonicalFieldNameOf(sH) != canonicalFieldNameOf(eH) && canonicalFieldNameOf(eH) == canonicalFieldNameOf(tH) then
@@ -244,7 +258,7 @@ object DiffEngine:
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
               (src, eT, tT, acc :+ burnSingleField(path, tHS, false))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
-              (src, eT, tT, acc) // TODO: fix acc
+              (src, eT, tT, acc :+ burnCompositeField(path, tHS, false))
             case _ =>
               (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
         else
@@ -254,7 +268,7 @@ object DiffEngine:
           case (eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
             (Nil,eT,tT, acc :+ burnSingleField(path, tHS, false))
           case (eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
-            (Nil,eT,tT,acc ) // TODO: Fix acc
+            (Nil,eT,tT,acc :+ burnCompositeField(path, tHS, false))
           case _ =>
             (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Target field ${fieldNameOf(tH)} has a different major types (loop vs segment) than EDI standard"))
       case (sH :: sT, eH :: eT, Nil) =>
@@ -262,7 +276,7 @@ object DiffEngine:
           case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec) =>
             (sT,eT,Nil, acc :+ burnSingleField(path, sHS, true))
           case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec) =>
-            (sT,eT,Nil,acc) // TODO: Fix acc
+            (sT,eT,Nil,acc :+ burnCompositeField(path, sHS, true))
           case _ =>
             (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Source element ${fieldNameOf(sH)} has a different major types (loop vs segment) than EDI standard"))
       case (Nil, eH :: eT, Nil) =>
@@ -275,6 +289,16 @@ object DiffEngine:
         compareSegmentFields(path, s, e, t, nextAcc)
     }
 
+
+  private def compareTwoCompositeFields(path: Path, src: RefinedCompositeFieldSpec, edi: RefinedCompositeFieldSpec, target: RefinedCompositeFieldSpec): FieldDifference =
+    CompositeFieldDifference(
+      path,
+      src.name,
+      src.canonicalName,
+      (true,true),
+      (src.required, target.required),
+      compareSegmentFields(path.dot(src.canonicalName), src.components, edi.components, target.components)
+    )
 
   private def compareTwoSingleFields(path: Path, src: RefinedSingleFieldSpec, target: RefinedSingleFieldSpec): FieldDifference =
     SingleFieldDifference(
@@ -300,17 +324,15 @@ object DiffEngine:
       )
     )
 
-  private def burnSrcSegmentFields(
+  private def burnSegmentFields(
                               path: Path,
-                              src: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
-                              edi: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
-                            ): List[FieldDifference] = List.empty // TODO!
-
-  private def burnTargetSegmentFields(
-                                    path: Path,
-                                    edi: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
-                                    target: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
-                                  ): List[FieldDifference] = List.empty // TODO!
+                              doomed: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                              isSrc: Boolean
+                            ): List[FieldDifference] =
+    doomed.map {
+      case f: RefinedSingleFieldSpec => burnSingleField(path, f, isSrc)
+      case f: RefinedCompositeFieldSpec => burnCompositeField(path, f, isSrc)
+    }
 
   private def burnSingleField(path: Path, f: RefinedSingleFieldSpec, isSrc: Boolean): FieldDifference =
     SingleFieldDifference(
@@ -327,6 +349,20 @@ object DiffEngine:
       None,
       None,
       None
+    )
+
+  private def burnCompositeField(path: Path, f: RefinedCompositeFieldSpec, isSrc: Boolean): FieldDifference =
+    CompositeFieldDifference(
+      path,
+      f.name,
+      f.canonicalName,
+      {
+        if isSrc then (true, false) else (false, true)
+      },
+      {
+        if isSrc then (f.required, false) else (false, f.required)
+      },
+      List.empty
     )
 
   private def burnEdiField(path: Path, f: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): FieldDifference =
@@ -350,11 +386,44 @@ object DiffEngine:
 
   // TODO: Sew Path through scanTarget, loop, and advanceTo()
 
-  private def burnSrcHL(path: Path, target: RefinedLoopSpec): LoopSegmentDifference = ???
-  private def burnTargetHL(path: Path, target: RefinedLoopSpec): LoopSegmentDifference = ???
+  private def burnSrcHL(path: Path, src: RefinedLoopSpec): LoopSegmentDifference =
+    LoopSegmentDifference(
+      path,
+      src.name,
+      canonicalNameOf(src),
+      (true, false),
+      (src.required, false),
+      None,
+      burnSegmentFields(path, src.fields, false),
+      None,
+      None,
+      src.body.map {
+        case bd: RefinedSegmentSpec => burnTargetSegment(path, bd)
+        case bd: RefinedLoopSpec => burnTargetLoop(path, bd)
+      },
+      None
+    )
+
+  private def burnTargetHL(path: Path, target: RefinedLoopSpec): LoopSegmentDifference =
+    LoopSegmentDifference(
+      path,
+      target.name,
+      canonicalNameOf(target),
+      (false, true),
+      (false, target.required),
+      None,
+      burnSegmentFields(path, target.fields, false),
+      None,
+      None,
+      target.body.map {
+        case bd: RefinedSegmentSpec => burnTargetSegment(path, bd)
+        case bd: RefinedLoopSpec => burnTargetLoop(path, bd)
+      },
+      None
+    )
 
   private def nestedCompare(path: Path, src: Option[RefinedLoopSpec], edi: RefinedLoopSpec, target: Option[RefinedLoopSpec]): List[LoopSegmentDifference] = {
-    println("Comparing nested loop: " + src.map(s=>canonicalNameOf(s)).getOrElse("none")+" and "+target.map(s=>canonicalNameOf(s)).getOrElse("none"))
+//    println("Comparing nested loop: " + src.map(s=>canonicalNameOf(s)).getOrElse("none")+" and "+target.map(s=>canonicalNameOf(s)).getOrElse("none"))
     @tailrec
     def scanTarget(t: Option[RefinedLoopSpec], name: String, acc: List[LoopSegmentDifference]): (Boolean, List[LoopSegmentDifference]) =
       t match {
@@ -366,16 +435,23 @@ object DiffEngine:
     @tailrec
     def loop(x: Option[RefinedLoopSpec], y: Option[RefinedLoopSpec], result: List[LoopSegmentDifference]): List[LoopSegmentDifference] = (x, y) match {
       case (None, None) => result
-      case (None, Some(tt)) => loop(None, tt.nested, result :+ burnTargetHL(path.nest(canonicalNameOf(tt)), tt))
-      case (Some(xx), None) => loop(xx.nested, None, result :+ burnSrcHL(path.nest(canonicalNameOf(xx)), xx))
-      case (Some(xx), Some(yy)) if xx.name == yy.name =>
+      case (None, Some(tt)) =>
+//        println("Source missing "+canonicalNameOf(tt))
+        loop(None, tt.nested, result :+ burnTargetHL(path.nest(canonicalNameOf(tt)), tt))
+      case (Some(xx), None) =>
+//        println("Target missing "+canonicalNameOf(xx))
+        loop(xx.nested, None, result :+ burnSrcHL(path.nest(canonicalNameOf(xx)), xx))
+      case (Some(xx), Some(yy)) if canonicalNameOf(xx) == canonicalNameOf(yy) =>
+//        println("Match: "+canonicalNameOf(xx)+"/"+canonicalNameOf(yy))
         result :+ compareTwoLoops(path, xx, edi, yy)
       case (Some(xx), Some(_)) =>
-        val (found, acc) = scanTarget(y, xx.name, Nil)
+        val (found, acc) = scanTarget(y, canonicalNameOf(xx), Nil)
         if found then
-          val y2 = advanceTo(y, xx.name).flatMap(_.nested)
+          val y2 = advanceTo(y, canonicalNameOf(xx)).flatMap(_.nested)
+//          println("Match: " + canonicalNameOf(xx) + "/" + canonicalNameOf(y2.get))
           result :+ compareTwoLoops(path, xx, edi, y2.get)
         else
+//          println("Target missing "+canonicalNameOf(xx))
           loop(xx.nested, y, result :+ burnSrcHL(path.nest(canonicalNameOf(xx)), xx))
     }
 
@@ -429,11 +505,4 @@ object DiffEngine:
   private def canonicalFieldNameOf(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): String = x match {
     case s: RefinedSingleFieldSpec => s.canonicalName
     case l: RefinedCompositeFieldSpec => l.canonicalName
-  }
-
-  private def equalIgnoringBrackets(a: String, b: String): Boolean = {
-    def stripBrackets(s: String): String =
-      s.replaceAll("\\[.*?\\]", "")
-
-    stripBrackets(a) == stripBrackets(b)
   }
