@@ -746,7 +746,7 @@
           ]
         }
       ],
-      "nested": [{
+      "nested": {
         "name": "HL",
         "canonicalName": "HL",
         "description": "Order",
@@ -856,7 +856,7 @@
             "body": []
           }
         ],
-        "nested": [{
+        "nested": {
           "name": "HL",
           "canonicalName": "HL",
           "description": "Pack",
@@ -1164,7 +1164,7 @@
               ]
             }
           ],
-          "nested": [{
+          "nested": {
             "name": "HL",
             "canonicalName": "HL",
             "description": "Item",
@@ -1708,14 +1708,10 @@
                   }
                 ]
               }
-            ],
-            "nested": []
+            ]
           }
-          ]
         }
-        ]
       }
-      ]
     },
     {
       "name": "CTT",

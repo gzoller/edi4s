@@ -171,7 +171,7 @@ object CanonicalParser:
       Some(1),
       Some(1),
       bodySegments,
-      {if loopName == "HL" then Some(Nil) else None}
+      None
     )
 
   private def convertSegmentProperty( name: String, isRequired: Boolean, prop: EdiRefProperty, catalog: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, RefinedSegmentSpec | RefinedLoopSpec] =
@@ -226,7 +226,7 @@ object CanonicalParser:
       prop.minItems,
       prop.maxItems,
       bodySegments,
-      {if loopName == "HL" then Some(Nil) else None}
+      None
     )
 
   private def convertLoopPropertyNoBody(

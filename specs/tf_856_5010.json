@@ -640,7 +640,7 @@
           ]
         }
       ],
-      "nested": [{
+      "nested": {
         "name": "HL",
         "canonicalName": "HL",
         "description": "Order",
@@ -760,7 +760,7 @@
             "body": []
           }
         ],
-        "nested": [{
+        "nested": {
           "name": "HL",
           "canonicalName": "HL",
           "description": "Tare",
@@ -850,7 +850,7 @@
               "body": []
             }
           ],
-          "nested": [ {
+          "nested": {
             "name": "HL",
             "canonicalName": "HL",
             "description": "Pack",
@@ -1131,7 +1131,7 @@
                 "body": []
               }
             ],
-            "nested": [{
+            "nested": {
               "name": "HL",
               "canonicalName": "HL",
               "description": "Item",
@@ -1392,12 +1392,11 @@
                   "maxRepeats": 1,
                   "body": []
                 }
-              ],
-              "nested": []
-            }]
-          }]
-        }]
-      }]
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "name": "CTT",

@@ -2,7 +2,6 @@ package co.blocke.edi4s
 
 import model.*
 import scala.collection.mutable
-import zio.*
 import scala.annotation.tailrec
 import pprint.*
 
@@ -13,333 +12,404 @@ object DiffEngine:
   //
   def compareSpecs(
                     src: RefinedDocumentSpec,
+                    edi: RefinedDocumentSpec,
                     target: RefinedDocumentSpec
-                  ): ZIO[Any, DifferenceError, List[Difference]] =
-    ZIO.succeed(compareSegmentLists(Path(), src.segments, target.segments))
+                  ): List[Difference] =
+    compareSegmentLists(Path(), src.segments, edi.segments, target.segments)
 
-
+  @tailrec
   private def compareSegmentLists(
-                                   path: Path,
-                                   src: List[RefinedSegmentSpec | RefinedLoopSpec],
-                                   target: List[RefinedSegmentSpec | RefinedLoopSpec]
-                                 ): List[SegmentDifference] = {
-    @tailrec
-    def tracker(
-                 s: Int,
-                 t: Int,
-                 acc: List[Option[SegmentDifference]]
-               ): List[Option[SegmentDifference]] =
-      if s == src.length && t == target.length then
-        acc
-      else if s == src.length then
-        tracker(s, t + 1, acc :+ Some(SimpleSegmentDifference(path, nameOf(target(t)), canonicalNameOf(target(t)), Some((false, true)), None, None, None, Nil)))
-      else if t == target.length then
-        tracker(s + 1, t, acc :+ Some(SimpleSegmentDifference(path, nameOf(src(s)), canonicalNameOf(src(s)), Some((false, true)), None, None, None, Nil)))
-      else if nameOf(src(s)) == nameOf(target(t)) then
-        (src(s), target(t)) match {
-          case (s1: RefinedSegmentSpec, t1: RefinedSegmentSpec) =>
-            tracker(s + 1, t + 1, acc :+ compareTwoSegments(path, s1, t1))
-          case (s2: RefinedLoopSpec, t2: RefinedLoopSpec) =>
-            tracker(s + 1, t + 1, acc :+ compareTwoLoopSegments(path, s2, t2))
-          case _ => tracker(s + 1, t + 1, acc :+ Some(SeriousDifference(path, nameOf(target(t)), canonicalNameOf(target(t)), "Types (loop vs segment) differ. They must match!")))
-        }
-      else
-        // Look for s in t
-        val srcName = nameOf(src(s))
-        val targetLookAhead = target.indexWhere(e => nameOf(e) == srcName)
-        targetLookAhead match {
-          case -1 =>
-            // not found... go back to target(t) and look for next position in src
-            val targetName = nameOf(target(t))
-            val srcLookAhead = src.indexWhere(e => nameOf(e) == targetName)
-            srcLookAhead match {
-              case -1 =>
-//                println("OOPS:  Can't reconcile --> "+srcName+" and "+targetName + " in "+path)
-                acc :+ Some(SeriousDifference(path, "(unknown)", "", "Cannot reconcile src/target body elements"))
-              case a =>
-                val chunk = src.slice(s, a) // segments between t and j (exclusive)
-                val diffs = chunk.map { seg =>
-                  Some(SimpleSegmentDifference(
-                    path,
-                    nameOf(seg),
-                    canonicalNameOf(seg),
-                    Some((true, false)),
-                    None, None, None, Nil
-                  ))
-                }
-                tracker(a, t, acc ++ diffs)
-            }
-          case a =>
-            val chunk = target.slice(t, a) // segments between t and j (exclusive)
-            val diffs = chunk.map { seg =>
-              Some(SimpleSegmentDifference(
-                path,
-                nameOf(seg),
-                canonicalNameOf(seg),
-                Some((false, true)),
-                None, None, None, Nil
-              ))
-            }
-            tracker(s, a, acc ++ diffs)
-        }
-
-    tracker(0, 0, Nil).flatten
-  }
-
-
-  private def compareTwoSegments(path: Path, a: RefinedSegmentSpec, b: RefinedSegmentSpec): Option[SimpleSegmentDifference] =
-    val req = Option.when(a.required != b.required)((a.required, b.required))
-    val assertions = Option.when(a.assertions.toSet != b.assertions.toSet)((a.assertions, b.assertions))
-    val fieldDiffs = compareSegmentFields(path.dot(canonicalNameOf(a)), getFields(a), getFields(b))
-    (req, assertions, fieldDiffs) match {
-      case (None, None, Nil) => None
-      case _ => Some(SimpleSegmentDifference(path, nameOf(a), canonicalNameOf(a), None, req, assertions, None, fieldDiffs))
-    }
-
-//  private def printMap(label: String, m: Map[String, List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]]): Unit =
-//    println(s"=== $label Segment Map ===")
-//    val maxKeyLen = m.keys.map(_.length).maxOption.getOrElse(0)
-//    m.foreach { case (key, entries) =>
-//      entries.zipWithIndex.foreach {
-//        case ((path, _), 0) => println(f"${key.padTo(maxKeyLen, ' ')}  ${path.toString}")
-//        case ((path, _), _) => println(f"${" " * maxKeyLen}  ${path.toString}")
-//      }
-//    }
-
-  private def compareTwoLoopSegments(path: Path, a: RefinedLoopSpec, b: RefinedLoopSpec, descendNesting: Boolean = true): Option[LoopSegmentDifference] =
-    val req = Option.when(a.required != b.required)((a.required, b.required))
-    val assertions = Option.when(a.assertions.toSet != b.assertions.toSet)((a.assertions, b.assertions))
-    val fieldDiffs = compareSegmentFields(path.dot(canonicalNameOf(a)), getFields(a), getFields(b))
-    val minDiff = Option.when(a.minRepeats != b.minRepeats)(a.minRepeats,b.minRepeats)
-    val maxDiff = Option.when(a.maxRepeats != b.maxRepeats)(a.maxRepeats,b.maxRepeats)
-    val bodyAndNest: (Option[List[SegmentDifference]], Option[List[HLDifference]]) =
-      if equalIgnoringBrackets(canonicalNameOf(a), "HL") && descendNesting then
-        val srcMap = buildSegmentPathMap(List(a), path)
-        val targetMap = buildSegmentPathMap(List(b), path)
-
-//        Show all the deep paths discovered for each element
-//        printMap("Source",srcMap)
-//        printMap("Target",targetMap)
-
-        // Find any missing segments, regardless of path in src and target
-        val sourceKeys = srcMap.keySet
-        val targetKeys = targetMap.keySet
-        val onlyInSource = (sourceKeys -- targetKeys).toList
-        val onlyInTarget = (targetKeys -- sourceKeys).toList
-        val inBoth = sourceKeys.intersect(targetKeys).toList
-
-        val acc1 = onlyInSource.flatMap { k =>
-          srcMap(k).map { case (elemPath, spec) =>
-            HLDifference(elemPath.prefix, nameOf(spec), canonicalNameOf(spec), Some((true, false)), None, Nil)
-          }
-        }
-        val acc2 = onlyInTarget.flatMap { k =>
-          targetMap(k).map { case (elemPath, spec) =>
-            HLDifference(elemPath.prefix, nameOf(spec), canonicalNameOf(spec), Some((false, true)), None, Nil)
-          }
-        }
-
-        // Now track "moved" segments (NOTE: unordered!)
-        val acc3 = inBoth.flatMap { k =>
-          val srcElemPaths = srcMap(k)
-          val targetElemPaths = targetMap(k)
-          (srcElemPaths.size, targetElemPaths.size) match {
-            // Exact mapping
-            case (1,1) =>
-              val (s1, s2) = srcElemPaths.head
-              val (t1, t2) = targetElemPaths.head
-              val loopDiffs = compareFoundOnPath((s1.prefix, s2), (t1.prefix, t2)).toList
-              // See if the paths match and issue a HLDifference if not
-              if equalIgnoringBrackets(s1.toString, t1.toString) then loopDiffs
-                else HLDifference(path.prefix, nameOf(a), canonicalNameOf(a), None, Some((s1.toString, t1.toString)), Nil) :: loopDiffs
-
-            // Equal mapping (presume same?)
-            case (n,m) if n == m =>
-              srcElemPaths.zip(targetElemPaths).flatMap { case (s, t) =>
-                val (s1,s2) = s
-                val (t1,t2) = t
-                val loopDiffs = compareFoundOnPath((s1.prefix, s2), (t1.prefix, t2)).toList
-                // See if the paths match and issue a HLDifference if not
-                if equalIgnoringBrackets(s1.toString, t1.toString) then loopDiffs
-                else HLDifference(path.prefix, nameOf(a), canonicalNameOf(a), None, Some((s1.toString, t1.toString)), Nil) :: loopDiffs
-              }
-
-            // 1-to-many: Possible nesting HLs from canonical spec
-            case (1,n) =>
-              val (s1, s2) = srcElemPaths.head
-              targetElemPaths.map { tp =>
-                val (t1,t2) = tp
-                val loopDiffs = compareFoundOnPath((s1.prefix, s2), (t1.prefix, t2)).toList
-                // See if the paths match and issue a HLDifference if not
-                if equalIgnoringBrackets(s1.toString, t1.toString) then loopDiffs
-                else HLDifference(path.prefix, nameOf(a), canonicalNameOf(a), None, Some((s1.toString, t1.toString)), Nil) :: loopDiffs
-              }.toList.flatten
-
-            // many-to-1: Possible nesting HLs from canonical spec
-            case (n,1) =>
-              val (t1, t2) = srcElemPaths.head
-              srcElemPaths.map { s =>
-                val (s1,s2) = s
-                val loopDiffs = compareFoundOnPath((s1.prefix, s2), (t1.prefix, t2)).toList
-                // See if the paths match and issue a HLDifference if not
-                if equalIgnoringBrackets(s1.toString, t1.toString) then loopDiffs
-                else HLDifference(path.prefix, nameOf(a), canonicalNameOf(a), None, Some((s1.toString, t1.toString)), Nil) :: loopDiffs
-              }.toList.flatten
-
-            // n-to-m: Who knows!
+                           path: Path,
+                           src: List[RefinedSegmentSpec | RefinedLoopSpec],
+                           edi: List[RefinedSegmentSpec | RefinedLoopSpec],
+                           target: List[RefinedSegmentSpec | RefinedLoopSpec],
+                           acc: List[SegmentDifference] = List.empty
+  ): List[SegmentDifference] =
+    val nextLoop = (src, edi, target) match {
+      case (_, Nil, _ :: _) | (_ :: _, Nil, _) =>
+        (Nil,Nil,Nil,acc :+ DifferenceError(path, "Exhausted EDI standard segments before either src/target--they have extra (non-standard) fields"))
+      case (Nil, Nil, Nil) =>
+        (Nil,Nil,Nil,acc) // done comparing lists
+      case (sH :: sT, eH :: eT, tH :: tT) =>
+        // 3-way match -> compare sH and tH
+        if rawCName(sH) == rawCName(eH) && rawCName(eH) == rawCName(tH) then
+          (sH,eH,tH) match
+            case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
+              (sT, eT, tT, acc :+ compareTwoSegments(path, sHS, eHS, tHS))
+            case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
+              (sT, eT, tT, acc :+ compareTwoLoops(path, sHS, eHS, tHS))
             case _ =>
-              // Attempt to match what we can...
-              val extracted = extractSame(srcElemPaths, targetElemPaths)
-              val (matched, remainingSrc, remainingTarget) = extracted
-              val matchedDiffs = matched.flatMap { case (a, b) => compareFoundOnPath(a, b) }
+              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Matching elements ${rawCName(sH)} have different major types (loop vs segment)"))
 
-              // Give up on teh rest
-              matchedDiffs ++ List(
-                HLDifference(path.prefix, k, k, None, None, Nil, None,
-                  Some((remainingSrc.map(_._1.toString),remainingTarget.map(_._1.toString))))
-              )
-          }
+        // src has edi segment, target does not
+        else if rawCName(sH) == rawCName(eH) && rawCName(eH) != rawCName(tH) then
+          (sH, eH) match
+            case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) =>
+              (sT,eT,target, acc :+ burnSrcSegment(path, sHS, eHS))
+            case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) =>
+              (sT,eT,target,acc) // TODO: Fix acc
+            case _ =>
+              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${rawCName(sH)} has a different major types (loop vs segment) than EDI standard"))
+
+        // src does not have edi segment, target does
+        else if rawCName(sH) != rawCName(eH) && rawCName(eH) == rawCName(tH) then
+          (eH, tH) match
+            case (eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
+              (src,eT,tT, acc :+ burnTargetSegment(path, eHS, tHS))
+            case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
+              (src,eT,tT,acc :+ burnTargetLoop(path, eHS, tHS)) // TODO: Fix acc
+            case _ =>
+              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${rawCName(tH)} has a different major types (loop vs segment) than EDI standard"))
+
+        // neither have edi segment
+        else
+          (src, eT, target, acc :+ SimpleSegmentDifference(path, nameOf(eH), canonicalNameOf(eH), (false, false), (isRequired(sH), isRequired(tH)), None, List.empty))
+
+      case (Nil, eH :: eT, tH :: tT) =>
+        (eH, tH) match
+          case (eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
+            (Nil,eT,tT, acc :+ burnTargetSegment(path, eHS, tHS))
+          case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
+            (Nil,eT,tT,acc :+ burnTargetLoop(path, eHS, tHS)) // TODO: Fix acc
+          case _ =>
+            (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${rawCName(tH)} has a different major types (loop vs segment) than EDI standard"))
+      case (sH :: sT, eH :: eT, Nil) =>
+        (sH, eH) match
+          case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) =>
+            (sT,eT,Nil, acc :+ burnSrcSegment(path, sHS, eHS))
+          case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) =>
+            (sT,eT,Nil,acc) // TODO: Fix acc
+          case _ =>
+            (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${rawCName(sH)} has a different major types (loop vs segment) than EDI standard"))
+      case (Nil, eH :: eT, Nil) =>
+        (Nil, eT, Nil, acc :+ burnEdiSegment(path, eH))
+    }
+    nextLoop match {
+      case (Nil,Nil,Nil,nextAcc) =>
+        nextAcc
+      case (s,e,t,nextAcc) =>
+        compareSegmentLists(path, s, e, t, nextAcc)
+    }
+
+
+  private def compareTwoLoops(path: Path, src: RefinedLoopSpec, edi: RefinedLoopSpec, target: RefinedLoopSpec): LoopSegmentDifference =
+    val nestedDiff = if src.canonicalName == "HL" then
+      Some(nestedCompare(path, src.nested, edi, target.nested))
+    else
+      None
+    LoopSegmentDifference(
+      path,
+      nameOf(src),
+      canonicalNameOf(src),
+      (true,true),
+      (src.required, src.required),
+      Option.when(src.assertions.sorted != target.assertions.sorted)(
+        (src.assertions, target.assertions)
+      ),
+      compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields),
+      Option.when(src.minRepeats != target.minRepeats) {
+        (src.minRepeats, target.minRepeats)
+      },
+      Option.when(src.maxRepeats != target.maxRepeats) {
+        (src.maxRepeats, target.maxRepeats)
+      },
+      compareSegmentLists(path.dot(canonicalNameOf(src)), src.body, edi.body, target.body),
+      nestedDiff
+    )
+
+
+
+  private def compareTwoSegments(
+                                path: Path,
+                                src: RefinedSegmentSpec,
+                                edi: RefinedSegmentSpec,
+                                target: RefinedSegmentSpec
+                                ): SegmentDifference =
+    SimpleSegmentDifference(
+      path,
+      src.name,
+      src.canonicalName,
+      (true,true),
+      (src.required, target.required),
+      Option.when(src.assertions.sorted != target.assertions.sorted)(
+        (src.assertions, target.assertions)
+      ),
+      compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields)
+  )
+
+  private def burnEdiSegment(
+                              path: Path,
+                              edi: RefinedSegmentSpec | RefinedLoopSpec
+                            ): SegmentDifference =
+    SimpleSegmentDifference(
+      path,
+      nameOf(edi),
+      canonicalNameOf(edi),
+      (false, false),
+      (isRequired(edi), false),
+      None,
+      {
+        edi match {
+          case e: RefinedSegmentSpec => e.fields.map(f => burnEdiField(path: Path, f))
+          case e: RefinedLoopSpec => e.fields.map(f => burnEdiField(path: Path, f))
         }
-
-        val allAcc: List[HLDifference] = acc1 ++ acc2 ++ acc3
-        // pprint.log(allAcc)
-        (None, Some(allAcc))
-
-      else
-        (Some(compareSegmentLists(path.dot(canonicalNameOf(a)), a.body, b.body)), None)
-    val (bodyDiff, nestDiff) = bodyAndNest
-    (req, assertions, fieldDiffs, minDiff, maxDiff, bodyDiff, nestDiff) match {
-      case (None, None, Nil, None, None, None, None) => None
-      case _ =>
-        Some(LoopSegmentDifference(path, nameOf(a), canonicalNameOf(b), None, req, assertions, None, fieldDiffs, minDiff, maxDiff, if (bodyDiff.nonEmpty) bodyDiff else None, nestDiff))
-    }
-
-  private def compareFoundOnPath(srcKey: (Path, RefinedSegmentSpec | RefinedLoopSpec), targetKey: (Path, RefinedSegmentSpec | RefinedLoopSpec)): Option[HLDifference] =
-    (srcKey._2, targetKey._2) match {
-      case (a: RefinedSegmentSpec, b: RefinedSegmentSpec) =>
-        compareTwoSegments(targetKey._1.prefix, a, b).map(d => HLDifference(srcKey._1.prefix, nameOf(srcKey._2), canonicalNameOf(srcKey._2), None, None, List(d)))
-      case (a: RefinedLoopSpec, b: RefinedLoopSpec) =>
-        compareTwoLoopSegments(targetKey._1.prefix, a, b, false).map(d => HLDifference(srcKey._1.prefix, nameOf(srcKey._2), canonicalNameOf(srcKey._2), None, None, List(d)))
-      case (a, b) =>
-        Some(HLDifference(srcKey._1.prefix, nameOf(a), canonicalNameOf(a), None, None, Nil, Some(s"Corresponding element at ${canonicalNameOf(b)} has different types")))
-    }
-
-
-
-  private def getFields(t: RefinedSegmentSpec | RefinedLoopSpec): List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec] =
-    t match {
-      case u: RefinedSegmentSpec => u.fields
-      case v: RefinedLoopSpec => v.fields
-    }
-
-
-  private def compareSegmentFields(
-                     path: Path,
-                     fieldsA: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
-                     fieldsB: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
-                   ): List[FieldDifference] = {
-
-    def getField(name: String, fields: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]) =
-      fields.find(f => fieldNameOf(f) == name)
-
-    val allNames = (fieldsA.map(fieldNameOf) ++ fieldsB.map(fieldNameOf)).distinct
-
-    allNames.flatMap { name =>
-      val fA = getField(name, fieldsA)
-      val fB = getField(name, fieldsB)
-
-      (fA, fB) match {
-        case (Some(a), None) =>
-          Some(SingleFieldDifference(path, fieldNameOf(a), canonicalFieldNameOf(a), presence = Some(true -> false)))
-
-        case (None, Some(b)) =>
-          Some(SingleFieldDifference(path, fieldNameOf(b), canonicalFieldNameOf(b), presence = Some(false -> true)))
-
-        case (Some(a: RefinedSingleFieldSpec), Some(b: RefinedSingleFieldSpec)) =>
-          val required = if (a.required != b.required) Some(a.required -> b.required) else None
-          val dataType = if (a.dataType != b.dataType) Some(a.dataType -> b.dataType) else None
-          val format = if (a.format != b.format) Some(a.format -> b.format) else None
-          val elementId = if (a.elementId != b.elementId) Some(a.elementId -> b.elementId) else None
-          val validValues = if (a.validValues.sorted != b.validValues.sorted) Some(a.validValues -> b.validValues) else None
-          val validValuesRef = if (a.validValuesRef != b.validValuesRef) Some(a.validValuesRef -> b.validValuesRef) else None
-
-          if (List(required, dataType, format, elementId, validValues, validValuesRef).exists(_.isDefined))
-            Some(SingleFieldDifference(path, name, a.canonicalName, None, required, dataType, format, elementId, validValues, validValuesRef))
-          else None
-
-        case (Some(a: RefinedCompositeFieldSpec), Some(b: RefinedCompositeFieldSpec)) =>
-          val required = if (a.required != b.required) Some(a.required -> b.required) else None
-          val subDiffs = compareSegmentFields(path.dot(a.canonicalName), a.components, b.components)
-          if (required.isDefined || subDiffs.nonEmpty)
-            Some(CompositeFieldDifference(path, a.name, a.canonicalName, presence = None, required = required, fieldDiff = subDiffs))
-          else None
-
-        case _ => None
       }
+    )
+
+  // src exists, target not
+  private def burnSrcSegment(
+                                  path: Path,
+                                  src: RefinedSegmentSpec,
+                                  edi: RefinedSegmentSpec
+                                ): SegmentDifference =
+    SimpleSegmentDifference(
+      path,
+      src.name,
+      src.canonicalName,
+      (true,false),
+      (src.required, false),
+      None,
+      burnSrcSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields)
+    )
+
+  // src exists, target not
+  private def burnTargetSegment(
+                              path: Path,
+                              edi: RefinedSegmentSpec,
+                              target: RefinedSegmentSpec
+                            ): SegmentDifference =
+    SimpleSegmentDifference(
+      path,
+      target.name,
+      target.canonicalName,
+      (false,true),
+      (false, target.required),
+      None,
+      burnTargetSegmentFields(path.dot(target.canonicalName), edi.fields, target.fields)
+    )
+
+  // src exists, target not
+  private def burnTargetLoop(
+                                 path: Path,
+                                 edi: RefinedLoopSpec,
+                                 target: RefinedLoopSpec
+                               ): SegmentDifference =
+    LoopSegmentDifference(
+      path,
+      target.name,
+      target.canonicalName,
+      (false, true),
+      (false, target.required),
+      None,
+      burnTargetSegmentFields(path.dot(target.canonicalName), edi.fields, target.fields),
+      None,
+      None,
+      List.empty,
+      None
+    )
+
+  @tailrec
+  private def compareSegmentFields(
+                                    path: Path,
+                                    src: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                                    edi: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                                    target: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                                    acc: List[FieldDifference] = List.empty
+                                  ): List[FieldDifference] =
+    val nextLoop = (src, edi, target) match {
+      case (_, Nil, _ :: _) | (_ :: _, Nil, _) =>
+        (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, "Exhausted EDI standard fields before either src/target--they have extra (non-standard) fields"))
+      case (Nil, Nil, Nil) =>
+        (Nil, Nil, Nil, acc) // done comparing lists
+      case (sH :: sT, eH :: eT, tH :: tT) =>
+        // 3-way match -> compare sH and tH
+        if canonicalFieldNameOf(sH) == canonicalFieldNameOf(eH) && canonicalFieldNameOf(eH) == canonicalFieldNameOf(tH) then
+          (sH, eH, tH) match
+            case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
+              (sT, eT, tT, acc :+ compareTwoSingleFields(path, sHS, tHS))
+            case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
+              (sT, eT, tT, acc) // TODO: fix acc
+            case _ =>
+              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
+        else if canonicalFieldNameOf(sH) == canonicalFieldNameOf(eH) && canonicalFieldNameOf(eH) != canonicalFieldNameOf(tH) then
+          (sH, eH, tH) match
+            case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
+              (sT, eT, target, acc :+ burnSingleField(path, sHS, true))
+            case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
+              (sT, eT, target, acc) // TODO: fix acc
+            case _ =>
+              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
+        else if canonicalFieldNameOf(sH) != canonicalFieldNameOf(eH) && canonicalFieldNameOf(eH) == canonicalFieldNameOf(tH) then
+          (sH, eH, tH) match
+            case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
+              (src, eT, tT, acc :+ burnSingleField(path, tHS, false))
+            case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
+              (src, eT, tT, acc) // TODO: fix acc
+            case _ =>
+              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
+        else
+          (src, eT, target, acc :+ SingleFieldDifference(path, fieldNameOf(eH), canonicalFieldNameOf(eH), (false, false), (isFieldRequired(sH), isFieldRequired(tH)), None, None))
+      case (Nil, eH :: eT, tH :: tT) =>
+        (eH, tH) match
+          case (eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
+            (Nil,eT,tT, acc :+ burnSingleField(path, tHS, false))
+          case (eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
+            (Nil,eT,tT,acc ) // TODO: Fix acc
+          case _ =>
+            (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Target field ${fieldNameOf(tH)} has a different major types (loop vs segment) than EDI standard"))
+      case (sH :: sT, eH :: eT, Nil) =>
+        (sH, eH) match
+          case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec) =>
+            (sT,eT,Nil, acc :+ burnSingleField(path, sHS, true))
+          case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec) =>
+            (sT,eT,Nil,acc) // TODO: Fix acc
+          case _ =>
+            (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Source element ${fieldNameOf(sH)} has a different major types (loop vs segment) than EDI standard"))
+      case (Nil, eH :: eT, Nil) =>
+        (Nil, eT, Nil, acc :+ burnEdiField(path, eH))
     }
-  }
+    nextLoop match {
+      case (Nil,Nil,Nil,nextAcc) =>
+        nextAcc
+      case (s,e,t,nextAcc) =>
+        compareSegmentFields(path, s, e, t, nextAcc)
+    }
 
-  private def mergePathMaps(
-                     maps: List[Map[String, List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]]]
-                   ): Map[String, List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]] = {
-    maps.flatten
-      .groupBy(_._1)
-      .view
-      .mapValues(_.flatMap(_._2))
-      .toMap
-  }
 
-//  private def cleanPath(path: String): String =
-//    path.replaceAll(">(HL\\.HL)+", ">HL")
+  private def compareTwoSingleFields(path: Path, src: RefinedSingleFieldSpec, target: RefinedSingleFieldSpec): FieldDifference =
+    SingleFieldDifference(
+      path,
+      src.name,
+      src.canonicalName,
+      (true,true),
+      (src.required, target.required),
+      Option.when(src.dataType != target.dataType)(
+        (src.dataType, target.dataType)
+      ),
+      Option.when(src.format != target.format)(
+        (src.format, target.format)
+      ),
+      Option.when(src.elementId != target.elementId)(
+        (src.elementId, target.elementId)
+      ),
+      Option.when(src.validValues.sorted != target.validValues.sorted)(
+        (src.validValues, target.validValues)
+      ),
+      Option.when(src.validValuesRef != target.validValuesRef)(
+        (src.validValuesRef, target.validValuesRef)
+      )
+    )
 
-  private def buildSegmentPathMap(
-                           specs: List[RefinedSegmentSpec | RefinedLoopSpec],
-                           path: Path
-                         ): Map[String, List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]] = {
-    specs.flatMap {
-      case s: RefinedSegmentSpec =>
-        val pathName = if equalIgnoringBrackets(s.canonicalName, "HL") && s.description.nonEmpty then s.canonicalName+s"[${s.description}]" else s.canonicalName
-        val segPath = path.dot(canonicalNameOf(s))
-        Map(canonicalNameOf(s) -> List((segPath, s)))
+  private def burnSrcSegmentFields(
+                              path: Path,
+                              src: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                              edi: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
+                            ): List[FieldDifference] = List.empty // TODO!
 
-      case loop: RefinedLoopSpec =>
-        val loopName = loop.canonicalName
-        val newPath = path.dot(canonicalNameOf(loop))
+  private def burnTargetSegmentFields(
+                                    path: Path,
+                                    edi: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                                    target: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]
+                                  ): List[FieldDifference] = List.empty // TODO!
 
-        // Traverse body
-        val bodyMap = buildSegmentPathMap(loop.body, newPath)
+  private def burnSingleField(path: Path, f: RefinedSingleFieldSpec, isSrc: Boolean): FieldDifference =
+    SingleFieldDifference(
+      path,
+      f.name,
+      f.canonicalName,
+      {
+        if isSrc then (true, false) else (false, true)
+      },
+      {
+        if isSrc then (f.required, false) else (false, f.required)
+      },
+      None,
+      None,
+      None,
+      None
+    )
 
-        // Traverse nested loops, if any, using '>' delimiter
-        val nestedMap = loop.nested match {
-          case Some(nestedLoops) =>
-            nestedLoops.flatMap { nestedLoop =>
-              val nestedPath = newPath //newPath.nest(canonicalNameOf(nestedLoop)) //cleanPath(s"$newnewPath>$pathName")
-              buildSegmentPathMap(List(nestedLoop), nestedPath)
-            }.groupBy(_._1).map { case (k, v) => k -> v.flatMap(_._2) }
-
-          case None => Map.empty
+  private def burnEdiField(path: Path, f: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): FieldDifference =
+    SingleFieldDifference(
+      path,
+      fieldNameOf(f),
+      canonicalFieldNameOf(f),
+      (false,false),
+      {
+        f match {
+          case ff: RefinedSingleFieldSpec => (ff.required, ff.required)
+          case ff: RefinedCompositeFieldSpec => (ff.required, ff.required)
         }
+      },
+      None,
+      None,
+      None,
+      None
+    )
 
-        // Also include this loop in the result
-        val thisLoopEntry = Map(loop.canonicalName -> List((newPath, loop)))
 
-        // Merge all maps
-        mergePathMaps(List(thisLoopEntry, bodyMap, nestedMap))
-    }.groupBy(_._1).view.mapValues(_.flatMap(_._2)).toMap
+  // TODO: Sew Path through scanTarget, loop, and advanceTo()
+
+  private def burnSrcHL(path: Path, target: RefinedLoopSpec): LoopSegmentDifference = ???
+  private def burnTargetHL(path: Path, target: RefinedLoopSpec): LoopSegmentDifference = ???
+
+  private def nestedCompare(path: Path, src: Option[RefinedLoopSpec], edi: RefinedLoopSpec, target: Option[RefinedLoopSpec]): List[LoopSegmentDifference] = {
+    println("Comparing nested loop: " + src.map(s=>canonicalNameOf(s)).getOrElse("none")+" and "+target.map(s=>canonicalNameOf(s)).getOrElse("none"))
+    @tailrec
+    def scanTarget(t: Option[RefinedLoopSpec], name: String, acc: List[LoopSegmentDifference]): (Boolean, List[LoopSegmentDifference]) =
+      t match {
+        case Some(tt) if canonicalNameOf(tt) == name => (true, acc)
+        case Some(tt) => scanTarget(tt.nested, name, acc :+ burnTargetHL(path.nest(canonicalNameOf(tt)), tt))
+        case None => (false, acc)
+      }
+
+    @tailrec
+    def loop(x: Option[RefinedLoopSpec], y: Option[RefinedLoopSpec], result: List[LoopSegmentDifference]): List[LoopSegmentDifference] = (x, y) match {
+      case (None, None) => result
+      case (None, Some(tt)) => loop(None, tt.nested, result :+ burnTargetHL(path.nest(canonicalNameOf(tt)), tt))
+      case (Some(xx), None) => loop(xx.nested, None, result :+ burnSrcHL(path.nest(canonicalNameOf(xx)), xx))
+      case (Some(xx), Some(yy)) if xx.name == yy.name =>
+        result :+ compareTwoLoops(path, xx, edi, yy)
+      case (Some(xx), Some(_)) =>
+        val (found, acc) = scanTarget(y, xx.name, Nil)
+        if found then
+          val y2 = advanceTo(y, xx.name).flatMap(_.nested)
+          result :+ compareTwoLoops(path, xx, edi, y2.get)
+        else
+          loop(xx.nested, y, result :+ burnSrcHL(path.nest(canonicalNameOf(xx)), xx))
+    }
+
+    @tailrec
+    def advanceTo(y: Option[RefinedLoopSpec], name: String): Option[RefinedLoopSpec] =
+      y match
+        case Some(t) if canonicalNameOf(t) == name => y
+        case Some(t) => advanceTo(t.nested, name)
+        case None => None
+
+    loop(src, target, Nil)
   }
 
 
-  //
-  //  Utilities
-  //
-  private def nameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
+  // Utilities
+  //-----------------------------------------------------------
+  private inline def isRequired(x: RefinedSegmentSpec | RefinedLoopSpec): Boolean = x match {
+    case s: RefinedSegmentSpec => s.required
+    case l: RefinedLoopSpec => l.required
+  }
+
+  private inline def isFieldRequired(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): Boolean = x match {
+    case s: RefinedSingleFieldSpec => s.required
+    case l: RefinedCompositeFieldSpec => l.required
+  }
+
+  private inline def nameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
     case s: RefinedSegmentSpec => s.name
     case l: RefinedLoopSpec => l.name
   }
 
-  private def fieldNameOf(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): String = x match {
-    case s: RefinedSingleFieldSpec => s.name
-    case l: RefinedCompositeFieldSpec => l.name
+  private inline def rawCName(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
+    case s: RefinedSegmentSpec => s.canonicalName
+    case l: RefinedLoopSpec => l.canonicalName
   }
 
   private def canonicalNameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
@@ -349,6 +419,11 @@ object DiffEngine:
         l.canonicalName + s"[${l.description}]"
       else
         l.canonicalName
+  }
+
+  private def fieldNameOf(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): String = x match {
+    case s: RefinedSingleFieldSpec => s.name
+    case l: RefinedCompositeFieldSpec => l.name
   }
 
   private def canonicalFieldNameOf(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): String = x match {
@@ -361,30 +436,4 @@ object DiffEngine:
       s.replaceAll("\\[.*?\\]", "")
 
     stripBrackets(a) == stripBrackets(b)
-  }
-
-  private def extractSame(
-                   a: List[(Path, RefinedSegmentSpec | RefinedLoopSpec)],
-                   b: List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]
-                 ): (List[((Path, RefinedSegmentSpec | RefinedLoopSpec), (Path, RefinedSegmentSpec | RefinedLoopSpec))], List[(Path, RefinedSegmentSpec | RefinedLoopSpec)], List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]) = {
-
-    def loop(
-              remainingA: List[(Path, RefinedSegmentSpec | RefinedLoopSpec)],
-              remainingB: List[(Path, RefinedSegmentSpec | RefinedLoopSpec)],
-              acc: List[((Path, RefinedSegmentSpec | RefinedLoopSpec), (Path, RefinedSegmentSpec | RefinedLoopSpec))]
-            ): (List[((Path, RefinedSegmentSpec | RefinedLoopSpec), (Path, RefinedSegmentSpec | RefinedLoopSpec))], List[(Path, RefinedSegmentSpec | RefinedLoopSpec)], List[(Path, RefinedSegmentSpec | RefinedLoopSpec)]) =
-      remainingA match {
-        case Nil => (acc.reverse, Nil, remainingB)
-        case x :: xs =>
-          remainingB.find(y => equalIgnoringBrackets(x._1.toString, y._1.toString)) match {
-            case Some(matched) =>
-              val newB = remainingB.filterNot(_ == matched) // remove only first match
-              loop(xs, newB, (x -> matched) :: acc)
-            case None =>
-              val (matchedPairs, unmatchedA, unmatchedB) = loop(xs, remainingB, acc)
-              (matchedPairs, x :: unmatchedA, unmatchedB)
-          }
-      }
-
-    loop(a, b, Nil)
   }

@@ -50,29 +50,34 @@ object Main extends ZIOAppDefault {
       /* Un-comment to do a comparison run
       */
 
-      tf <- loadRefinedSpec("specs/tf_856_5010.json")
-      std <- loadRefinedSpec("specs/pfg_856_5010.json")
-      result <- DiffEngine.compareSpecs(tf, std)
+      std <- loadRefinedSpec("specs/x12_856_5010.json")
+      src <- loadRefinedSpec("specs/tf_856_5010.json")
+      target <- loadRefinedSpec("specs/pfg_856_5010.json")
+      result = DiffEngine.compareSpecs(src, std, target)
       titles = List(
           Title(List(Cell("📦 EDI Segment Comparison Report"))),
           Title(List(Cell("Taylor Farms -to- Core-Mark")))
         )
       header = Header(List(
-          Cell("Segment"),
           Cell("Source (Taylor Farms)"),
-          Cell("Target (Core-Mark")
+          Cell("Difference"),
+          Cell("Target (Core-Mark)"),
+          Cell("Difference")
         ))
       rows = result.foldLeft(List.empty[BodyRow]){ case (acc,diff) => acc ++ diff.render() }
-//      _ <- ZIO.succeed(pprint.log(result))
+        .filter { row =>
+          // keep rows that have at least one cell *not* muted
+          row.cells.exists(cell => cell.style != Some(Style.MUTED))
+        }
       table = Table(
           title = titles,
-          columns = 3,
-          columnWidthPct = List(60, 30, 30),
+          columns = 4,
+          columnWidthPct = List(35, 15, 35, 15),
           tableWidth = 200,
           header,
           rows
         )
-      _ <- ZIO.succeed(println(table.toHtml))
+      _ <- ZIO.succeed(println(table.toString))
 
 
       /*

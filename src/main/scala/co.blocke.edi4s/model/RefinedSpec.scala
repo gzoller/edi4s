@@ -56,7 +56,7 @@ case class RefinedLoopSpec(
                                  minRepeats: Option[Int],
                                  maxRepeats: Option[Int],
                                  body: List[RefinedSegmentSpec | RefinedLoopSpec], // may be empty
-                                 nested: Option[List[RefinedLoopSpec]] = None  // if present this is an HL loop
+                                 nested: Option[RefinedLoopSpec] = None  // if present this is an HL loop
                                ):
     // EDI has "loops" that are really segments (EdiSchema) with type "object" (not array) and the `x-openedi-loop-id` flag set.
     // They are *not* EdiItemsProperty! What this means is they are a block of segments that look like a loop that does't repeat,
