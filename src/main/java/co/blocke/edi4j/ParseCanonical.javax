@@ -1,0 +1,42 @@
+package co.blocke.edi4j;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import co.blocke.edi4s.model4j.EdiObject;
+
+import java.io.IOException;
+
+public class ParseCanonical {
+    private static final ObjectMapper MAPPER = new ObjectMapper()
+            // <-- infers constructor parameter names (requires javac -parameters)
+            .registerModule(new ParameterNamesModule())
+            // <-- adds support for java.util.Optional
+            .registerModule(new Jdk8Module())
+            // ignore any extra JSON properties you don’t have in your model
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    /** Deserialize JSON into your top‐level EdiObject */
+    public static EdiObject fromJson(String json) throws IOException {
+        return MAPPER.readValue(json, EdiObject.class);
+    }
+
+    /** Serialize any EdiObject (or sub‐object) back to JSON */
+    public static String toJson(EdiObject ediObject) throws IOException {
+        return MAPPER.writeValueAsString(ediObject);
+    }
+
+
+    // Example usage:
+//    public static void main(String[] args) throws IOException {
+//        String incoming = /* read your JSON string from file / network / etc. */;
+//    EdiObject root = JsonUtil.fromJson(incoming);
+//        System.out.println("Parsed: " + root.getInfo().getTitle());
+//
+//    // And to round-trip:
+//    String backAgain = JsonUtil.toJson(root);
+//        System.out.println(backAgain);
+//}
+
+}

@@ -1,4 +1,4 @@
-val scala3Version = "3.6.4"
+val scala3Version = "3.5.2"
 
 lazy val root = project
   .in(file("."))
@@ -16,6 +16,13 @@ lazy val root = project
       "org.apache.poi" % "poi-ooxml" % "5.2.5",
       "com.lihaoyi" %% "pprint" % "0.8.1",
       //"co.blocke" %% "scalajack" % "8.0.2",
-      "org.scalameta" %% "munit" % "1.0.0" % Test
-    )
+      "org.scalameta" %% "munit" % "1.0.0" % Test,
+
+      // Java Junk
+      "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.0",
+      "com.fasterxml.jackson.module" % "jackson-module-parameter-names" % "2.19.0",
+      "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8" % "2.19.0"
+    ),
+
+    Compile / javacOptions += "-parameters"
   )

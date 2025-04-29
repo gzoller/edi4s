@@ -1,38 +1,43 @@
 package co.blocke.edi4s
-package model
+package model4j
 
 import scala.collection.mutable
 import scala.collection.mutable.LinkedHashMap
-import zio.*
 
 
-trait Showable
+class CanonicalError(msg: String) extends Exception(msg)
+
+
+trait EnumOrSchema
 
 
 trait Property:
-  def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema]
-  def dereferenceSegment(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiSchema] =
-    dereference(schemas).flatMap {
-      case _: EdiEnum => ZIO.fail(CanonicalError("Expecting EdiSchema but found EdiEnum"))
-      case x: EdiSchema => ZIO.succeed(x)
+  @throws[CanonicalError]
+  def dereference(schemas: Map[String, EnumOrSchema]): EnumOrSchema
+
+  @throws[CanonicalError]
+  def dereferenceSegment(schemas: Map[String, EnumOrSchema]): EdiSchema =
+    dereference(schemas) match {
+      case _: EdiEnum => throw new CanonicalError("Expecting EdiSchema but found EdiEnum")
+      case x: EdiSchema => x
     }
 
 
 case class EdiInfo(title: String, version: String)
 
 
-case class EdiEnum(`enum`: List[String], `type`: String, format: String) extends Showable
+case class EdiEnum(`enum`: List[String], `type`: String, format: String) extends EnumOrSchema
 
 
 case class EdiSchema(
                       required: Option[List[String]],
                       `type`: String,
-                      properties: mutable.LinkedHashMap[String, EdiRefProperty|EdiItemsProperty|EdiElementProperty],
+                      properties: mutable.LinkedHashMap[String, Property],
                       `x-openedi-segment-id`: Option[String],
                       `x-openedi-composite-id`: Option[String],
                       `x-openedi-loop-id`: Option[String],
                       `x-openedi-syntax`: Option[List[String]]  // encoded assertions
-                    ) extends Showable:
+                    ) extends EnumOrSchema:
   def isRequired(p: String): Boolean = required.exists(_.contains(p))
   def isComposite: Boolean = `x-openedi-composite-id`.isDefined
   def isLoop: Boolean = `x-openedi-loop-id`.isDefined
@@ -43,15 +48,19 @@ case class EdiSchema(
       .getOrElse("unknown")
 
 
+trait RefOrItemsProperty
+
+
 // Segment property with a reference the details in schemas (segment catalog)
-case class EdiRefProperty(`$ref`: String) extends Showable with Property:
-  def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema ] =
-    Canonical.extractRefKey(`$ref`).flatMap{ key =>
-      schemas.get(key) match {
-        case Some(v) => ZIO.succeed(v)
-        case None => ZIO.fail(CanonicalError(s"Reference for ${`$ref`} not found in canonical schema"))
-      }
+case class EdiRefProperty(`$ref`: String) extends Property with RefOrItemsProperty:
+  @throws[CanonicalError]
+  def dereference(schemas: Map[String, EnumOrSchema]): EnumOrSchema =
+    val key = Canonical.extractRefKey(`$ref`)
+    schemas.get(key) match {
+      case Some(v) => v
+      case None => throw new CanonicalError(s"Reference for ${`$ref`} not found in canonical schema")
     }
+
 
 // Defines loops/arrays
 case class EdiItemsProperty(
@@ -59,17 +68,19 @@ case class EdiItemsProperty(
                              minItems: Option[Int],
                              maxItems: Option[Int],
                              items: EdiRefProperty
-                           ) extends Showable with Property:
-  def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema ] =
+                           ) extends Property with RefOrItemsProperty:
+  @throws[CanonicalError]
+  def dereference(schemas: Map[String, EnumOrSchema]): EnumOrSchema =
     items.dereference(schemas)
-  def loopHasBody(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, Boolean] =
-    dereference(schemas).flatMap {
+
+  def loopHasBody(schemas: Map[String, EnumOrSchema]): Boolean =
+    dereference(schemas) match {
       case e: EdiSchema =>
         e.properties.headOption match {
-          case Some((_, _: EdiRefProperty)) => ZIO.succeed(true)
-          case _ => ZIO.succeed(false)
+          case Some((_, _: EdiRefProperty)) => true
+          case _ => false
         }
-      case _ => ZIO.succeed(false)
+      case _ => false
     }
 
 
@@ -85,20 +96,23 @@ case class EdiElementProperty(
                                oneOf: Option[List[Map[String,String]]],
                                not: Option[List[Map[String,String]]],
                                `x-openedi-element-id`: Option[String]
-                             ) extends Showable with Property:
-  def dereference(schemas: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, EdiEnum | EdiSchema] =
-    ZIO.succeed(EdiSchema(None,`type`,mutable.LinkedHashMap.empty[String, EdiRefProperty|EdiItemsProperty|EdiElementProperty],`x-openedi-element-id`,None,None,None))
+                             ) extends Property:
+  @throws[CanonicalError]
+  def dereference(schemas: Map[String, EnumOrSchema]): EnumOrSchema =
+    EdiSchema(None,`type`,mutable.LinkedHashMap.empty[String, Property],`x-openedi-element-id`,None,None,None)
 
 
-case class EdiComponents(schemas: Map[String, EdiEnum | EdiSchema])
+case class EdiComponents(schemas: Map[String, EnumOrSchema])
 
 
 case class EdiObject(openapi: String, info: EdiInfo, components: EdiComponents)
 
+
 object Canonical:
-  def extractRefKey(ref: String): ZIO[Any,CanonicalError,String] =
+  @throws[CanonicalError]
+  def extractRefKey(ref: String): String =
     val extractKey = ".*/([^/]+)$".r
     ref match {
-      case extractKey(key) => ZIO.succeed(key)
-      case _ => ZIO.fail(CanonicalError(s"Unable to extract a reference key from $ref"))
+      case extractKey(key) => key
+      case _ => throw new CanonicalError(s"Unable to extract a reference key from $ref")
     }

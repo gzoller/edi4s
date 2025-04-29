@@ -6,7 +6,6 @@ case class RefinedDocumentSpec(
                                 version: String,
                                 partner: String,
                                 segments: List[RefinedLoopSpec | RefinedSegmentSpec]
-                                // segments: List[RefinedSegmentSpec | RefinedLoopSpec]
                               )
 
 case class RefinedSingleFieldSpec(
