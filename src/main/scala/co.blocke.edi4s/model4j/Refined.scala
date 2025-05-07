@@ -9,7 +9,7 @@ case class RefinedDocumentSpec(
                               )
 
 
-trait RefinedFieldSpec:
+sealed trait RefinedFieldSpec:
   val name: String
   val canonicalName: String
   val humanName: Option[String]
@@ -44,7 +44,7 @@ case class RefinedCompositeFieldSpec(
                                     ) extends RefinedFieldSpec
 
 
-trait RefinedSingleOrLoopSegmentSpec:
+sealed trait RefinedSingleOrLoopSegmentSpec:
   val name: String
   val canonicalName: String
   val humanName: Option[String]

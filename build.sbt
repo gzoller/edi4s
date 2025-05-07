@@ -8,11 +8,14 @@ lazy val root = project
 
     scalaVersion := scala3Version,
 
+    javacOptions ++= Seq("-source", "11", "-target", "11"),
+    scalacOptions ++= compilerOptions,
+
     libraryDependencies ++= Seq(
     	"dev.zio" %% "zio" % "2.1.12",
       "dev.zio" %% "zio-nio" % "2.0.2",
       "dev.zio" %% "zio-json" % "0.7.39",
-      "co.blocke" %% "scalajack" % "orderedMap_af1bda",
+      "co.blocke" %% "scalajack" % "c6e265_SNAPSHOT",
       "org.apache.poi" % "poi-ooxml" % "5.2.5",
       "com.lihaoyi" %% "pprint" % "0.8.1",
       //"co.blocke" %% "scalajack" % "8.0.2",
@@ -26,3 +29,10 @@ lazy val root = project
 
     Compile / javacOptions += "-parameters"
   )
+
+lazy val compilerOptions = Seq(
+  "-unchecked",
+  "-feature",
+  "-language:implicitConversions",
+  "-deprecation"
+)

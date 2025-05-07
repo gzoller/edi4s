@@ -12,7 +12,7 @@ import pprint.*
 object CanonicalParser:
   // Let compile-time macros deep-dive and generate JSON serilalizer for EdiObject and all subclasses...
   given sjEdiObject: ScalaJack[EdiObject] = ScalaJack.sjCodecOf[EdiObject]
-  given sjRefinedSpec: ScalaJack[RefinedDocumentSpec] = ScalaJack.sjCodecOf[RefinedDocumentSpec]
+  given sjRefinedSpec: ScalaJack[model4j.RefinedDocumentSpec] = ScalaJack.sjCodecOf[model4j.RefinedDocumentSpec]
 
   def readSpec( spec: String ): ZIO[Any, CanonicalError, EdiObject] =
     // ScalaJack  isn't natively ZIO-capable

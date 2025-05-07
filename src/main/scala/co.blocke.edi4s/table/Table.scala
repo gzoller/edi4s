@@ -1,13 +1,6 @@
 package co.blocke.edi4s
 package table
 
-//import java.io.FileOutputStream
-//import org.apache.poi.ss.usermodel._
-//import org.apache.poi.xssf.usermodel.XSSFWorkbook
-//import org.apache.poi.ss.util.CellRangeAddress
-//import org.apache.poi.ss.usermodel.IndexedColors
-
-import scala.Console._
 
 enum Style:
   case PRIMARY, SECONDARY, TERTIARY, NEUTRAL, MUTED, ALERT, WARN
