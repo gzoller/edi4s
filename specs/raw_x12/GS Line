@@ -1,0 +1,36 @@
++--------+---------+-------------------------------+---------------------------------------------+
+| Field  | ID      | Name                          | Example Value / Meaning                     |
++--------+---------+-------------------------------+---------------------------------------------+
+| GS01   | 1       | Functional ID Code            | SH → Ship Notice (856), PO → Purchase Order |
+| GS02   | 2       | Application Sender Code       | SENDERID → App-level sender ID              |
+| GS03   | 3       | Application Receiver Code     | RECEIVERID → App-level receiver ID          |
+| GS04   | 4       | Date                          | 20240511 → YYYYMMDD (group creation date)   |
+| GS05   | 5       | Time                          | 1345 → HHMM (group creation time, local)    |
+| GS06   | 6       | Group Control Number          | 1 → Must match GE02  (counter of GS blocks) |
+| GS07   | 7       | Responsible Agency Code       | X → ASC X12                                 |
+| GS08   | 8       | Version / Release / Industry  | 004030 → Version 4030, 004010 for 4010      |
++--------+---------+-------------------------------+---------------------------------------------+
+
+
+
+Values for GS01:
+
++------+------------------------------+-------------+
+| Code | Description                  | ST01 (Doc)  |
++------+------------------------------+-------------+
+| PO   | Purchase Order               | 850         |
+| IN   | Invoice                      | 810         |
+| SH   | Ship Notice / Manifest       | 856         |
+| RA   | Payment Advice               | 820         |
+| FA   | Functional Acknowledgment    | 997         |
+| CN   | Delivery Schedule            | 862         |
+| SC   | Price/Sales Catalog          | 832         |
+| CO   | Cooperative Ad Agreement     | 889         |
+| GC   | Response to Load Tender      | 990         |
+| IB   | Inventory Inquiry/Advice     | 846         |
+| SI   | Shipping Instructions        | 304         |
+| HC   | Health Care Claim            | 837         |
+| HP   | Health Care Payment/Advice   | 835         |
+| HR   | Eligibility/Benefit Inquiry  | 270         |
+| HN   | Eligibility Response         | 271         |
++------+------------------------------+-------------+

@@ -15,7 +15,7 @@ lazy val root = project
     	"dev.zio" %% "zio" % "2.1.12",
       "dev.zio" %% "zio-nio" % "2.0.2",
       "dev.zio" %% "zio-json" % "0.7.39",
-      "co.blocke" %% "scalajack" % "c6e265_SNAPSHOT",
+      "co.blocke" %% "scalajack" % "8.1.0",
       "org.apache.poi" % "poi-ooxml" % "5.2.5",
       "com.lihaoyi" %% "pprint" % "0.8.1",
       //"co.blocke" %% "scalajack" % "8.0.2",

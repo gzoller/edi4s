@@ -7,126 +7,165 @@ import scala.annotation.tailrec
 
 
 enum FieldStatus:
-  case PRESENT, EMPTY, END_OF_SEGMENT, COMPONENT
+  case PRESENT, EMPTY, END_OF_SEGMENT, COMPONENT, REPEATED
 
 
-trait X12Tokenizer:
+object X12Tokenizer:
 
-  def tokenizeOneElement(tc: TokenizerContext): ZIO[Any, Throwable, (String, TokenizerContext, FieldStatus)] = {
+  private def tokenizeOneElement(
+                          doc: String,
+                          offset: Int,
+                          config: TokenizerConfig
+                        ): ZIO[Any, X12ParseError, (String, Int, FieldStatus)] =
 
-    inline def consumeWhitespace(ctx: TokenizerContext): TokenizerContext =
-      var i = ctx.offset
-      while i < ctx.doc.length && ctx.doc.charAt(i).isWhitespace do i += 1
-      ctx.copy(offset = i)
+    // Skip whitespace characters (spaces, \r, \n, \t) before parsing
+    @tailrec
+    def skipNewlines(i: Int): Int =
+      if i < doc.length && (doc.charAt(i) == '\n' || doc.charAt(i) == '\r') then
+        skipNewlines(i + 1)
+      else
+        i
 
     @tailrec
-    def loop(
-              currentOffset: Int,
-              sb: StringBuilder,
-              isEscape: Boolean,
-              isFirst: Boolean = false,
-            ): ZIO[Any, Throwable, (String, Int, FieldStatus)] =
-      if (currentOffset >= tc.doc.length) {
-        // End of document reached
-        ZIO.fail(new UnexpectedEndOfData("Missing segment end token"))
-      } else {
-        tc.doc.charAt(currentOffset) match {
-          case tc.config.escapeCharacter =>
-            loop(currentOffset + 1, sb, true)
-          case c if isEscape =>
-            sb.append(c)
-            loop(currentOffset + 1, sb, false)
-
-          case tc.config.componentDelimiter =>
-            ZIO.succeed((sb.toString, currentOffset + 1, FieldStatus.COMPONENT))
-
-          case tc.config.elementDelimiter if isFirst =>
-            if currentOffset+1 < tc.doc.length && tc.doc.charAt(currentOffset+1) == tc.config.elementDelimiter then
-              ZIO.succeed(("", currentOffset+2, FieldStatus.EMPTY))
-            else
-              ZIO.succeed(("", currentOffset+1, FieldStatus.EMPTY))
-          case tc.config.elementDelimiter =>
-            if sb.isEmpty then
-              ZIO.succeed((sb.toString, currentOffset + 1, FieldStatus.EMPTY))
-            else
-              ZIO.succeed((sb.toString, currentOffset + 1, FieldStatus.PRESENT))
-
-          case tc.config.segmentDelimiter =>
-            ZIO.succeed((sb.toString, currentOffset + 1, FieldStatus.END_OF_SEGMENT))
-
+    def loop(i: Int, sb: StringBuilder, isEscape: Boolean = false, isFirst: Boolean = false): ZIO[Any, X12ParseError, (String, Int, FieldStatus)] =
+      if i >= doc.length then ZIO.fail(X12ParseError("Unexpected end of input"))
+      else
+        val ch = doc.charAt(i)
+        if isEscape then
+          sb.append(ch)
+          loop(i + 1, sb, false)
+        else ch match
+          case c if c == config.escapeCharacter =>
+            loop(i + 1, sb, true)
+          case c if c == config.componentDelimiter =>
+            ZIO.succeed((sb.toString, i + 1, FieldStatus.COMPONENT))
+          case c if c == config.elementDelimiter && isFirst =>
+            val empty = if i + 1 < doc.length && doc.charAt(i + 1) == config.elementDelimiter then "" else ""
+            ZIO.succeed((empty, i + 1, FieldStatus.EMPTY))
+          case c if c == config.elementDelimiter =>
+            val status = if sb.isEmpty then FieldStatus.EMPTY else FieldStatus.PRESENT
+            ZIO.succeed((sb.toString, i + 1, status))
+          case c if c == config.segmentDelimiter =>
+            ZIO.succeed((sb.toString, i + 1, FieldStatus.END_OF_SEGMENT))
+          case c if c == config.repeatDelimiter =>
+            ZIO.succeed((sb.toString, i+1, FieldStatus.REPEATED))
           case c =>
             sb.append(c)
-            loop(currentOffset + 1, sb, false)
+            loop(i + 1, sb, false)
+
+    loop(skipNewlines(offset), new StringBuilder(), false, true)
+
+  private def tokenizeSegment(
+    doc: String,
+    offset: Int,
+    config: TokenizerConfig
+  ): ZIO[Any, X12ParseError, (SegmentX12Token, Int)] =
+
+    def parseComposite(parentName: String, index: Int, offset: Int, firstElement: String): ZIO[Any, X12ParseError, (CompositeX12Token, Int, FieldStatus)] =
+      def loop(i: Int, acc: List[X12Token], currentOffset: Int): ZIO[Any, X12ParseError, (List[X12Token], Int, FieldStatus)] =
+        tokenizeOneElement(doc, currentOffset, config).flatMap { (chunk, nextOffset, status) =>
+          val compName = f"$parentName${index}%02d${acc.length + 1}%02d"
+          val token = if chunk.isEmpty then EmptyX12Token(compName) else SimpleX12Token(compName, chunk)
+          status match
+            case FieldStatus.COMPONENT =>
+              loop(i + 1, acc :+ token, nextOffset)
+            case _ =>
+              ZIO.succeed((acc :+ token, nextOffset, status))
         }
+
+      val compName = f"$parentName${index}%02d01"
+      val token = if firstElement.isEmpty then EmptyX12Token(compName) else SimpleX12Token(compName, firstElement)
+      loop(2, List(token), offset).map { (comps, nextOffset, status) =>
+        (CompositeX12Token(f"$parentName${index}%02d", comps), nextOffset, status)
       }
 
-    for {
-      // Start the recursive loop with the initial offset and an empty StringBuilder.
-      result <- loop(tc.offset, new StringBuilder(), false, true)
-      (value, newOffset, status) = result
-    } yield (value, consumeWhitespace(tc.copy(offset = newOffset)), status)
-  }
+    def parseRepeated(
+                       parentName: String,
+                       index: Int,
+                       offset: Int,
+                       firstChunk: String
+                     ): ZIO[Any, X12ParseError, (RepeatedX12Token, Int, FieldStatus)] = {
+      val fieldName = f"$parentName${index}%02d"
+      def loop(
+                values: List[String],
+                currentOffset: Int
+              ): ZIO[Any, X12ParseError, (List[String], Int, FieldStatus)] = {
+        tokenizeOneElement(doc, currentOffset, config).flatMap {
+          case (chunk, nextOffset, FieldStatus.REPEATED) =>
+            loop(values :+ chunk, nextOffset)
 
-
-object SegmentTokenizer extends X12Tokenizer:
-
-  // By the time this is called, DocumentParser has consumed the segment name and delimiter ('*'). We parse from there...
-  def tokenize(tc: TokenizerContext): ZIO[Any, Throwable, (SegmentX12Token, TokenizerContext)] =
-    inline def mkElement(chunk: String): X12Token =
-      if chunk.isEmpty then
-        EmptyX12Token("")
-      else
-        SimpleX12Token("", chunk)
-
-    def loop(
-              acc: List[X12Token],
-              current: TokenizerContext,
-              inComposite: Boolean = false,
-              compositeAcc: List[X12Token] = Nil
-            ): ZIO[Any, Throwable, (List[X12Token], TokenizerContext)] =
-      for {
-        (chunk, nextPC, status) <- tokenizeOneElement(current)
-        result <- status match {
-          case FieldStatus.END_OF_SEGMENT =>
-            if inComposite then
-              val composites = compositeAcc :+ mkElement(chunk)
-              ZIO.succeed(acc :+ CompositeX12Token("",composites), nextPC)
-            else
-              ZIO.succeed(acc :+ mkElement(chunk), nextPC)
-          case FieldStatus.EMPTY =>
-            if inComposite then
-              val composites = compositeAcc :+ EmptyX12Token("")
-              loop(acc :+ CompositeX12Token("",composites), nextPC)
-            else
-              loop(acc :+ EmptyX12Token(""), nextPC)
-          case FieldStatus.PRESENT =>
-            if inComposite then
-              val composites = compositeAcc :+ SimpleX12Token("", chunk)
-              loop(acc :+ CompositeX12Token("",composites), nextPC)
-            else
-              loop(acc :+ SimpleX12Token("", chunk), nextPC)
-          case FieldStatus.COMPONENT => loop(acc, nextPC, true, compositeAcc :+ mkElement(chunk))
+          case (chunk, nextOffset, status) =>
+            // Last value — stop
+            ZIO.succeed((values :+ chunk, nextOffset, status))
         }
-      } yield result
-    loop(Nil, tc).flatMap{ (elements,nextPc) =>
-      elements match {
-        case (head:SimpleX12Token) :: tail => ZIO.succeed( (SegmentX12Token(head.value, tail), nextPc) )
-        case _ => ZIO.fail(new Exception("boom: "+elements))
+      }
+      loop(List(firstChunk), offset).map { (allValues, nextOffset, trailingStatus) =>
+        (RepeatedX12Token(fieldName, allValues), nextOffset, trailingStatus)
       }
     }
 
+    def loop(
+      index: Int,
+      offset: Int,
+      acc: List[X12Token],
+      segmentName: String
+    ): ZIO[Any, X12ParseError, (List[X12Token], Int)] =
+      val fieldName = segmentName + f"$index%02d"
+      tokenizeOneElement(doc, offset, config).flatMap {
+        case (chunk, nextOffset, status) =>
+          status match
+            case FieldStatus.END_OF_SEGMENT =>
+              val token = if chunk.isEmpty then EmptyX12Token(fieldName) else SimpleX12Token(fieldName, chunk)
+              ZIO.succeed(acc :+ token, nextOffset)
 
-object X12Tokenizer extends X12Tokenizer:
-  def tokenize(tc: TokenizerContext): ZIO[Any, Throwable, (X12TokenDocument, TokenizerContext)] =
+            case FieldStatus.EMPTY =>
+              loop(index + 1, nextOffset, acc :+ EmptyX12Token(fieldName), segmentName)
+
+            case FieldStatus.PRESENT =>
+              loop(index + 1, nextOffset, acc :+ SimpleX12Token(fieldName, chunk), segmentName)
+
+            case FieldStatus.REPEATED =>
+              parseRepeated(segmentName, index, nextOffset, chunk).flatMap {
+                case (composite, next, FieldStatus.END_OF_SEGMENT) =>
+                  ZIO.succeed(acc :+ composite, next)
+                case (composite, next, _) =>
+                  loop(index + 1, next, acc :+ composite, segmentName)
+              }
+
+            case FieldStatus.COMPONENT =>
+              parseComposite(segmentName, index, nextOffset, chunk).flatMap {
+                case (composite, next, FieldStatus.END_OF_SEGMENT) =>
+                  ZIO.succeed(acc :+ composite, next)
+                case (composite, next, _) =>
+                  loop(index + 1, next, acc :+ composite, segmentName)
+              }
+      }
+
+    for {
+      (firstChunk, offsetAfter1, _) <- tokenizeOneElement(doc, offset, config)
+      segmentName = firstChunk
+      (tokens, finalOffset) <- loop(1, offsetAfter1, Nil, segmentName)
+    } yield SegmentX12Token(segmentName, tokens) -> finalOffset
+
+  // Depending on input, this may return a fully-formed/wrapped X12 doc (ie with ISA)
+  // or just a single ST block
+  def tokenize(
+                doc: String,
+                offset: Int,
+                config: TokenizerConfig
+              ): ZIO[Any, X12ParseError, (List[SegmentX12Token], Int)] =
     def loop(
               acc: List[SegmentX12Token],
-              current: TokenizerContext
-            ): ZIO[Any, Throwable, (List[SegmentX12Token], TokenizerContext)] =
+              offset: Int
+            ): ZIO[Any, X12ParseError, (List[SegmentX12Token], Int)] =
       for {
-        (seg, nextPc) <- SegmentTokenizer.tokenize(current)
-        result <- if nextPc.offset >= nextPc.doc.length then
-          ZIO.succeed( (acc :+ seg, nextPc) )
-        else
-          loop(acc :+ seg, nextPc)
+        (seg, nextOffset) <- tokenizeSegment(doc, offset, config)
+        result <-
+          if nextOffset >= doc.length then
+            ZIO.succeed((acc :+ seg, nextOffset))
+          else
+            loop(acc :+ seg, nextOffset)
       } yield result
-    loop(Nil, tc).flatMap( (segments, nextPc) => ZIO.succeed( (X12TokenDocument(segments), nextPc)))
+
+    loop(Nil, offset)
+

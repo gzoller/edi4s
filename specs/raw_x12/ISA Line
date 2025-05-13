@@ -1,0 +1,20 @@
++----------+------------+-----------------------------------------------------------+------------------------+
+| Position | Element    | Meaning                                                   | Example Value          |
++----------+------------+-----------------------------------------------------------+------------------------+
+| ISA01    | 00         | Authorization Information Qualifier                       | 00                     |
+| ISA02    |            | Authorization Information (10 chars, space padded)        | [10 spaces]            |
+| ISA03    | 00         | Security Information Qualifier                            | 00                     |
+| ISA04    |            | Security Information (10 chars, space padded)             | [10 spaces]            |
+| ISA05    | ZZ         | Interchange ID Qualifier (Sender)                         | ZZ                     |
+| ISA06    | SENDERID   | Interchange Sender ID (15 chars, space padded)            | SENDERID[7 spaces]     |
+| ISA07    | ZZ         | Interchange ID Qualifier (Receiver)                       | ZZ                     |
+| ISA08    | RECEIVERID | Interchange Receiver ID (15 chars, space padded)          | RECEIVERID[5 spaces]   |
+| ISA09    | 240511     | Date (YYMMDD)                                             | 240511                 |
+| ISA10    | 1200       | Time (HHMM)                                               | 1200                   |
+| ISA11    | U          | Repetition Separator                                      | U                      |
+| ISA12    | 00401      | Interchange Control Version                               | 00401                  |
+| ISA13    | 000000001  | Interchange Control Number  (sequential with ea partner)  | 000000001              | <- Must match IEA02 exactly (9 digits right-padded)
+| ISA14    | 0          | Acknowledgment Requested (0 = No, 1 = Yes)                | 0                      |
+| ISA15    | T          | Usage Indicator (T = Test, P = Production)                | T                      |
+| ISA16    | :          | **Component Element Separator** (for composite subfields) | :                      |
++----------+------------+-----------------------------------------------------------+------------------------+

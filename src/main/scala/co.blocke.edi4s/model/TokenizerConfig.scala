@@ -1,10 +1,10 @@
-package co.blocke.edi4s
-package tokenizer
+package co.blocke.edi4s.model
 
 // Config for delimiters
 case class TokenizerConfig(
                         segmentDelimiter: Char = '~',
                         elementDelimiter: Char = '*',
                         componentDelimiter: Char = ':',  // for composite values
-                        escapeCharacter: Char = '\\'
+                        escapeCharacter: Char = '\\',
+                        repeatDelimiter: Char = '^'
                       )

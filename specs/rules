@@ -1,0 +1,8 @@
+Rules:
+
+
+1. Direct assignment S->T
+2. AssignOrElse S(opt) -> T  If S is None and T is required then assign "orElse" value
+3. AssignFromContext C(key) -> T
+4. OptToOpt -> S(opt) -> T(opt)
+5. Expression (TBD) - formulaic combinations of elements into a value to be assigned

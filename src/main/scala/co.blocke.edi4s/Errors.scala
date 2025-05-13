@@ -16,3 +16,9 @@ case class MissingRequiredFieldException(fieldNum: Int, segment: String) extends
 
 // Custom error for unexpected end of data
 case class UnexpectedEndOfData(message: String) extends Exception(message)
+
+
+// Token parsing errors
+//---------------------------
+case class UnexpectedSegmentError(message: String) // deprecated
+case class X12ParseError(message: String)

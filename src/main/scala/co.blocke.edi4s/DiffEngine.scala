@@ -20,9 +20,9 @@ object DiffEngine:
   @tailrec
   private def compareSegmentLists(
                            path: Path,
-                           src: List[RefinedSegmentSpec | RefinedLoopSpec],
-                           edi: List[RefinedSegmentSpec | RefinedLoopSpec],
-                           target: List[RefinedSegmentSpec | RefinedLoopSpec],
+                           src: List[RefinedSingleOrLoopSegmentSpec],
+                           edi: List[RefinedSingleOrLoopSegmentSpec],
+                           target: List[RefinedSingleOrLoopSegmentSpec],
                            acc: List[SegmentDifference] = List.empty
   ): List[SegmentDifference] =
     val nextLoop = (src, edi, target) match {
@@ -32,38 +32,38 @@ object DiffEngine:
         (Nil,Nil,Nil,acc) // done comparing lists
       case (sH :: sT, eH :: eT, tH :: tT) =>
         // 3-way match -> compare sH and tH
-        if rawCName(sH) == rawCName(eH) && rawCName(eH) == rawCName(tH) then
+        if sH.canonicalName == eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (sH,eH,tH) match
             case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
               (sT, eT, tT, acc :+ compareTwoSegments(path, sHS, eHS, tHS))
             case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
               (sT, eT, tT, acc :+ compareTwoLoops(path, sHS, eHS, tHS))
             case _ =>
-              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Matching elements ${rawCName(sH)} have different major types (loop vs segment)"))
+              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Matching elements ${sH.canonicalName} have different major types (loop vs segment)"))
 
         // src has edi segment, target does not
-        else if rawCName(sH) == rawCName(eH) && rawCName(eH) != rawCName(tH) then
+        else if sH.canonicalName == eH.canonicalName && eH.canonicalName != tH.canonicalName then
           (sH, eH) match
             case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) =>
               (sT,eT,target, acc :+ burnSrcSegment(path, sHS))
             case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) =>
               (sT,eT,target,acc :+ burnSrcLoop(path, sHS))
             case _ =>
-              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${rawCName(sH)} has a different major types (loop vs segment) than EDI standard"))
+              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${sH.canonicalName} has a different major types (loop vs segment) than EDI standard"))
 
         // src does not have edi segment, target does
-        else if rawCName(sH) != rawCName(eH) && rawCName(eH) == rawCName(tH) then
+        else if sH.canonicalName != eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (eH, tH) match
             case (eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
               (src,eT,tT, acc :+ burnTargetSegment(path, tHS))
             case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
               (src,eT,tT,acc :+ burnTargetLoop(path, tHS))
             case _ =>
-              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${rawCName(tH)} has a different major types (loop vs segment) than EDI standard"))
+              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${tH.canonicalName} has a different major types (loop vs segment) than EDI standard"))
 
         // neither have edi segment
         else
-          (src, eT, target, acc :+ SimpleSegmentDifference(path, nameOf(eH), canonicalNameOf(eH), (false, false), (isRequired(sH), isRequired(tH)), None, List.empty))
+          (src, eT, target, acc :+ SimpleSegmentDifference(path, eH.name, canonicalNameOf(eH), (false, false), (sH.required, tH.required), None, List.empty))
 
       case (Nil, eH :: eT, tH :: tT) =>
         (eH, tH) match
@@ -72,7 +72,7 @@ object DiffEngine:
           case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
             (Nil,eT,tT,acc :+ burnTargetLoop(path, tHS))
           case _ =>
-            (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${rawCName(tH)} has a different major types (loop vs segment) than EDI standard"))
+            (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${tH.canonicalName} has a different major types (loop vs segment) than EDI standard"))
       case (sH :: sT, eH :: eT, Nil) =>
         (sH, eH) match
           case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) =>
@@ -80,7 +80,7 @@ object DiffEngine:
           case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) =>
             (sT,eT,Nil,acc :+ burnSrcLoop(path, sHS))
           case _ =>
-            (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${rawCName(sH)} has a different major types (loop vs segment) than EDI standard"))
+            (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${sH.canonicalName} has a different major types (loop vs segment) than EDI standard"))
       case (Nil, eH :: eT, Nil) =>
         (Nil, eT, Nil, acc :+ burnEdiSegment(path, eH))
     }
@@ -99,7 +99,7 @@ object DiffEngine:
       None
     LoopSegmentDifference(
       path,
-      nameOf(src),
+      src.name,
       canonicalNameOf(src),
       (true,true),
       (src.required, src.required),
@@ -139,14 +139,14 @@ object DiffEngine:
 
   private def burnEdiSegment(
                               path: Path,
-                              edi: RefinedSegmentSpec | RefinedLoopSpec
+                              edi: RefinedSingleOrLoopSegmentSpec
                             ): SegmentDifference =
     SimpleSegmentDifference(
       path,
-      nameOf(edi),
+      edi.name,
       canonicalNameOf(edi),
       (false, false),
-      (isRequired(edi), false),
+      (edi.required, false),
       None,
       {
         edi match {
@@ -225,9 +225,9 @@ object DiffEngine:
   @tailrec
   private def compareSegmentFields(
                                     path: Path,
-                                    src: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
-                                    edi: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
-                                    target: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                                    src: List[RefinedFieldSpec],
+                                    edi: List[RefinedFieldSpec],
+                                    target: List[RefinedFieldSpec],
                                     acc: List[FieldDifference] = List.empty
                                   ): List[FieldDifference] =
     val nextLoop = (src, edi, target) match {
@@ -237,32 +237,32 @@ object DiffEngine:
         (Nil, Nil, Nil, acc) // done comparing lists
       case (sH :: sT, eH :: eT, tH :: tT) =>
         // 3-way match -> compare sH and tH
-        if canonicalFieldNameOf(sH) == canonicalFieldNameOf(eH) && canonicalFieldNameOf(eH) == canonicalFieldNameOf(tH) then
+        if sH.canonicalName == eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (sH, eH, tH) match
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
               (sT, eT, tT, acc :+ compareTwoSingleFields(path, sHS, tHS))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
               (sT, eT, tT, acc :+ compareTwoCompositeFields(path, sHS, eHS, tHS))
             case _ =>
-              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
-        else if canonicalFieldNameOf(sH) == canonicalFieldNameOf(eH) && canonicalFieldNameOf(eH) != canonicalFieldNameOf(tH) then
+              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${sH.name} have different major types (simple vs composite)"))
+        else if sH.canonicalName == eH.canonicalName && eH.canonicalName != tH.canonicalName then
           (sH, eH, tH) match
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
               (sT, eT, target, acc :+ burnSingleField(path, sHS, true))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
               (sT, eT, target, acc :+ burnCompositeField(path, sHS, true))
             case _ =>
-              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
-        else if canonicalFieldNameOf(sH) != canonicalFieldNameOf(eH) && canonicalFieldNameOf(eH) == canonicalFieldNameOf(tH) then
+              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${sH.name} have different major types (simple vs composite)"))
+        else if sH.canonicalName != eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (sH, eH, tH) match
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
               (src, eT, tT, acc :+ burnSingleField(path, tHS, false))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
               (src, eT, tT, acc :+ burnCompositeField(path, tHS, false))
             case _ =>
-              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${fieldNameOf(sH)} have different major types (simple vs composite)"))
+              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${sH.name} have different major types (simple vs composite)"))
         else
-          (src, eT, target, acc :+ SingleFieldDifference(path, fieldNameOf(eH), canonicalFieldNameOf(eH), (false, false), (isFieldRequired(sH), isFieldRequired(tH)), None, None))
+          (src, eT, target, acc :+ SingleFieldDifference(path, eH.name, eH.canonicalName, (false, false), (sH.required, tH.required), None, None))
       case (Nil, eH :: eT, tH :: tT) =>
         (eH, tH) match
           case (eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
@@ -270,7 +270,7 @@ object DiffEngine:
           case (eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
             (Nil,eT,tT,acc :+ burnCompositeField(path, tHS, false))
           case _ =>
-            (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Target field ${fieldNameOf(tH)} has a different major types (loop vs segment) than EDI standard"))
+            (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Target field ${tH.name} has a different major types (loop vs segment) than EDI standard"))
       case (sH :: sT, eH :: eT, Nil) =>
         (sH, eH) match
           case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec) =>
@@ -278,7 +278,7 @@ object DiffEngine:
           case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec) =>
             (sT,eT,Nil,acc :+ burnCompositeField(path, sHS, true))
           case _ =>
-            (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Source element ${fieldNameOf(sH)} has a different major types (loop vs segment) than EDI standard"))
+            (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Source element ${sH.name} has a different major types (loop vs segment) than EDI standard"))
       case (Nil, eH :: eT, Nil) =>
         (Nil, eT, Nil, acc :+ burnEdiField(path, eH))
     }
@@ -326,7 +326,7 @@ object DiffEngine:
 
   private def burnSegmentFields(
                               path: Path,
-                              doomed: List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec],
+                              doomed: List[RefinedFieldSpec],
                               isSrc: Boolean
                             ): List[FieldDifference] =
     doomed.map {
@@ -365,11 +365,11 @@ object DiffEngine:
       List.empty
     )
 
-  private def burnEdiField(path: Path, f: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): FieldDifference =
+  private def burnEdiField(path: Path, f: RefinedFieldSpec): FieldDifference =
     SingleFieldDifference(
       path,
-      fieldNameOf(f),
-      canonicalFieldNameOf(f),
+      f.name,
+      f.canonicalName,
       (false,false),
       {
         f match {
@@ -468,41 +468,12 @@ object DiffEngine:
 
   // Utilities
   //-----------------------------------------------------------
-  private inline def isRequired(x: RefinedSegmentSpec | RefinedLoopSpec): Boolean = x match {
-    case s: RefinedSegmentSpec => s.required
-    case l: RefinedLoopSpec => l.required
-  }
 
-  private inline def isFieldRequired(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): Boolean = x match {
-    case s: RefinedSingleFieldSpec => s.required
-    case l: RefinedCompositeFieldSpec => l.required
-  }
-
-  private inline def nameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
-    case s: RefinedSegmentSpec => s.name
-    case l: RefinedLoopSpec => l.name
-  }
-
-  private inline def rawCName(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
-    case s: RefinedSegmentSpec => s.canonicalName
-    case l: RefinedLoopSpec => l.canonicalName
-  }
-
-  private def canonicalNameOf(x: RefinedSegmentSpec | RefinedLoopSpec): String = x match {
+  private def canonicalNameOf(x: RefinedSingleOrLoopSegmentSpec): String = x match {
     case s: RefinedSegmentSpec => s.canonicalName
     case l: RefinedLoopSpec =>
       if l.canonicalName == "HL" && l.description.nonEmpty then
         l.canonicalName + s"[${l.description}]"
       else
         l.canonicalName
-  }
-
-  private def fieldNameOf(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): String = x match {
-    case s: RefinedSingleFieldSpec => s.name
-    case l: RefinedCompositeFieldSpec => l.name
-  }
-
-  private def canonicalFieldNameOf(x: RefinedSingleFieldSpec | RefinedCompositeFieldSpec): String = x match {
-    case s: RefinedSingleFieldSpec => s.canonicalName
-    case l: RefinedCompositeFieldSpec => l.canonicalName
   }

@@ -12,7 +12,7 @@ import pprint.*
 object CanonicalParser:
   // Let compile-time macros deep-dive and generate JSON serilalizer for EdiObject and all subclasses...
   given sjEdiObject: ScalaJack[EdiObject] = ScalaJack.sjCodecOf[EdiObject]
-  given sjRefinedSpec: ScalaJack[model4j.RefinedDocumentSpec] = ScalaJack.sjCodecOf[model4j.RefinedDocumentSpec]
+  given sjRefinedSpec: ScalaJack[RefinedDocumentSpec] = ScalaJack.sjCodecOf[RefinedDocumentSpec]
 
   def readSpec( spec: String ): ZIO[Any, CanonicalError, EdiObject] =
     // ScalaJack  isn't natively ZIO-capable
@@ -75,7 +75,7 @@ object CanonicalParser:
   private def convertFields(
                              segment: EdiSchema,
                              catalog: Map[String, EdiEnum | EdiSchema],
-                           ): ZIO[Any, CanonicalError, List[RefinedSingleFieldSpec | RefinedCompositeFieldSpec]] =
+                           ): ZIO[Any, CanonicalError, List[RefinedFieldSpec]] =
     for {
       fields <- ZIO.foreach(segment.properties.toList.zipWithIndex) {
         case ((fname, sp: EdiElementProperty),i) =>
@@ -137,7 +137,7 @@ object CanonicalParser:
       }
     } yield fields
 
-  private def convertNestedLoopSegment(name: String, isRequired: Boolean, loopSchema: EdiSchema, catalog: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, RefinedSegmentSpec | RefinedLoopSpec] =
+  private def convertNestedLoopSegment(name: String, isRequired: Boolean, loopSchema: EdiSchema, catalog: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, RefinedSingleOrLoopSegmentSpec] =
     for {
       (loopFirstProp, loopBodyProp) <- loopSchema.properties.toList match
         case head :: tail => ZIO.succeed((head,tail))
@@ -174,7 +174,7 @@ object CanonicalParser:
       None
     )
 
-  private def convertSegmentProperty( name: String, isRequired: Boolean, prop: EdiRefProperty, catalog: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, RefinedSegmentSpec | RefinedLoopSpec] =
+  private def convertSegmentProperty( name: String, isRequired: Boolean, prop: EdiRefProperty, catalog: Map[String, EdiEnum | EdiSchema]): ZIO[Any, CanonicalError, RefinedSingleOrLoopSegmentSpec] =
     for {
       segment <- prop.dereferenceSegment(catalog)
       refinedSpec <- if segment.isLoop then convertNestedLoopSegment(name, isRequired, segment, catalog)
@@ -240,7 +240,6 @@ object CanonicalParser:
       fields <- prop.dereferenceSegment(catalog).flatMap(loopSegment => convertFields(loopSchema, catalog))
     } yield RefinedLoopSpec(name, name, None, "", isRequired, loopSchema.`x-openedi-syntax`.getOrElse(Nil), fields, prop.minItems, prop.maxItems, Nil)
 
-  private type RefinedUnion = RefinedSegmentSpec | RefinedLoopSpec
   def toRefined( edi: EdiObject, topLevel: String, document: String, version: String, partner: String ): ZIO[Any, CanonicalError, RefinedDocumentSpec] =
     val catalog = edi.components.schemas
     catalog.get(topLevel) match {
@@ -254,15 +253,12 @@ object CanonicalParser:
         props <- ZIO.foreach( filtered ) {
           case (name, single: EdiRefProperty) =>
             convertSegmentProperty(name, top.isRequired(name), single, catalog)
-              .map(identity[RefinedUnion])
           case (name, loop: EdiItemsProperty) =>
             loop.loopHasBody(catalog).flatMap{ hasBody =>
-              val action =
-                if hasBody then
-                  convertLoopProperty(name, top.isRequired(name), loop, catalog)
-                else
-                  convertLoopPropertyNoBody(name, top.isRequired(name), loop, catalog)
-              action.map(identity[RefinedUnion])
+              if hasBody then
+                convertLoopProperty(name, top.isRequired(name), loop, catalog)
+              else
+                convertLoopPropertyNoBody(name, top.isRequired(name), loop, catalog)
             }
         }
         result <- ZIO.succeed(RefinedDocumentSpec(document, version, partner, props))
