@@ -1,5 +1,5 @@
 package co.blocke.edi4s
-package tokenizer
+package parser
 
 import model.*
 //import java.time.LocalDateTime
@@ -80,7 +80,7 @@ object Emitter:
     sb.append(s"SE${cfg.elementDelimiter}${st.body.length}${cfg.elementDelimiter}${st.transactionSetControlNumber}${cfg.segmentDelimiter}")
     sb
 
-  private def emit(cfg: TokenizerConfig, sb: StringBuilder, bodySeg: SegmentX12Token): StringBuilder =
+  def emit(cfg: TokenizerConfig, sb: StringBuilder, bodySeg: SegmentX12Token): StringBuilder =
     sb.append(bodySeg.name + cfg.elementDelimiter)
     val maxFields = bodySeg.fields.length-1
     bodySeg.fields.zipWithIndex.foreach {

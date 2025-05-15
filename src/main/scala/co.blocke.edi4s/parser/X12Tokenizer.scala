@@ -1,5 +1,5 @@
 package co.blocke.edi4s
-package tokenizer
+package parser
 
 import model.*
 import zio.*

@@ -4,7 +4,7 @@ import zio.*
 import zio.nio.file.{Files, Path}
 import table.*
 import model.*
-import tokenizer.*
+import parser.*
 import java.io.File
 import scala.io.Source
 
@@ -65,25 +65,27 @@ object Main extends ZIOAppDefault {
       rows
     )
 
-  def run: ZIO[ZIOAppArgs & Scope, CanonicalError | X12ParseError, Unit] = {
+  def run: ZIO[ZIOAppArgs & Scope, CanonicalError | X12ParseError | Throwable, Unit] = {
 
     for {
-
       _ <- ZIO.succeed("Starting!")
-      std <- readRefined("specs/x12_856_5010.json")
-      src <- readRefined("specs/tf_856_5010.json")
-      pfg <- readRefined("specs/pfg_856_5010.json")
-      tj <- readRefined("specs/tj_856_4030.json")
-      cm <- readRefined("specs/cm_856_5010.json")
+      _ <- Locator.go
+// >> DiffEngine + Table
+//      std <- readRefined("specs/x12_856_5010.json")
+//      src <- readRefined("specs/tf_856_5010.json")
+//      pfg <- readRefined("specs/pfg_856_5010.json")
+//      tj <- readRefined("specs/tj_856_4030.json")
+//      cm <- readRefined("specs/cm_856_5010.json")
 
-      table1 = diffReport("Taylor Farms", "Core-Mark", src, std, cm, true)
-      //_ <- ZIO.succeed(println(table1.toString))
+//      table1 = diffReport("Taylor Farms", "Trader Joes", src, std, tj, true)
+//      _ <- ZIO.succeed(println(table1.toString))
 
-      doc = readFileToString(new File("specs/raw_x12/sample_856.x12"))
-      (isa,cfg) <- X12Parser.parse(doc, TokenizerConfig())
-
-      sb = Emitter.emitTransaction(cfg, isa)
-      _ <- ZIO.succeed(println(sb.split("~").mkString("\n").toString))
+// >> Emitting X12
+//      doc = readFileToString(new File("specs/raw_x12/sample_856.x12"))
+//      (isa,cfg) <- X12Parser.parse(doc, TokenizerConfig())
+//
+//      sb = Emitter.emitTransaction(cfg, isa)
+//      _ <- ZIO.succeed(println(sb.split("~").mkString("\n").toString))
 
     } yield ()
   }

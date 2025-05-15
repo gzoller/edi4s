@@ -1,6 +1,9 @@
 package co.blocke.edi4s
 package model
 
+
+// Keep this file for now. It's not used, but there's learnings required around these contstraints, eg allOf
+
 sealed trait Constraint
 
 case class TypeConstraint(dataType: String) extends Constraint

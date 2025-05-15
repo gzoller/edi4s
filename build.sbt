@@ -12,13 +12,12 @@ lazy val root = project
     scalacOptions ++= compilerOptions,
 
     libraryDependencies ++= Seq(
-    	"dev.zio" %% "zio" % "2.1.12",
+    	"dev.zio" %% "zio" % "2.1.17",
       "dev.zio" %% "zio-nio" % "2.0.2",
       "dev.zio" %% "zio-json" % "0.7.39",
       "co.blocke" %% "scalajack" % "8.1.0",
       "org.apache.poi" % "poi-ooxml" % "5.2.5",
       "com.lihaoyi" %% "pprint" % "0.8.1",
-      //"co.blocke" %% "scalajack" % "8.0.2",
       "org.scalameta" %% "munit" % "1.0.0" % Test,
 
       // Java Junk

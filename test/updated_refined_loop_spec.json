@@ -1,0 +1,104 @@
+{
+  "name": "HL",
+  "canonicalName": "HL",
+  "description": "Shipment",
+  "required": true,
+  "assertions": [],
+  "fields": [],
+  "body": [
+    {
+      "name": "BSN",
+      "canonicalName": "BSN",
+      "description": "Shipment",
+      "required": true,
+      "assertions": [],
+      "fields": []
+    },
+    {
+      "name": "TD1",
+      "canonicalName": "TD1",
+      "description": "Shipment",
+      "required": true,
+      "assertions": [],
+      "fields": []
+    }
+  ],
+  "nested": {
+    "name": "HL",
+    "canonicalName": "HL",
+    "description": "Order",
+    "required": true,
+    "assertions": [],
+    "fields": [],
+    "body": [
+      {
+        "name": "PRF",
+        "canonicalName": "PRF",
+        "description": "Order",
+        "required": true,
+        "assertions": [],
+        "fields": []
+      },
+      {
+        "name": "N1",
+        "canonicalName": "N1",
+        "description": "Order",
+        "required": true,
+        "assertions": [],
+        "fields": []
+      }
+    ],
+    "nested": {
+      "name": "HL",
+      "canonicalName": "HL",
+      "description": "Pack",
+      "required": true,
+      "assertions": [],
+      "fields": [],
+      "body": [
+        {
+          "name": "MAN",
+          "canonicalName": "MAN",
+          "description": "Pack",
+          "required": true,
+          "assertions": [],
+          "fields": []
+        },
+        {
+          "name": "TD1",
+          "canonicalName": "TD1",
+          "description": "Pack",
+          "required": true,
+          "assertions": [],
+          "fields": []
+        }
+      ],
+      "nested": {
+        "name": "HL",
+        "canonicalName": "HL",
+        "description": "Item",
+        "required": true,
+        "assertions": [],
+        "fields": [],
+        "body": [
+          {
+            "name": "LIN",
+            "canonicalName": "LIN",
+            "description": "Item",
+            "required": true,
+            "assertions": [],
+            "fields": []
+          },
+          {
+            "name": "SN1",
+            "canonicalName": "SN1",
+            "description": "Item",
+            "required": true,
+            "assertions": [],
+            "fields": []
+          }
+        ]
+      }
+    }
+  }
+}

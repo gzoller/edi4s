@@ -18,8 +18,6 @@ case class CompositeX12Token(name: String, value: List[X12Token]) extends X12Tok
 
 case class SegmentX12Token(name: String, fields: List[X12Token])
 
-case class X12TokenDocument( segments: List[SegmentX12Token] )
-
 case class IsaSegment(
                        authorizationQualifier: String = "00",    // ISA01 - e.g., "00"
                        authorizationInfo: String = "          ", // ISA02 - 10 spaces if unused
