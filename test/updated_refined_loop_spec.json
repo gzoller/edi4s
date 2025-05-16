@@ -7,8 +7,8 @@
   "fields": [],
   "body": [
     {
-      "name": "BSN",
-      "canonicalName": "BSN",
+      "name": "PID",
+      "canonicalName": "PID",
       "description": "Shipment",
       "required": true,
       "assertions": [],
@@ -57,16 +57,16 @@
       "fields": [],
       "body": [
         {
-          "name": "MAN",
-          "canonicalName": "MAN",
+          "name": "SN1",
+          "canonicalName": "SN1",
           "description": "Pack",
           "required": true,
           "assertions": [],
           "fields": []
         },
         {
-          "name": "TD1",
-          "canonicalName": "TD1",
+          "name": "N1",
+          "canonicalName": "N1",
           "description": "Pack",
           "required": true,
           "assertions": [],
@@ -90,8 +90,8 @@
             "fields": []
           },
           {
-            "name": "SN1",
-            "canonicalName": "SN1",
+            "name": "MAN",
+            "canonicalName": "MAN",
             "description": "Item",
             "required": true,
             "assertions": [],

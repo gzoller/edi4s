@@ -28,10 +28,14 @@ object Locator:
       x12File = readFileToString(new File("test/sample.x12"))
       (tokens,_) <- X12Tokenizer.tokenize(x12File, 0, TokenizerConfig())
 
+      canonicalFile = readFileToString(new File("specs/x12_856_5010.json"))
+      canonicalSpec = CanonicalParser.sjRefinedSpec.fromJson(canonicalFile)
+      hlSpec = canonicalSpec.segments.find(_.name == "HL").get.asInstanceOf[RefinedLoopSpec]
+
       (hl,rest) = X12ops.extractHLRange(tokens, refSpec.asInstanceOf[RefinedLoopSpec])
       roots = X12ops.extractHLTree(hl)
 
-      flat = X12ops.flattenHLTree(roots.roots,Set("P"))
+      flat = X12ops.flattenHLTree(roots.roots,Set("O","P"), hlSpec)
       _ <- ZIO.succeed{
         println("--- Flattened Record ---")
         flat.foreach { seg =>
