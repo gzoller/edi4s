@@ -42,10 +42,20 @@
       {
         "name": "N1",
         "canonicalName": "N1",
-        "description": "Order",
+        "description": "Item",
         "required": true,
         "assertions": [],
-        "fields": []
+        "fields": [],
+        "body": [
+          {
+            "name": "PER",
+            "canonicalName": "PER",
+            "description": "Item",
+            "required": true,
+            "assertions": [],
+            "fields": []
+          }
+        ]
       }
     ],
     "nested": {
@@ -67,10 +77,20 @@
         {
           "name": "N1",
           "canonicalName": "N1",
-          "description": "Pack",
+          "description": "Item",
           "required": true,
           "assertions": [],
-          "fields": []
+          "fields": [],
+          "body": [
+            {
+              "name": "N3",
+              "canonicalName": "N3",
+              "description": "Item",
+              "required": true,
+              "assertions": [],
+              "fields": []
+            }
+          ]
         }
       ],
       "nested": {
@@ -96,6 +116,32 @@
             "required": true,
             "assertions": [],
             "fields": []
+          },
+          {
+            "name": "N1",
+            "canonicalName": "N1",
+            "description": "Item",
+            "required": true,
+            "assertions": [],
+            "fields": [],
+            "body": [
+              {
+                "name": "N2",
+                "canonicalName": "N2",
+                "description": "Item",
+                "required": true,
+                "assertions": [],
+                "fields": []
+              },
+              {
+                "name": "N4",
+                "canonicalName": "N4",
+                "description": "Item",
+                "required": true,
+                "assertions": [],
+                "fields": []
+              }
+            ]
           }
         ]
       }

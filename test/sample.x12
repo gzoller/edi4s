@@ -5,26 +5,41 @@ TD1*ship~
 HL*2*1*O~
 PRF*order~
 N1*order~
+PER*foo~
 
 HL*3*2*P~
 SN1*pack1~
 N1*pack1~
+N3*pack1~
 HL*4*3*I~
 LIN*item1~
 MAN*item1~
+N1*item1~
+N2*item1~
+N4*item1~
 HL*5*3*I~
 LIN*item2~
 MAN*item2~
+N1*item2~
+N2*item2~
+N4*item2~
 
 HL*6*2*P~
 SN1*pack2~
 N1*pack2~
+N3*pack2~
 HL*7*6*I~
 LIN*item3~
 MAN*item3~
+N1*item3~
+N2*item3~
+N4*item3~
 HL*8*6*I~
 LIN*item4~
 MAN*item4~
+N1*item4~
+N2*item4~
+N4*item4~
 
 REF*Foo*Bar~
 GZ*1**3~

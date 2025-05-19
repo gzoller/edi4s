@@ -3,6 +3,8 @@ package mapper
 
 import model.*
 
+import scala.annotation.tailrec
+
 object X12ops:
 
   case class HLNode(
@@ -23,21 +25,21 @@ object X12ops:
                       loopSpec: RefinedLoopSpec
                     ): (List[SegmentX12Token], List[SegmentX12Token]) =
 
-    def walk(remaining: List[SegmentX12Token], acc: List[SegmentX12Token]): (List[SegmentX12Token], List[SegmentX12Token]) =
+    @tailrec
+    def walk(
+              remaining: List[SegmentX12Token],
+              acc: List[SegmentX12Token]
+            ): (List[SegmentX12Token], List[SegmentX12Token]) =
       remaining match
         case Nil => (acc.reverse, Nil)
-        case seg :: tail if seg.name == "HL" =>
-          // Assume HL means new loop; include and recurse if nested spec exists
-          val (nestedTokens, rest) =
-            loopSpec.nested.map { nestedSpec =>
-              val (nested, rem) = extractHLRange(tail, nestedSpec)
-              (seg :: nested, rem)
-            }.getOrElse((List(seg), tail))
-          walk(rest, nestedTokens.reverse ++ acc)
-        case seg :: tail if loopSpec.body.exists(_.name == seg.name) =>
+
+        case seg :: tail if seg.name == "HL" || !Set("SE", "GE", "REF", "GZ").contains(seg.name) =>
+          // Accept all HL segments and other body segments until we hit a terminal marker
           walk(tail, seg :: acc)
-        case _ =>
-          (acc.reverse, remaining) // Stop at unexpected segment
+
+        case seg :: tail =>
+          println(s"END (terminal or control segment): ${seg.name}")
+          (acc.reverse, remaining)
 
     walk(segments, Nil)
 
@@ -47,27 +49,28 @@ object X12ops:
 
 
   // Builds a tree of HLNodes from the flat list of segments in ST body
-  def buildHLTree(segments: List[SegmentX12Token]): List[HLNode] =
-    val grouped =
-      segments match
-        case Nil => Nil
-        case _ =>
-          val buffer = scala.collection.mutable.ListBuffer.empty[(SegmentX12Token, List[SegmentX12Token])]
-          var remaining = segments
-          while remaining.nonEmpty do
-            val (hl, rest) = (remaining.head, remaining.tail)
-            val (body, tail) = rest.span(_.name != "HL")
-            buffer += ((hl, body))
-            remaining = tail
-          buffer.toList
+  private def buildHLTree(segments: List[SegmentX12Token]): List[HLNode] =
+    // Step 1: Extract all HL blocks
+    val hlGroups = segments.foldLeft(List.empty[List[SegmentX12Token]]) {
+      case (accum, seg) if seg.name == "HL" =>
+        List(seg) :: accum  // Start a new group
+      case (head :: tail, seg) =>
+        (seg :: head) :: tail  // Append to current group
+      case (Nil, seg) =>
+        List(List(seg)) // First group
+    }.map(_.reverse).reverse  // Restore original order
 
-    val nodeMap: Map[String, HLNode] = grouped.map { case (hlSeg, body) =>
-      val hl01 = hlSeg.fields.lift(0).collect { case s: SimpleX12Token => s.value }.getOrElse("?")
-      val hl02 = hlSeg.fields.lift(1).collect { case s: SimpleX12Token => s.value }
-      val hl03 = hlSeg.fields.lift(2).collect { case s: SimpleX12Token => s.value }.getOrElse("?")
-      hl01 -> HLNode(hl01, hl02, hl03, hlSeg :: body)
+    // Step 2: Build HLNode map
+    val nodeMap = hlGroups.flatMap {
+      case hlSeg :: body =>
+        val hl01 = hlSeg.fields.lift(0).collect { case s: SimpleX12Token => s.value }.getOrElse("?")
+        val hl02 = hlSeg.fields.lift(1).collect { case s: SimpleX12Token => s.value }
+        val hl03 = hlSeg.fields.lift(2).collect { case s: SimpleX12Token => s.value }.getOrElse("?")
+        Some(hl01 -> HLNode(hl01, hl02, hl03, hlSeg :: body))
+      case _ => None
     }.toMap
 
+    // Step 3: Link children recursively
     def linkChildren(parentId: String): List[HLNode] =
       nodeMap.values
         .filter(_.hlParentId.contains(parentId))
@@ -75,6 +78,7 @@ object X12ops:
         .sortBy(_.hlId.toInt)
         .map(child => child.copy(children = linkChildren(child.hlId)))
 
+    // Step 4: Build the tree
     nodeMap.values
       .filter(_.hlParentId.isEmpty)
       .toList
@@ -83,94 +87,6 @@ object X12ops:
 
 
   // Flatten all branches down to any HL level in `flattenLevels`
-    /*
-  def flattenHLTree(
-                     roots: List[HLNode],
-                     flattenLevels: Set[String],
-                     canonicalSpec: RefinedLoopSpec
-                   ): List[SegmentX12Token] =
-
-    val canonicalOrder: Map[String, Int] =
-      linearizeCanonicalOrder(canonicalSpec).zipWithIndex.toMap
-
-    def recurse(
-                 node: HLNode,
-                 inherited: List[SegmentX12Token],
-                 effectiveParentHLId: Option[String]
-               ): List[SegmentX12Token] =
-
-      val isFlattened = flattenLevels.contains(node.hlType)
-      val newInherited =
-        if isFlattened then overrideSegments(inherited, node.segmentGroup.drop(1))
-        else Nil
-
-      val childOutput = node.children.flatMap { child =>
-        recurse(child, newInherited, if isFlattened then effectiveParentHLId else Some(node.hlId))
-      }
-
-      if isFlattened then
-        childOutput
-      else
-        val hlSegment = node.segmentGroup.head
-        val rest = node.segmentGroup.tail
-        val body =
-          if isFlattened then interleaveSegments(inherited, rest, canonicalSpec)
-          else overrideSegments(inherited, rest) // just parent merge; preserve order
-
-        val rewrittenGroup = (hlSegment +: body).map {
-          case s@SegmentX12Token("HL", f0 :: _ :: f2 :: Nil)
-            if effectiveParentHLId.isDefined =>
-            s.copy(fields = List(f0, SimpleX12Token("HL02", effectiveParentHLId.get), f2))
-          case other => other
-        }
-
-        rewrittenGroup ++ childOutput
-
-    roots.flatMap(r => recurse(r, Nil, None))
-
-  def overrideSegments(
-                        parent: List[SegmentX12Token],
-                        child: List[SegmentX12Token]
-                      ): List[SegmentX12Token] =
-    val childMap = child.map(_.name).toSet
-    val base = parent.filterNot(s => childMap.contains(s.name))
-    base ++ child
-
-
-  private def interleaveSegments(
-                                  segments: List[SegmentX12Token],
-                                  canonicalSpec: RefinedLoopSpec
-                                ): List[SegmentX12Token] =
-    val canonicalOrder: Map[String, Int] =
-      linearizeCanonicalOrder(canonicalSpec).zipWithIndex.toMap
-    println("Canonical Sort Order:")
-    canonicalOrder.toList.sortBy(_._2).foreach { case (name, idx) =>
-      println(f"$idx%02d: $name")
-    }
-    def sortOneRecord(record: List[SegmentX12Token]): List[SegmentX12Token] =
-      record match
-        case hl :: rest if hl.name == "HL" =>
-          val sorted = rest.sortBy(seg => canonicalOrder.getOrElse(seg.name, Int.MaxValue))
-          hl +: sorted
-        case other => other
-
-    val grouped: List[List[SegmentX12Token]] = {
-      val buf = collection.mutable.ListBuffer.empty[List[SegmentX12Token]]
-      var current = collection.mutable.ListBuffer.empty[SegmentX12Token]
-
-      for seg <- segments do
-        if seg.name == "HL" then
-          if current.nonEmpty then buf += current.toList
-          current = collection.mutable.ListBuffer(seg)
-        else
-          current += seg
-
-      if current.nonEmpty then buf += current.toList
-      buf.toList
-    }
-
-    grouped.flatMap(sortOneRecord)
-    */
   def flattenHLTree(
                      roots: List[HLNode],
                      flattenLevels: Set[String],
@@ -186,7 +102,9 @@ object X12ops:
 
       val isFlattened = flattenLevels.contains(node.hlType)
       val rest = node.segmentGroup.tail
-      val newInherited = if isFlattened then overrideSegments(inherited, rest) else Nil
+      val newInherited =
+        if isFlattened then overrideSegments(inherited, rest)
+        else inherited
 
       val childOutput = node.children.sortBy(_.hlId.toInt).flatMap(child =>
         recurse(child, newInherited, if isFlattened then effectiveParentHLId else Some(node.hlId))
@@ -210,7 +128,7 @@ object X12ops:
     roots.sortBy(_.hlId.toInt).flatMap(r => recurse(r, Nil, None))
 
 
-  def overrideSegments(
+  private def overrideSegments(
                         parent: List[SegmentX12Token],
                         child: List[SegmentX12Token]
                       ): List[SegmentX12Token] =
@@ -218,7 +136,7 @@ object X12ops:
     val base = parent.filterNot(s => childMap.contains(s.name))
     base ++ child
 
-  def interleaveSegments(
+  private def interleaveSegments(
                           parent: List[SegmentX12Token],
                           child: List[SegmentX12Token],
                           canonicalOrder: Map[String, Int]
@@ -227,7 +145,7 @@ object X12ops:
     combined.sortBy(seg => canonicalOrder.getOrElse(seg.name, Int.MaxValue))
 
 
-  def linearizeCanonicalOrder(spec: RefinedLoopSpec): List[String] =
+  private def linearizeCanonicalOrder(spec: RefinedLoopSpec): List[String] =
     def flatten(loop: RefinedLoopSpec): List[String] =
       // Start with the loop’s own name
       val loopSelf = List(loop.canonicalName)
@@ -242,3 +160,93 @@ object X12ops:
       loopSelf ++ bodyNames
 
     flatten(spec)
+
+
+  def flattenHLSpec(
+                     flattenLevels: Set[String],
+                     partnerSpec: RefinedLoopSpec,
+                     canonicalSpec: RefinedLoopSpec
+                   ): RefinedLoopSpec = {
+
+    def linearizeCanonicalOrder(spec: RefinedLoopSpec): List[String] =
+      def recurse(spec: RefinedLoopSpec): List[String] =
+        val base = spec.body.flatMap {
+          case s: RefinedSegmentSpec => List(s.name)
+          case l: RefinedLoopSpec => l.name +: recurse(l) // << fix: include the loop name
+        }
+        base ++ spec.nested.toList.flatMap(recurse)
+
+      recurse(spec)
+
+    def interleaveLoopBodies(
+                              parentBody: List[RefinedSingleOrLoopSegmentSpec],
+                              childBody: List[RefinedSingleOrLoopSegmentSpec],
+                              canonicalOrder: List[String]
+                            ): List[RefinedSingleOrLoopSegmentSpec] = {
+      val parentSegs = parentBody.collect { case s: RefinedSegmentSpec => s.name -> s }.toMap
+      val childSegs = childBody.collect { case s: RefinedSegmentSpec => s.name -> s }.toMap
+      val parentLoops = parentBody.collect { case l: RefinedLoopSpec => l.name -> l }.toMap
+      val childLoops = childBody.collect { case l: RefinedLoopSpec => l.name -> l }.toMap
+
+      val mergedFlatSegs = canonicalOrder.flatMap { name =>
+        childSegs.get(name).orElse(parentSegs.get(name))
+      }
+
+      val mergedLoops = canonicalOrder.flatMap { name =>
+        (childLoops.get(name), parentLoops.get(name)) match {
+          case (Some(child), Some(parent)) =>
+            Some(child.copy(body = interleaveLoopBodies(parent.body, child.body, canonicalOrder)))
+          case (Some(child), None) => Some(child)
+          case (None, Some(parent)) => Some(parent)
+          case _ => None
+        }
+      }
+
+      mergedFlatSegs ++ mergedLoops
+    }
+
+    def recurse(partner: RefinedLoopSpec, canon: RefinedLoopSpec): RefinedLoopSpec = {
+      val nestedFlattened = partner.nested.map(n => recurse(n, canon))
+      val shouldFlatten = flattenLevels.contains(partner.description)
+
+      if (shouldFlatten && nestedFlattened.isDefined) {
+        val flattened = nestedFlattened.get
+        val canonicalOrder = linearizeCanonicalOrder(canonicalSpec)
+        val newBody = interleaveLoopBodies(partner.body, flattened.body, canonicalOrder)
+        flattened.copy(body = newBody)
+      } else {
+        partner.copy(nested = nestedFlattened)
+      }
+    }
+
+    recurse(partnerSpec, canonicalSpec)
+  }
+
+
+  def show(spec: RefinedDocumentSpec): Unit =
+    println(s"Document: ${spec.name} (v${spec.version}, partner: ${spec.partner})")
+    spec.segments.foreach {
+      case loop: RefinedLoopSpec =>
+        showLoop(loop, indent = 1)
+      case seg: RefinedSegmentSpec =>
+        showSegment(seg, indent = 1)
+    }
+
+  def showLoop(loop: RefinedLoopSpec, indent: Int): Unit =
+    if loop.isRealLoop then
+      println(s"${"  " * indent}Segment (loop): ${loop.name}[${loop.description}]")
+    else
+      println(s"${"  " * indent}Segment: ${loop.name}")
+//    loop.fields.foreach(f => println(s"${"  " * (indent + 1)}Field: ${f.name}"))
+    loop.body.foreach {
+      case seg: RefinedSegmentSpec =>
+        showSegment(seg, indent + 1)
+      case nestedLoop: RefinedLoopSpec =>
+        showLoop(nestedLoop, indent + 1)
+    }
+    if loop.nested.nonEmpty then print(s"${" "*(indent+1)}(nested) ")
+    loop.nested.foreach(n => showLoop(n, indent + 1))
+
+  def showSegment(seg: RefinedSegmentSpec, indent: Int): Unit =
+    println(s"${"  " * indent}Segment: ${seg.name}")
+//    seg.fields.foreach(f => println(s"${"  " * (indent + 1)}Field: ${f.name}"))

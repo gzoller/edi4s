@@ -35,7 +35,7 @@ object Locator:
       (hl,rest) = X12ops.extractHLRange(tokens, refSpec.asInstanceOf[RefinedLoopSpec])
       roots = X12ops.extractHLTree(hl)
 
-      flat = X12ops.flattenHLTree(roots.roots,Set("O","P"), hlSpec)
+      flat = X12ops.flattenHLTree(roots.roots, Set("P"), hlSpec)
       _ <- ZIO.succeed{
         println("--- Flattened Record ---")
         flat.foreach { seg =>
@@ -48,7 +48,13 @@ object Locator:
       _ = flat.foreach( bodySeg => Emitter.emit(TokenizerConfig(), sb, bodySeg))
 
 //      _ <- ZIO.succeed(println("-----------\n"+flat.mkString("\n\n")))
-      _ <- ZIO.succeed(println("-----------\n"+sb.toString.split("~").mkString("~\n")))
+      _ <- ZIO.succeed(println("----------->> Data\n"+sb.toString.split("~").mkString("~\n")))
+
+//      flatSpec = X12ops.flattenHLSpec(Set("Pack"), refSpec.asInstanceOf[RefinedLoopSpec], hlSpec)
+//      _ <- ZIO.succeed(println("--------------------- Before >>"))
+//      _ <- ZIO.succeed(X12ops.showLoop(refSpec.asInstanceOf[RefinedLoopSpec],0))
+//      _ <- ZIO.succeed(println("--------------------- After >>"))
+//      _ <- ZIO.succeed(X12ops.showLoop(flatSpec,0))
     } yield ()
 
   /*

@@ -82,4 +82,5 @@ case class RefinedLoopSpec(
   // much like a struct in C.  We indicate this here by setting both minRepeats and maxRepeats to Some(1).
   def isStruct: Boolean = minRepeats.contains(1) && maxRepeats.contains(1)
   def isRepeatable: Boolean = maxRepeats.exists(_ > 1)
+  def isRealLoop: Boolean = body.nonEmpty
 
