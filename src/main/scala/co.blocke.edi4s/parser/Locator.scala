@@ -29,7 +29,7 @@ object Locator:
       (tokens,_) <- X12Tokenizer.tokenize(x12File, 0, TokenizerConfig())
 
       canonicalFile = readFileToString(new File("specs/x12_856_5010.json"))
-      canonicalSpec = CanonicalParser.sjRefinedSpec.fromJson(canonicalFile)
+      canonicalSpec = sjRefinedSpec.fromJson(canonicalFile)
       hlSpec = canonicalSpec.segments.find(_.name == "HL").get.asInstanceOf[RefinedLoopSpec]
 
       (hl,rest) = X12ops.extractHLRange(tokens, refSpec.asInstanceOf[RefinedLoopSpec])

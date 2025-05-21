@@ -1,9 +1,11 @@
 package co.blocke.edi4s
+package diff
 
-import model.*
-import scala.collection.mutable
-import scala.annotation.tailrec
+import co.blocke.edi4s.model.*
 import pprint.*
+
+import scala.annotation.tailrec
+import scala.collection.mutable
 
 object DiffEngine:
 
@@ -14,7 +16,7 @@ object DiffEngine:
                     src: RefinedDocumentSpec,
                     edi: RefinedDocumentSpec,
                     target: RefinedDocumentSpec
-                  ): List[Difference] =
+                  ): List[SegmentDifference] =
     compareSegmentLists(Path(), src.segments, edi.segments, target.segments)
 
   @tailrec
@@ -476,4 +478,110 @@ object DiffEngine:
         l.canonicalName + s"[${l.description}]"
       else
         l.canonicalName
+  }
+
+
+  // Final patch step for detectAndPatchMissingHL
+  private def patchMissingHLIntoTarget(
+                                        target: RefinedDocumentSpec,
+                                        beforeDesc: String,
+                                        hl03Value: String,
+                                        missingDesc: String,
+                                      ): RefinedDocumentSpec = {
+
+    def findHLInSpec(desc: String, loop: RefinedLoopSpec): Option[RefinedLoopSpec] =
+      if loop.canonicalName == "HL" && loop.description == desc then Some(loop)
+      else loop.nested.flatMap(findHLInSpec(desc, _))
+
+    // Patch a specific HL loop by sewing in a clone with modified HL03 value
+    def patchLoop(loop: RefinedLoopSpec): RefinedLoopSpec =
+      findHLInSpec(beforeDesc, loop) match
+        case Some(before) =>
+          before.nested match
+            case Some(originalChild) =>
+              val patchedChild = {
+                val newFields = originalChild.fields.map {
+                  case f: RefinedSingleFieldSpec if f.canonicalName == "HL03" =>
+                    f.copy(validValues = List(hl03Value))
+                  case other => other
+                }
+                originalChild.copy(description = missingDesc, fields = newFields, nested = Some(originalChild))
+              }
+              val patchedBefore = before.copy(nested = Some(patchedChild))
+
+              // Reconstruct the full chain from top using replacement
+              def walk(current: RefinedLoopSpec): RefinedLoopSpec =
+                if current eq before then patchedBefore
+                else current.copy(nested = current.nested.map(walk))
+
+              walk(loop)
+
+            case None =>
+              println(s"[WARN] No nested HL under HL[$beforeDesc] to clone.")
+              loop
+        case None =>
+          println(s"[WARN] Could not locate HL[$beforeDesc] in target spec")
+          loop
+
+    // Apply patch only to the top-level HL loop, leave everything else alone
+    val patchedSegments = target.segments.map {
+      case hl: RefinedLoopSpec if hl.canonicalName == "HL" =>
+        patchLoop(hl)
+      case other => other
+    }
+
+    target.copy(segments = patchedSegments)
+  }
+
+
+  // Returns either original or patched target
+  def detectAndPatchMissingHL(
+                               src: RefinedDocumentSpec,
+                               differences: List[SegmentDifference],
+                               target: RefinedDocumentSpec
+                             ): Option[RefinedDocumentSpec] = {
+
+    @tailrec
+    def findSurroundingHL(desc: String, loop: RefinedLoopSpec): Option[(RefinedLoopSpec, RefinedLoopSpec)] =
+      loop.nested match
+        case Some(nested) if nested.description == desc =>
+          nested.nested.map(after => (loop, after))
+        case Some(nested) =>
+          findSurroundingHL(desc, nested)
+        case None =>
+          None
+
+    // Step 1: Detect missing HL levels
+    def collectMissingHLs(diffs: List[SegmentDifference]): List[LoopSegmentDifference] =
+      diffs.flatMap {
+        case hl: LoopSegmentDifference if hl.canonicalName.startsWith("HL[") =>
+          val bodyMissing = collectMissingHLs(hl.bodyDiff)
+          val nestedMissing = hl.nested.toList.flatten.flatMap(n => collectMissingHLs(List(n)))
+          val self = if !hl.presence._2 then List(hl) else Nil
+          self ++ bodyMissing ++ nestedMissing
+        case _ => Nil
+      }
+
+    def findHLInSpec(desc: String, loop: RefinedLoopSpec): Option[RefinedLoopSpec] = {
+      if loop.canonicalName == "HL" && loop.description == desc then Some(loop)
+      else loop.nested.flatMap(findHLInSpec(desc, _))
+    }
+
+    collectMissingHLs(differences).headOption.flatMap { missingHL =>
+      val desc = missingHL.canonicalName.stripPrefix("HL[").stripSuffix("]")
+
+      for {
+        loop <- src.segments.collectFirst { case l: RefinedLoopSpec => findHLInSpec(desc, l) }.flatten
+        loopDesc = loop.description
+        hl03Field <- loop.fields.collectFirst { case f: RefinedSingleFieldSpec if f.canonicalName == "HL03" => f }
+        hl03Value <- hl03Field.validValues.headOption
+        topHL <- src.segments.collectFirst { case l: RefinedLoopSpec if l.canonicalName == "HL" => l }
+        (before, after) <- findSurroundingHL(desc, topHL)
+        targetTopHL <- target.segments.collectFirst { case l: RefinedLoopSpec if l.canonicalName == "HL" => l }
+        afterHLInTarget <- findHLInSpec(after.description, targetTopHL)
+        targetHL03Field <- afterHLInTarget.fields.collectFirst { case f: RefinedSingleFieldSpec if f.canonicalName == "HL03" => f }
+        if targetHL03Field.validValues.size > 1 && targetHL03Field.validValues.contains(hl03Value)
+      } yield patchMissingHLIntoTarget(target, before.description, hl03Value, loopDesc)
+
+    }
   }

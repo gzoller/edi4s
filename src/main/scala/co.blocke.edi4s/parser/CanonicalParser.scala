@@ -1,18 +1,18 @@
 package co.blocke.edi4s
+package parser
 
-import model.*
-
+import co.blocke.edi4s.CanonicalError
+import co.blocke.edi4s.model.*
 import co.blocke.scalajack.*
+import pprint.*
 import zio.*
 
 import scala.collection.mutable
 import scala.collection.mutable.LinkedHashMap
-import pprint.*
 
 object CanonicalParser:
   // Let compile-time macros deep-dive and generate JSON serilalizer for EdiObject and all subclasses...
   given sjEdiObject: ScalaJack[EdiObject] = ScalaJack.sjCodecOf[EdiObject]
-  given sjRefinedSpec: ScalaJack[RefinedDocumentSpec] = ScalaJack.sjCodecOf[RefinedDocumentSpec]
 
   def readSpec( spec: String ): ZIO[Any, CanonicalError, EdiObject] =
     // ScalaJack  isn't natively ZIO-capable
