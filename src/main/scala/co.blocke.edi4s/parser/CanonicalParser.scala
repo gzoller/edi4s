@@ -24,7 +24,7 @@ object CanonicalParser:
     val schema = edi.components.schemas
     val topEdi = schema(top)
     val tab = 1
-    CanonicalShow.show(topEdi, tab, schema)
+    CanonicalRender.show(topEdi, tab, schema)
 
   private def convertCompositeField(
                              name: String,

@@ -33,11 +33,24 @@ object Main extends ZIOAppDefault {
     } yield refined
 
 
+  private def readEnumFields: ZIO[Any, CanonicalError, Map[String, List[String | EnumeratedDependency]]] =
+    ZIO.scoped {
+      ZIO.acquireRelease(ZIO.attempt(Source.fromResource("enumerated-fields.json")))(src =>
+        ZIO.succeedBlocking(src.close())
+      ).flatMap { source =>
+        ZIO.attemptBlocking(source.mkString)
+      }.flatMap { jsonStr =>
+        ZIO.attempt(sjEnumFields.fromJson(jsonStr))
+      }.mapError(th => CanonicalError(s"Failed to load enum fields: ${th.getMessage}"))
+    }
 
-  def run: ZIO[ZIOAppArgs & Scope, CanonicalError | X12ParseError | Throwable, Unit] = {
+
+  def run: ZIO[ZIOAppArgs & Scope, CanonicalError | X12ParseError | DifferenceError | Throwable, Unit] = {
 
     for {
       _ <- ZIO.succeed("Starting!")
+      enums <- readEnumFields
+//      _ <- ZIO.succeed(println(enums))
 //      _ <- Locator.go
 
 // >> DiffEngine + Table
@@ -47,8 +60,26 @@ object Main extends ZIOAppDefault {
       tj <- readRefined("specs/tj_856_4030.json")
 //      cm <- readRefined("specs/cm_856_5010.json")
 
-      table1 = DiffReport.asTable("Taylor Farms", "Trader Joes", src, std, tj, true)
-      _ <- ZIO.succeed(println(table1.toString))
+//      table1 = DiffReport.asTable("Taylor Farms", "Trader Joes", src, std, tj, true)
+//      _ <- ZIO.succeed(println(table1.toString))
+
+      // Test
+//      hlSrc = DiffUtil.getHLLevels( src.segments.find(_.name == "HL").get.asInstanceOf[RefinedLoopSpec] )
+//      hlTarget = DiffUtil.getHLLevels( tj.segments.find(_.name == "HL").get.asInstanceOf[RefinedLoopSpec] )
+//      _ <- ZIO.succeed(println("Src   : "+hlSrc.mkString(",")))
+//      _ <- ZIO.succeed(println("Target: "+hlTarget.mkString(",")))
+//      z = List(("Shipment","S"),("Order","O"),("Tare","T"),("Pack","P"),("Item","I"))
+//      _ <- ZIO.succeed(println("Target: "+z.mkString(",")))
+//      hlRule <- DiffUtil.analyzeHLStructures(hlSrc, z)
+//      _ <- ZIO.succeed(println("HL Rule: "+hlRule))
+      // --- end test
+
+      diffResult <- DiffEngine.compareSpecs(src, std, tj)
+      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffResult, true)
+      _ <- ZIO.succeed(println(table.toString))
+//      rules = mapper.RuleGenerator.generate(diffResult, enums)
+//      _ <- ZIO.succeed(println("RULES: \n"+sjAssignment.toJson(MappingSpec(rules))))
+
 
 // >> Emitting X12
 //      doc = readFileToString(new File("specs/raw_x12/sample_856.x12"))

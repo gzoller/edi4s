@@ -1,0 +1,36 @@
+{
+  "BSN": ["BSN01", "BSN05", "BSN06", "BSN07"],
+  "DTM": ["DTM01", "DTM04", "DTM05"],
+  "HL": ["HL03", "HL04"],
+  "LIN": [
+    { "field": "LIN02", "companionField": "LIN03" },
+    { "field": "LIN04", "companionField": "LIN05" },
+    { "field": "LIN06", "companionField": "LIN07" },
+    { "field": "LIN08", "companionField": "LIN09" },
+    { "field": "LIN10", "companionField": "LIN11" },
+    { "field": "LIN12", "companionField": "LIN13" },
+    { "field": "LIN14", "companionField": "LIN15" },
+    { "field": "LIN16", "companionField": "LIN17" },
+    { "field": "LIN18", "companionField": "LIN19" },
+    { "field": "LIN20", "companionField": "LIN21" },
+    { "field": "LIN22", "companionField": "LIN23" },
+    { "field": "LIN24", "companionField": "LIN25" },
+    { "field": "LIN26", "companionField": "LIN27" },
+    { "field": "LIN28", "companionField": "LIN29" },
+    { "field": "LIN30", "companionField": "LIN31" }
+  ],
+  "REF": [
+    { "field": "REF01", "companionField": "REF02" }
+  ],
+  "MEA": ["MEA01", "MEA02", "MEA07", "MEA08", "MEA09", "MEA10", "MEA11"],
+  "PKG": ["PKG01", "PKG02", "PKG03", "PKG06"],
+  "PID": ["PID01", "PID02", "PID03", "PID06", "PID08"],
+  "PO4": ["PO403", "PO405", "PO407", "PO409", "PO413", "PO415"],
+  "PWK": ["PWK01", "PWK02", "PWK04", "PWK05", "PWK09"],
+  "SLN": ["SLN03", "SLN07", "SLN08", "SLN09", "SLN11", "SLN13", "SLN15", "SLN17", "SLN19", "SLN21", "SLN23", "SLN25", "SLN27"],
+  "SN1": ["SN103", "SN106", "SN107", "SN108"],
+  "TD1": ["TD103", "TD106", "TD108", "TD110"],
+  "TD5": ["TD501", "TD502", "TD504", "TD506", "TD507", "TD509", "TD510", "TD511"],
+  "TD3": ["TD301", "TD302", "TD303"],
+  "TD4": ["TD401", "TD404"]
+}

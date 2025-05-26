@@ -126,7 +126,7 @@ extension (sd: SegmentDifference)
         )
       }
       val bodyRows = lsd.bodyDiff.flatMap( bd => bd.render(nestLevel+1) )
-      val nestedRows = lsd.nested.map( _.flatMap( n =>
+      val nestedRows = lsd.nested.map( n =>
         n.presence match {
           case (true,false) => List(Row(List(
             Cell(n.canonicalName, indent = nestLevel+1, style=Some(Style.ALERT)),
@@ -143,7 +143,7 @@ extension (sd: SegmentDifference)
           )))
           case _ => n.render(nestLevel+1)
         }
-      ) ).toList.flatten
+      ).toList.flatten
       superRows ++ minRow.toList ++ maxRow.toList ++ bodyRows ++ nestedRows
     case s: SegmentDifference => renderSeg(nestLevel, s)
   }

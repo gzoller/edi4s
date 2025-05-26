@@ -3,7 +3,7 @@ package model
 
 
 // Separate the "show" funcitonality--don't mess up the model classes
-object CanonicalShow:
+object CanonicalRender:
 
   def show[T](value: T, tab: Int, schemas: Map[String, EdiEnum | EdiSchema]) :String =
     value match {

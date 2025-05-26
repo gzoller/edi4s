@@ -4,6 +4,7 @@ package diff
 import co.blocke.edi4s.model.*
 import pprint.*
 
+import zio.*
 import scala.annotation.tailrec
 import scala.collection.mutable
 
@@ -16,109 +17,166 @@ object DiffEngine:
                     src: RefinedDocumentSpec,
                     edi: RefinedDocumentSpec,
                     target: RefinedDocumentSpec
-                  ): List[SegmentDifference] =
+                  ): ZIO[Any, DifferenceError, List[SegmentDifference]] =
     compareSegmentLists(Path(), src.segments, edi.segments, target.segments)
 
-  @tailrec
+  /*
+    This logic is admittedly a little convoluted. Both src and target are based on a canonical edi spec, however... both can
+    go "shopping" in the canonical spec and pull segments they want to use and ignore others. So they are both perfect
+    subsets, but they may well be *different* subsets to one another. Therefor we must use the canonical spec as our
+    "north star" to be a concrete reference for the known segments and their ordering.
+   */
   private def compareSegmentLists(
                            path: Path,
                            src: List[RefinedSingleOrLoopSegmentSpec],
                            edi: List[RefinedSingleOrLoopSegmentSpec],
                            target: List[RefinedSingleOrLoopSegmentSpec],
                            acc: List[SegmentDifference] = List.empty
-  ): List[SegmentDifference] =
-    val nextLoop = (src, edi, target) match {
+  ): ZIO[Any, DifferenceError, List[SegmentDifference]] =
+    (src, edi, target) match {
+
+      // ===== Ran out of EDI segments before we ran out of src/target segmens. This should never happen.
       case (_, Nil, _ :: _) | (_ :: _, Nil, _) =>
-        (Nil,Nil,Nil,acc :+ DifferenceError(path, "Exhausted EDI standard segments before either src/target--they have extra (non-standard) fields"))
+        ZIO.fail(DifferenceError("Exhausted EDI standard segments before either src/target--they have extra (non-standard) segments"))
+
+      // =====  All done.
       case (Nil, Nil, Nil) =>
-        (Nil,Nil,Nil,acc) // done comparing lists
+        ZIO.succeed(acc) // done comparing lists
+
+      // =====  Normative case: we have some segment available to compare for src/edi/target
       case (sH :: sT, eH :: eT, tH :: tT) =>
-        // 3-way match -> compare sH and tH
+        // 3-way match -> compare sH and tH directly, like-for-like
         if sH.canonicalName == eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (sH,eH,tH) match
             case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
-              (sT, eT, tT, acc :+ compareTwoSegments(path, sHS, eHS, tHS))
+              compareSegmentLists( path, sT, eT, tT, acc :+ compareTwoSegments(path, sHS, eHS, tHS))
             case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
-              (sT, eT, tT, acc :+ compareTwoLoops(path, sHS, eHS, tHS))
+              // We need the for loop drama here b/c compareTwoLoops returns a ZIO--may fail with an error if loop is incompatible HL
+              for {
+                _ <- ZIO.succeed(println(">>> BEFORE <<< "+sH.canonicalName+"/"+tH.canonicalName))
+                loopCompare <- compareTwoLoops(path, sHS, eHS, tHS)
+                _ <- ZIO.succeed(println(">>> AFTER <<< "+sH.canonicalName+"/"+tH.canonicalName))
+                updatedAcc = acc :+ loopCompare
+                nextRecursion <- compareSegmentLists(path, sT, eT, tT, updatedAcc)
+              } yield nextRecursion
             case _ =>
-              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Matching elements ${sH.canonicalName} have different major types (loop vs segment)"))
+              ZIO.fail( DifferenceError(s"Matching elements ${sH.canonicalName} have different major type (loop vs segment)"))
 
-        // src has edi segment, target does not
+        // src has edi segment, target does not (advance src and edi but leave target unchanged)
         else if sH.canonicalName == eH.canonicalName && eH.canonicalName != tH.canonicalName then
           (sH, eH) match
             case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) =>
-              (sT,eT,target, acc :+ burnSrcSegment(path, sHS))
+              compareSegmentLists( path, sT, eT, target, acc :+ burnSrcSegment(path, sHS))
             case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) =>
-              (sT,eT,target,acc :+ burnSrcLoop(path, sHS))
+              compareSegmentLists( path, sT, eT, target, acc :+ burnSrcLoop(path, sHS))
             case _ =>
-              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${sH.canonicalName} has a different major types (loop vs segment) than EDI standard"))
+              ZIO.fail(DifferenceError(s"Source element ${sH.canonicalName} has a different major type (loop vs segment) than EDI standard"))
 
-        // src does not have edi segment, target does
+        // src does not have edi segment, target does (advance target and edi but leave src unchanged)
         else if sH.canonicalName != eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (eH, tH) match
             case (eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
-              (src,eT,tT, acc :+ burnTargetSegment(path, tHS))
+              compareSegmentLists( path, src, eT, tT, acc :+ burnTargetSegment(path, tHS))
             case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
-              (src,eT,tT,acc :+ burnTargetLoop(path, tHS))
+              compareSegmentLists( path, src, eT, tT, acc :+ burnTargetLoop(path, tHS))
             case _ =>
-              (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${tH.canonicalName} has a different major types (loop vs segment) than EDI standard"))
+              ZIO.fail(DifferenceError(s"Target element ${tH.canonicalName} has a different major type (loop vs segment) than EDI standard"))
 
         // neither have edi segment
         else
-          (src, eT, target, acc :+ SimpleSegmentDifference(path, eH.name, canonicalNameOf(eH), (false, false), (sH.required, tH.required), None, List.empty))
+          compareSegmentLists( path, src, eT, target, acc :+ SimpleSegmentDifference(path, eH.name, canonicalNameOf(eH), (false, false), (sH.required, tH.required), None, List.empty))
 
+      // ===== Ran out of src segments but there are more target segments left
       case (Nil, eH :: eT, tH :: tT) =>
         (eH, tH) match
-          case (eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
-            (Nil,eT,tT, acc :+ burnTargetSegment(path, tHS))
-          case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
-            (Nil,eT,tT,acc :+ burnTargetLoop(path, tHS))
-          case _ =>
-            (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Target element ${tH.canonicalName} has a different major types (loop vs segment) than EDI standard"))
+          case (eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) if eHS.canonicalName == tHS.canonicalName =>
+            compareSegmentLists( path, Nil, eT, tT, acc :+ burnTargetSegment(path, tHS))
+          case (eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) if eHS.canonicalName == tHS.canonicalName  =>
+            compareSegmentLists( path, Nil, eT, tT, acc :+ burnTargetLoop(path, tHS))
+          case _ => // no match--advance edi and try again
+            compareSegmentLists( path, Nil, eT, target, acc)
+
+      // ===== Ran out of target segments but there are more src segments left
       case (sH :: sT, eH :: eT, Nil) =>
         (sH, eH) match
-          case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) =>
-            (sT,eT,Nil, acc :+ burnSrcSegment(path, sHS))
-          case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) =>
-            (sT,eT,Nil,acc :+ burnSrcLoop(path, sHS))
-          case _ =>
-            (Nil,Nil,Nil, acc :+ DifferenceError(path, s"Source element ${sH.canonicalName} has a different major types (loop vs segment) than EDI standard"))
+          case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec) if sHS.canonicalName == eHS.canonicalName =>
+            compareSegmentLists( path, sT, eT, Nil, acc :+ burnSrcSegment(path, sHS))
+          case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec) if sHS.canonicalName == eHS.canonicalName =>
+            compareSegmentLists( path, sT, eT, Nil, acc :+ burnSrcLoop(path, sHS))
+          case _ => // no match--advance edi and try again
+            compareSegmentLists( path, src, eT, Nil, acc)
+
+      // ===== Ran out of src *and* target segments but there are more edi segments left
       case (Nil, eH :: eT, Nil) =>
-        (Nil, eT, Nil, acc :+ burnEdiSegment(path, eH))
-    }
-    nextLoop match {
-      case (Nil,Nil,Nil,nextAcc) =>
-        nextAcc
-      case (s,e,t,nextAcc) =>
-        compareSegmentLists(path, s, e, t, nextAcc)
+        compareSegmentLists( path, Nil, eT, Nil, acc :+ burnEdiSegment(path, eH) )
     }
 
 
-  private def compareTwoLoops(path: Path, src: RefinedLoopSpec, edi: RefinedLoopSpec, target: RefinedLoopSpec): LoopSegmentDifference =
-    val nestedDiff = if src.canonicalName == "HL" then
-      Some(nestedCompare(path, src.nested, edi, target.nested))
+  // So this 2-phase drama is to account for src or target spec re-writing in the cases of FlattenSrcLevel or PromoteTargetLevel, respectively.
+  // Once we settle on the final specs we can then call part2 to do the real comparison, like-for-like. Of course there is a chance we can't
+  // get src/target HL hierarchies to align, in which case an error is returned.
+  private def compareTwoLoops(
+                               path: Path,
+                               src: RefinedLoopSpec,
+                               edi: RefinedLoopSpec,
+                               target: RefinedLoopSpec
+                             ): ZIO[Any, DifferenceError, LoopSegmentDifference] =
+
+    if src.canonicalName == "HL" then
+      val hlSrc = DiffUtil.getHLLevels(src)
+      val hlTarget = DiffUtil.getHLLevels(target)
+
+      for {
+        hlRule <- DiffUtil.analyzeHLStructures(hlSrc, hlTarget)
+        result <- hlRule match
+          case promo: PromoteTargetLevel =>
+            for {
+              promotedTarget <- DiffUtil.promoteHLLevel(src, target, promo)
+              result <- compareTwoLoops_part2(path, src, edi, promotedTarget, Some(hlRule))
+            } yield result
+
+          case _ =>
+            compareTwoLoops_part2(path, src, edi, target, Some(hlRule))
+      } yield result
+
     else
-      None
-    LoopSegmentDifference(
-      path,
-      src.name,
-      canonicalNameOf(src),
-      (true,true),
-      (src.required, src.required),
-      Option.when(src.assertions.sorted != target.assertions.sorted)(
+      compareTwoLoops_part2(path, src, edi, target)
+
+
+  private def compareTwoLoops_part2(
+                               path: Path,
+                               src: RefinedLoopSpec,
+                               edi: RefinedLoopSpec,
+                               target: RefinedLoopSpec,
+                               hlRule: Option[HLSpecRule] = None): ZIO[Any, DifferenceError, LoopSegmentDifference] =
+    // For HL loops we need to compare the nesting hierarchy and ensure it is compatible, and if so, issue a transformation rule
+    for {
+      _ <- ZIO.succeed(println("Body loop processing... "+ canonicalNameOf(src)))
+      bodyDiff <- compareSegmentLists(path.dot(canonicalNameOf(src)), src.body, edi.body, target.body)
+      _ <- ZIO.succeed(println("Body loop processing...done "+src.canonicalName))
+      nestedDiffOpt <- (src.nested, target.nested) match
+        case (Some(srcNext), Some(targetNext)) =>
+          compareTwoLoops_part2(path, srcNext, edi, targetNext).map(Some(_))
+        case (None, None) =>
+          ZIO.succeed(None)
+        case _ =>
+          ZIO.fail(DifferenceError("HL nesting mismatch after alignment"))
+    } yield LoopSegmentDifference(
+      path = path,
+      name = src.name,
+      canonicalName = canonicalNameOf(src),
+      presence = (true, canonicalNameOf(target) == canonicalNameOf(src)),
+      required = (src.required, target.required),
+      assertions = Option.when(src.assertions.sorted != target.assertions.sorted)(
         (src.assertions, target.assertions)
       ),
-      compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields),
-      Option.when(src.minRepeats != target.minRepeats) {
-        (src.minRepeats, target.minRepeats)
-      },
-      Option.when(src.maxRepeats != target.maxRepeats) {
-        (src.maxRepeats, target.maxRepeats)
-      },
-      compareSegmentLists(path.dot(canonicalNameOf(src)), src.body, edi.body, target.body),
-      nestedDiff
+      fieldDiff = compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields),
+      minDiff = Option.when(src.minRepeats != target.minRepeats)(src.minRepeats, target.minRepeats),
+      maxDiff = Option.when(src.maxRepeats != target.maxRepeats)(src.maxRepeats, target.maxRepeats),
+      bodyDiff = bodyDiff,
+      hlRule = hlRule,
+      nested = nestedDiffOpt
     )
-
 
 
   private def compareTwoSegments(
@@ -139,6 +197,9 @@ object DiffEngine:
       compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields)
   )
 
+  // Used when there are no mor src or target segments but here are unvisited edi segments.
+  // We then create differences for each remaining edi segment noting they are not present,
+  // and noting their required status accordingly.
   private def burnEdiSegment(
                               path: Path,
                               edi: RefinedSingleOrLoopSegmentSpec
@@ -424,49 +485,6 @@ object DiffEngine:
       None
     )
 
-  private def nestedCompare(path: Path, src: Option[RefinedLoopSpec], edi: RefinedLoopSpec, target: Option[RefinedLoopSpec]): List[LoopSegmentDifference] = {
-//    println("Comparing nested loop: " + src.map(s=>canonicalNameOf(s)).getOrElse("none")+" and "+target.map(s=>canonicalNameOf(s)).getOrElse("none"))
-    @tailrec
-    def scanTarget(t: Option[RefinedLoopSpec], name: String, acc: List[LoopSegmentDifference]): (Boolean, List[LoopSegmentDifference]) =
-      t match {
-        case Some(tt) if canonicalNameOf(tt) == name => (true, acc)
-        case Some(tt) => scanTarget(tt.nested, name, acc :+ burnTargetHL(path.nest(canonicalNameOf(tt)), tt))
-        case None => (false, acc)
-      }
-
-    @tailrec
-    def loop(x: Option[RefinedLoopSpec], y: Option[RefinedLoopSpec], result: List[LoopSegmentDifference]): List[LoopSegmentDifference] = (x, y) match {
-      case (None, None) => result
-      case (None, Some(tt)) =>
-//        println("Source missing "+canonicalNameOf(tt))
-        loop(None, tt.nested, result :+ burnTargetHL(path.nest(canonicalNameOf(tt)), tt))
-      case (Some(xx), None) =>
-//        println("Target missing "+canonicalNameOf(xx))
-        loop(xx.nested, None, result :+ burnSrcHL(path.nest(canonicalNameOf(xx)), xx))
-      case (Some(xx), Some(yy)) if canonicalNameOf(xx) == canonicalNameOf(yy) =>
-//        println("Match: "+canonicalNameOf(xx)+"/"+canonicalNameOf(yy))
-        result :+ compareTwoLoops(path, xx, edi, yy)
-      case (Some(xx), Some(_)) =>
-        val (found, acc) = scanTarget(y, canonicalNameOf(xx), Nil)
-        if found then
-          val y2 = advanceTo(y, canonicalNameOf(xx)).flatMap(_.nested)
-//          println("Match: " + canonicalNameOf(xx) + "/" + canonicalNameOf(y2.get))
-          result :+ compareTwoLoops(path, xx, edi, y2.get)
-        else
-//          println("Target missing "+canonicalNameOf(xx))
-          loop(xx.nested, y, result :+ burnSrcHL(path.nest(canonicalNameOf(xx)), xx))
-    }
-
-    @tailrec
-    def advanceTo(y: Option[RefinedLoopSpec], name: String): Option[RefinedLoopSpec] =
-      y match
-        case Some(t) if canonicalNameOf(t) == name => y
-        case Some(t) => advanceTo(t.nested, name)
-        case None => None
-
-    loop(src, target, Nil)
-  }
-
 
   // Utilities
   //-----------------------------------------------------------
@@ -478,110 +496,4 @@ object DiffEngine:
         l.canonicalName + s"[${l.description}]"
       else
         l.canonicalName
-  }
-
-
-  // Final patch step for detectAndPatchMissingHL
-  private def patchMissingHLIntoTarget(
-                                        target: RefinedDocumentSpec,
-                                        beforeDesc: String,
-                                        hl03Value: String,
-                                        missingDesc: String,
-                                      ): RefinedDocumentSpec = {
-
-    def findHLInSpec(desc: String, loop: RefinedLoopSpec): Option[RefinedLoopSpec] =
-      if loop.canonicalName == "HL" && loop.description == desc then Some(loop)
-      else loop.nested.flatMap(findHLInSpec(desc, _))
-
-    // Patch a specific HL loop by sewing in a clone with modified HL03 value
-    def patchLoop(loop: RefinedLoopSpec): RefinedLoopSpec =
-      findHLInSpec(beforeDesc, loop) match
-        case Some(before) =>
-          before.nested match
-            case Some(originalChild) =>
-              val patchedChild = {
-                val newFields = originalChild.fields.map {
-                  case f: RefinedSingleFieldSpec if f.canonicalName == "HL03" =>
-                    f.copy(validValues = List(hl03Value))
-                  case other => other
-                }
-                originalChild.copy(description = missingDesc, fields = newFields, nested = Some(originalChild))
-              }
-              val patchedBefore = before.copy(nested = Some(patchedChild))
-
-              // Reconstruct the full chain from top using replacement
-              def walk(current: RefinedLoopSpec): RefinedLoopSpec =
-                if current eq before then patchedBefore
-                else current.copy(nested = current.nested.map(walk))
-
-              walk(loop)
-
-            case None =>
-              println(s"[WARN] No nested HL under HL[$beforeDesc] to clone.")
-              loop
-        case None =>
-          println(s"[WARN] Could not locate HL[$beforeDesc] in target spec")
-          loop
-
-    // Apply patch only to the top-level HL loop, leave everything else alone
-    val patchedSegments = target.segments.map {
-      case hl: RefinedLoopSpec if hl.canonicalName == "HL" =>
-        patchLoop(hl)
-      case other => other
-    }
-
-    target.copy(segments = patchedSegments)
-  }
-
-
-  // Returns either original or patched target
-  def detectAndPatchMissingHL(
-                               src: RefinedDocumentSpec,
-                               differences: List[SegmentDifference],
-                               target: RefinedDocumentSpec
-                             ): Option[RefinedDocumentSpec] = {
-
-    @tailrec
-    def findSurroundingHL(desc: String, loop: RefinedLoopSpec): Option[(RefinedLoopSpec, RefinedLoopSpec)] =
-      loop.nested match
-        case Some(nested) if nested.description == desc =>
-          nested.nested.map(after => (loop, after))
-        case Some(nested) =>
-          findSurroundingHL(desc, nested)
-        case None =>
-          None
-
-    // Step 1: Detect missing HL levels
-    def collectMissingHLs(diffs: List[SegmentDifference]): List[LoopSegmentDifference] =
-      diffs.flatMap {
-        case hl: LoopSegmentDifference if hl.canonicalName.startsWith("HL[") =>
-          val bodyMissing = collectMissingHLs(hl.bodyDiff)
-          val nestedMissing = hl.nested.toList.flatten.flatMap(n => collectMissingHLs(List(n)))
-          val self = if !hl.presence._2 then List(hl) else Nil
-          self ++ bodyMissing ++ nestedMissing
-        case _ => Nil
-      }
-
-    def findHLInSpec(desc: String, loop: RefinedLoopSpec): Option[RefinedLoopSpec] = {
-      if loop.canonicalName == "HL" && loop.description == desc then Some(loop)
-      else loop.nested.flatMap(findHLInSpec(desc, _))
-    }
-
-    collectMissingHLs(differences).headOption.flatMap { missingHL =>
-      val desc = missingHL.canonicalName.stripPrefix("HL[").stripSuffix("]")
-
-      for {
-        loop <- src.segments.collectFirst { case l: RefinedLoopSpec => findHLInSpec(desc, l) }.flatten
-        loopDesc = loop.description
-        hl03Field <- loop.fields.collectFirst { case f: RefinedSingleFieldSpec if f.canonicalName == "HL03" => f }
-        hl03Value <- hl03Field.validValues.headOption
-        topHL <- src.segments.collectFirst { case l: RefinedLoopSpec if l.canonicalName == "HL" => l }
-        (before, after) <- findSurroundingHL(desc, topHL)
-        targetTopHL <- target.segments.collectFirst { case l: RefinedLoopSpec if l.canonicalName == "HL" => l }
-        afterHLInTarget <- findHLInSpec(after.description, targetTopHL)
-        targetHL03Field <- afterHLInTarget.fields.collectFirst { case f: RefinedSingleFieldSpec if f.canonicalName == "HL03" => f }
-        if targetHL03Field.validValues.size > 1 && targetHL03Field.validValues.contains(hl03Value)
-      } yield patchMissingHLIntoTarget(target, before.description, hl03Value, loopDesc)
-
-    }
   }

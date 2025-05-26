@@ -68,22 +68,23 @@ case class LoopSegmentDifference(
                                   minDiff: Option[(Option[Int], Option[Int])] = None,
                                   maxDiff: Option[(Option[Int], Option[Int])] = None,
                                   bodyDiff: List[SegmentDifference],
-                                  nested: Option[List[LoopSegmentDifference]] = None
+                                  hlRule: Option[HLSpecRule],  // populated only for top-level HL segments
+                                  nested: Option[LoopSegmentDifference] = None
                                 ) extends SegmentDifference
 
 
 // Used as a kind of exception -- halts further diff comparison
-case class DifferenceError(
-                              path: Path,
-                              message: String
-                            ) extends SegmentDifference:
-  val name: String = ""
-  val canonicalName: String = ""
-  val presence: (Boolean, Boolean) = (true,true)
-  val required: (Boolean, Boolean) = (true,true)
-  val assertions: Option[(List[String], List[String])] = None
-  val pathDiff: Option[(String, String)] = None
-  val fieldDiff: List[FieldDifference] = Nil
+//case class DifferenceError(
+//                              path: Path,
+//                              message: String
+//                            ) extends SegmentDifference:
+//  val name: String = ""
+//  val canonicalName: String = ""
+//  val presence: (Boolean, Boolean) = (true,true)
+//  val required: (Boolean, Boolean) = (true,true)
+//  val assertions: Option[(List[String], List[String])] = None
+//  val pathDiff: Option[(String, String)] = None
+//  val fieldDiff: List[FieldDifference] = Nil
 
 
 case class FieldDifferenceError(
