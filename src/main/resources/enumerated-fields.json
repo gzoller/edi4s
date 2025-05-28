@@ -1,6 +1,6 @@
 {
   "BSN": ["BSN01", "BSN05", "BSN06", "BSN07"],
-  "DTM": ["DTM01", "DTM04", "DTM05"],
+  "DTM": ["DTM01", "DTM04", {"field": "DTM05", "companionField": "DTM06"}],
   "HL": ["HL03", "HL04"],
   "LIN": [
     { "field": "LIN02", "companionField": "LIN03" },

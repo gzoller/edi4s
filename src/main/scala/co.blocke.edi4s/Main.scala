@@ -75,10 +75,11 @@ object Main extends ZIOAppDefault {
       // --- end test
 
       diffResult <- DiffEngine.compareSpecs(src, std, tj)
-      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffResult, true)
-      _ <- ZIO.succeed(println(table.toString))
-//      rules = mapper.RuleGenerator.generate(diffResult, enums)
-//      _ <- ZIO.succeed(println("RULES: \n"+sjAssignment.toJson(MappingSpec(rules))))
+//      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffResult, true)
+//      _ <- ZIO.succeed(println(table.toString))
+
+      rules = mapper.RuleGenerator.generate(diffResult, enums)
+      _ <- ZIO.succeed(println("RULES: \n"+sjAssignment.toJson(MappingSpec(rules))))
 
 
 // >> Emitting X12

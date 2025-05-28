@@ -20,6 +20,8 @@ case class LoopSegmentAssignment(
                                     canonicalName: String,
                                     fieldAssignments: List[FieldAssignment],
                                     body: List[SegmentAssignment], // used for loops
+                                    // TODO: When we handle missing nest levels we'll need a top-level rule to flatten data
+                                    // The machinery is all there--just not wired up.
                                     nested: Option[LoopSegmentAssignment]  // for nested HL loops
                                   ) extends SegmentAssignment
 
@@ -48,7 +50,7 @@ case class GeneralFieldAssignment(
 
 // For src-optional, target-required fields
 case class OrElseFieldAssignment(
-                                  targetField: String,
+                                  assignment: FieldAssignment,  // if defined in src
                                   orElseValue: String,
                                   orElseValueKind: ValueKind,
                                   isPlaceholder: Boolean = true

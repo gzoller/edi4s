@@ -49,15 +49,16 @@ object DiffEngine:
         if sH.canonicalName == eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (sH,eH,tH) match
             case (sHS: RefinedSegmentSpec, eHS: RefinedSegmentSpec, tHS: RefinedSegmentSpec) =>
-              compareSegmentLists( path, sT, eT, tT, acc :+ compareTwoSegments(path, sHS, eHS, tHS))
+              // We need the for loop drama here b/c compareTwoLoops returns a ZIO--may fail with an error if loop is incompatible HL
+              for {
+                loopCompare <- compareTwoSegments(path, sHS, eHS, tHS)
+                nextRecursion <- compareSegmentLists(path, sT, eT, tT, acc :+ loopCompare)
+              } yield nextRecursion
             case (sHS: RefinedLoopSpec, eHS: RefinedLoopSpec, tHS: RefinedLoopSpec) =>
               // We need the for loop drama here b/c compareTwoLoops returns a ZIO--may fail with an error if loop is incompatible HL
               for {
-                _ <- ZIO.succeed(println(">>> BEFORE <<< "+sH.canonicalName+"/"+tH.canonicalName))
                 loopCompare <- compareTwoLoops(path, sHS, eHS, tHS)
-                _ <- ZIO.succeed(println(">>> AFTER <<< "+sH.canonicalName+"/"+tH.canonicalName))
-                updatedAcc = acc :+ loopCompare
-                nextRecursion <- compareSegmentLists(path, sT, eT, tT, updatedAcc)
+                nextRecursion <- compareSegmentLists(path, sT, eT, tT, acc :+ loopCompare)
               } yield nextRecursion
             case _ =>
               ZIO.fail( DifferenceError(s"Matching elements ${sH.canonicalName} have different major type (loop vs segment)"))
@@ -151,9 +152,7 @@ object DiffEngine:
                                hlRule: Option[HLSpecRule] = None): ZIO[Any, DifferenceError, LoopSegmentDifference] =
     // For HL loops we need to compare the nesting hierarchy and ensure it is compatible, and if so, issue a transformation rule
     for {
-      _ <- ZIO.succeed(println("Body loop processing... "+ canonicalNameOf(src)))
       bodyDiff <- compareSegmentLists(path.dot(canonicalNameOf(src)), src.body, edi.body, target.body)
-      _ <- ZIO.succeed(println("Body loop processing...done "+src.canonicalName))
       nestedDiffOpt <- (src.nested, target.nested) match
         case (Some(srcNext), Some(targetNext)) =>
           compareTwoLoops_part2(path, srcNext, edi, targetNext).map(Some(_))
@@ -161,6 +160,7 @@ object DiffEngine:
           ZIO.succeed(None)
         case _ =>
           ZIO.fail(DifferenceError("HL nesting mismatch after alignment"))
+      fieldDiff <- compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields)
     } yield LoopSegmentDifference(
       path = path,
       name = src.name,
@@ -170,7 +170,7 @@ object DiffEngine:
       assertions = Option.when(src.assertions.sorted != target.assertions.sorted)(
         (src.assertions, target.assertions)
       ),
-      fieldDiff = compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields),
+      fieldDiff = fieldDiff,
       minDiff = Option.when(src.minRepeats != target.minRepeats)(src.minRepeats, target.minRepeats),
       maxDiff = Option.when(src.maxRepeats != target.maxRepeats)(src.maxRepeats, target.maxRepeats),
       bodyDiff = bodyDiff,
@@ -184,17 +184,20 @@ object DiffEngine:
                                 src: RefinedSegmentSpec,
                                 edi: RefinedSegmentSpec,
                                 target: RefinedSegmentSpec
-                                ): SegmentDifference =
-    SimpleSegmentDifference(
-      path,
-      src.name,
-      src.canonicalName,
-      (true,true),
-      (src.required, target.required),
-      Option.when(src.assertions.sorted != target.assertions.sorted)(
-        (src.assertions, target.assertions)
-      ),
-      compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields)
+                                ): ZIO[Any, DifferenceError, SegmentDifference] =
+    compareSegmentFields(path.dot(src.canonicalName), src.fields, edi.fields, target.fields)
+      .flatMap( fieldDiff =>
+        ZIO.succeed(SimpleSegmentDifference(
+          path,
+          src.name,
+          src.canonicalName,
+          (true,true),
+          (src.required, target.required),
+          Option.when(src.assertions.sorted != target.assertions.sorted)(
+            (src.assertions, target.assertions)
+          ),
+          fieldDiff
+        ))
   )
 
   // Used when there are no mor src or target segments but here are unvisited edi segments.
@@ -285,83 +288,97 @@ object DiffEngine:
       None
     )
 
-  @tailrec
   private def compareSegmentFields(
-                                    path: Path,
-                                    src: List[RefinedFieldSpec],
-                                    edi: List[RefinedFieldSpec],
-                                    target: List[RefinedFieldSpec],
-                                    acc: List[FieldDifference] = List.empty
-                                  ): List[FieldDifference] =
-    val nextLoop = (src, edi, target) match {
+                                   path: Path,
+                                   src: List[RefinedFieldSpec],
+                                   edi: List[RefinedFieldSpec],
+                                   target: List[RefinedFieldSpec],
+                                   acc: List[FieldDifference] = List.empty
+                                 ): ZIO[Any, DifferenceError, List[FieldDifference]] =
+    (src, edi, target) match {
       case (_, Nil, _ :: _) | (_ :: _, Nil, _) =>
-        (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, "Exhausted EDI standard fields before either src/target--they have extra (non-standard) fields"))
+        ZIO.fail(DifferenceError("Exhausted EDI standard fields before either src/target--they have extra (non-standard) fields"))
+
       case (Nil, Nil, Nil) =>
-        (Nil, Nil, Nil, acc) // done comparing lists
+        ZIO.succeed(acc)
+
       case (sH :: sT, eH :: eT, tH :: tT) =>
         // 3-way match -> compare sH and tH
         if sH.canonicalName == eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (sH, eH, tH) match
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
-              (sT, eT, tT, acc :+ compareTwoSingleFields(path, sHS, tHS))
+              compareSegmentFields( path, sT, eT, tT, acc :+ compareTwoSingleFields(path, sHS, tHS))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
-              (sT, eT, tT, acc :+ compareTwoCompositeFields(path, sHS, eHS, tHS))
+              // We need the for loop drama here b/c compareTwoLoops returns a ZIO--may fail with an error if loop is incompatible HL
+              for {
+                loopCompare <- compareTwoCompositeFields(path, sHS, eHS, tHS)
+                updatedAcc = acc :+ loopCompare
+                nextRecursion <- compareSegmentFields(path, sT, eT, tT, updatedAcc)
+              } yield nextRecursion
             case _ =>
-              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${sH.name} have different major types (simple vs composite)"))
+              ZIO.fail( DifferenceError(s"Matching fields ${sH.name} have different major types (simple vs composite)"))
+
         else if sH.canonicalName == eH.canonicalName && eH.canonicalName != tH.canonicalName then
           (sH, eH, tH) match
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
-              (sT, eT, target, acc :+ burnSingleField(path, sHS, true))
+              compareSegmentFields( path, sT, eT, target, acc :+ burnSingleField(path, sHS, true))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
-              (sT, eT, target, acc :+ burnCompositeField(path, sHS, true))
+              compareSegmentFields( path, sT, eT, target, acc :+ burnCompositeField(path, sHS, true))
             case _ =>
-              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${sH.name} have different major types (simple vs composite)"))
+              ZIO.fail( DifferenceError(s"Matching fields ${sH.name} have different major types (simple vs composite)"))
+
         else if sH.canonicalName != eH.canonicalName && eH.canonicalName == tH.canonicalName then
           (sH, eH, tH) match
             case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
-              (src, eT, tT, acc :+ burnSingleField(path, tHS, false))
+              compareSegmentFields( path, src, eT, tT, acc :+ burnSingleField(path, tHS, false))
             case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
-              (src, eT, tT, acc :+ burnCompositeField(path, tHS, false))
+              compareSegmentFields( path, src, eT, tT, acc :+ burnCompositeField(path, tHS, false))
             case _ =>
-              (Nil, Nil, Nil, acc :+ FieldDifferenceError(path, s"Matching fields ${sH.name} have different major types (simple vs composite)"))
+              ZIO.fail( DifferenceError(s"Matching fields ${sH.name} have different major types (simple vs composite)"))
+
         else
-          (src, eT, target, acc :+ SingleFieldDifference(path, eH.name, eH.canonicalName, (false, false), (sH.required, tH.required), None, None))
+          compareSegmentFields( path, src, eT, target, acc :+ SingleFieldDifference(path, eH.name, eH.canonicalName, (false, false), (sH.required, tH.required), None, None))
+
       case (Nil, eH :: eT, tH :: tT) =>
         (eH, tH) match
           case (eHS: RefinedSingleFieldSpec, tHS: RefinedSingleFieldSpec) =>
-            (Nil,eT,tT, acc :+ burnSingleField(path, tHS, false))
+            compareSegmentFields( path, Nil, eT, tT, acc :+ burnSingleField(path, tHS, false))
           case (eHS: RefinedCompositeFieldSpec, tHS: RefinedCompositeFieldSpec) =>
-            (Nil,eT,tT,acc :+ burnCompositeField(path, tHS, false))
+            compareSegmentFields( path, Nil, eT, tT, acc :+ burnCompositeField(path, tHS, false))
           case _ =>
-            (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Target field ${tH.name} has a different major types (loop vs segment) than EDI standard"))
+            ZIO.fail( DifferenceError(s"Target field ${tH.name} has a different major types (loop vs segment) than EDI standard"))
+
       case (sH :: sT, eH :: eT, Nil) =>
         (sH, eH) match
           case (sHS: RefinedSingleFieldSpec, eHS: RefinedSingleFieldSpec) =>
-            (sT,eT,Nil, acc :+ burnSingleField(path, sHS, true))
+            compareSegmentFields( path, sT, eT, Nil, acc :+ burnSingleField(path, sHS, true))
           case (sHS: RefinedCompositeFieldSpec, eHS: RefinedCompositeFieldSpec) =>
-            (sT,eT,Nil,acc :+ burnCompositeField(path, sHS, true))
+            compareSegmentFields( path, sT, eT, Nil, acc :+ burnCompositeField(path, sHS, true))
           case _ =>
-            (Nil,Nil,Nil, acc :+ FieldDifferenceError(path, s"Source element ${sH.name} has a different major types (loop vs segment) than EDI standard"))
+            ZIO.fail( DifferenceError(s"Source field ${sH.name} has a different major types (loop vs segment) than EDI standard"))
+
       case (Nil, eH :: eT, Nil) =>
-        (Nil, eT, Nil, acc :+ burnEdiField(path, eH))
-    }
-    nextLoop match {
-      case (Nil,Nil,Nil,nextAcc) =>
-        nextAcc
-      case (s,e,t,nextAcc) =>
-        compareSegmentFields(path, s, e, t, nextAcc)
+        compareSegmentFields( path, Nil, eT, Nil, acc :+ burnEdiField(path, eH))
     }
 
 
-  private def compareTwoCompositeFields(path: Path, src: RefinedCompositeFieldSpec, edi: RefinedCompositeFieldSpec, target: RefinedCompositeFieldSpec): FieldDifference =
-    CompositeFieldDifference(
-      path,
-      src.name,
-      src.canonicalName,
-      (true,true),
-      (src.required, target.required),
-      compareSegmentFields(path.dot(src.canonicalName), src.components, edi.components, target.components)
-    )
+  private def compareTwoCompositeFields(
+                                         path: Path,
+                                         src: RefinedCompositeFieldSpec,
+                                         edi: RefinedCompositeFieldSpec,
+                                         target: RefinedCompositeFieldSpec
+                                       ): ZIO[Any, DifferenceError, FieldDifference] =
+    compareSegmentFields(path.dot(src.canonicalName), src.components, edi.components, target.components)
+      .flatMap( fieldDiff =>
+        ZIO.succeed(CompositeFieldDifference(
+          path,
+          src.name,
+          src.canonicalName,
+          (true,true),
+          (src.required, target.required),
+          fieldDiff
+        ))
+      )
 
   private def compareTwoSingleFields(path: Path, src: RefinedSingleFieldSpec, target: RefinedSingleFieldSpec): FieldDifference =
     SingleFieldDifference(
@@ -411,7 +428,13 @@ object DiffEngine:
       None,
       None,
       None,
-      None
+      {
+        if f.validValues == Nil then None
+        else if isSrc then
+          Some((f.validValues,Nil))
+        else
+          Some((Nil,f.validValues))
+      }
     )
 
   private def burnCompositeField(path: Path, f: RefinedCompositeFieldSpec, isSrc: Boolean): FieldDifference =
