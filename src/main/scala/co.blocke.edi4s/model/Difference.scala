@@ -69,6 +69,7 @@ case class LoopSegmentDifference(
                                   maxDiff: Option[(Option[Int], Option[Int])] = None,
                                   bodyDiff: List[SegmentDifference],
                                   hlRule: Option[HLSpecRule],  // populated only for top-level HL segments
+                                  hlDiscriminator: Option[String],
                                   nested: Option[LoopSegmentDifference] = None
                                 ) extends SegmentDifference
 

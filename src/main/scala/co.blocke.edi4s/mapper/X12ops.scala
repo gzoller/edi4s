@@ -2,7 +2,6 @@ package co.blocke.edi4s
 package mapper
 
 import model.*
-
 import scala.annotation.tailrec
 
 object X12ops:
@@ -13,7 +12,10 @@ object X12ops:
                      hlType: String, // HL03 (e.g. S, O, T, P, I)
                      segmentGroup: List[SegmentX12Token],
                      children: List[HLNode] = Nil
-                   )
+                   ):
+    override def toString: String =
+      hlId + {if hlParentId.isDefined then s":${hlParentId.get}" else ":no_parent"} + s" - $hlType\n" +
+        "   " + segmentGroup.map(_.name).mkString("(",",",")")+"\n" + "children: " + children.map(_.toString).mkString("\n")
 
   case class HLParseResult(
                             roots: List[HLNode],
@@ -33,7 +35,7 @@ object X12ops:
       remaining match
         case Nil => (acc.reverse, Nil)
 
-        case seg :: tail if seg.name == "HL" || !Set("SE", "GE", "REF", "GZ").contains(seg.name) =>
+        case seg :: tail if seg.name == "HL" || !Set("SE", "GE").contains(seg.name) =>
           // Accept all HL segments and other body segments until we hit a terminal marker
           walk(tail, seg :: acc)
 
@@ -49,7 +51,7 @@ object X12ops:
 
 
   // Builds a tree of HLNodes from the flat list of segments in ST body
-  private def buildHLTree(segments: List[SegmentX12Token]): List[HLNode] =
+  def buildHLTree(segments: List[SegmentX12Token]): List[HLNode] =
     // Step 1: Extract all HL blocks
     val hlGroups = segments.foldLeft(List.empty[List[SegmentX12Token]]) {
       case (accum, seg) if seg.name == "HL" =>
@@ -221,6 +223,9 @@ object X12ops:
 
     recurse(partnerSpec, canonicalSpec)
   }
+
+
+  //-----------------------------------------------------
 
 
   def show(spec: RefinedDocumentSpec): Unit =

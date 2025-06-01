@@ -7,6 +7,8 @@ case class CanonicalError(msg: String)
 
 case class DifferenceError( msg: String )
 
+case class MappingError( msg: String )
+
 case class WrongNumberOfElementsException(segment: String, expected: Int, actual: Int) extends Exception {
   override def getMessage: String =
     s"Wrong number of elements in segment $segment. Expected $expected, but got $actual."

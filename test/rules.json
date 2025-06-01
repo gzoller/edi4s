@@ -1,0 +1,1254 @@
+{
+  "rules": [
+    {
+      "canonicalName": "BSN",
+      "fieldAssignments": [
+        {
+          "targetField": "BSN01",
+          "value": "BSN01",
+          "valueKind": "Direct",
+          "isPlaceholder": false
+        },
+        {
+          "targetField": "BSN02",
+          "value": "BSN02",
+          "valueKind": "Direct",
+          "isPlaceholder": false
+        },
+        {
+          "targetField": "BSN03",
+          "value": "BSN03",
+          "valueKind": "Direct",
+          "isPlaceholder": false
+        },
+        {
+          "targetField": "BSN04",
+          "value": "BSN04",
+          "valueKind": "Direct",
+          "isPlaceholder": false
+        }
+      ],
+      "missingInSrc": false
+    },
+    {
+      "canonicalName": "HL[S]",
+      "fieldAssignments": [
+        {
+          "targetField": "HL01",
+          "value": "HL01",
+          "valueKind": "Direct",
+          "isPlaceholder": false
+        },
+        {
+          "targetField": "HL03",
+          "value": "HL03",
+          "valueKind": "Direct",
+          "isPlaceholder": false
+        }
+      ],
+      "body": [
+        {
+          "canonicalName": "TD1",
+          "fieldAssignments": [
+            {
+              "assignment": {
+                "targetField": "TD101",
+                "value": "TD101",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              "orElseValue": "???",
+              "orElseValueKind": "Constant",
+              "isPlaceholder": true
+            },
+            {
+              "assignment": {
+                "targetField": "TD102",
+                "value": "TD102",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              "orElseValue": "???",
+              "orElseValueKind": "Constant",
+              "isPlaceholder": true
+            },
+            {
+              "targetField": "TD106",
+              "value": "TD106",
+              "valueKind": "Direct",
+              "isPlaceholder": false
+            },
+            {
+              "targetField": "TD107",
+              "value": "TD107",
+              "valueKind": "Direct",
+              "isPlaceholder": false
+            },
+            {
+              "targetField": "TD108",
+              "value": "TD108",
+              "valueKind": "Direct",
+              "isPlaceholder": false
+            }
+          ],
+          "body": [],
+          "missingInSrc": false
+        },
+        {
+          "canonicalName": "TD5",
+          "someAssignment": {
+            "canonicalName": "TD5",
+            "fieldAssignments": [
+              {
+                "targetField": "TD502",
+                "value": "2",
+                "valueKind": "Constant",
+                "isPlaceholder": false
+              },
+              {
+                "targetField": "TD503",
+                "value": "TD503",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              {
+                "targetField": "TD504",
+                "value": "TD504",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              {
+                "targetField": "TD505",
+                "value": "TD505",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              }
+            ],
+            "body": [],
+            "missingInSrc": false
+          },
+          "noneAssignment": {
+            "canonicalName": "TD5",
+            "fieldAssignments": [
+              {
+                "targetField": "TD502",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "TD503",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "TD504",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "TD505",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              }
+            ],
+            "body": [],
+            "missingInSrc": false
+          }
+        },
+        {
+          "canonicalName": "TD3",
+          "fieldAssignments": [
+            {
+              "assignment": {
+                "targetField": "TD301",
+                "value": "TL",
+                "valueKind": "Constant",
+                "isPlaceholder": false
+              },
+              "orElseValue": "???",
+              "orElseValueKind": "Constant",
+              "isPlaceholder": true
+            },
+            {
+              "targetField": "TD302",
+              "value": "TD302",
+              "valueKind": "Direct",
+              "isPlaceholder": false
+            },
+            {
+              "assignment": {
+                "targetField": "TD303",
+                "value": "TD303",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              "orElseValue": "???",
+              "orElseValueKind": "Constant",
+              "isPlaceholder": true
+            }
+          ],
+          "body": [],
+          "missingInSrc": false
+        },
+        {
+          "canonicalName": "REF",
+          "someAssignment": {
+            "canonicalName": "REF",
+            "fieldAssignments": [
+              {
+                "targetField": "REF01",
+                "value": "REF01",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              {
+                "assignment": {
+                  "targetField": "REF02",
+                  "value": "REF02",
+                  "valueKind": "Direct",
+                  "isPlaceholder": false
+                },
+                "orElseValue": "???",
+                "orElseValueKind": "Constant",
+                "isPlaceholder": true
+              }
+            ],
+            "body": [],
+            "missingInSrc": false
+          },
+          "noneAssignment": {
+            "canonicalName": "REF",
+            "fieldAssignments": [
+              {
+                "targetField": "REF01",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "REF02",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              }
+            ],
+            "body": [],
+            "missingInSrc": false
+          }
+        },
+        {
+          "canonicalName": "MAN"
+        },
+        {
+          "canonicalName": "DTM",
+          "someAssignment": {
+            "canonicalName": "DTM",
+            "fieldAssignments": [
+              {
+                "targetField": "DTM01",
+                "value": "DTM01",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              {
+                "assignment": {
+                  "targetField": "DTM02",
+                  "value": "DTM02",
+                  "valueKind": "Direct",
+                  "isPlaceholder": false
+                },
+                "orElseValue": "???",
+                "orElseValueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "DTM03",
+                "value": "DTM03",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              }
+            ],
+            "body": [],
+            "missingInSrc": false
+          },
+          "noneAssignment": {
+            "canonicalName": "DTM",
+            "fieldAssignments": [
+              {
+                "targetField": "DTM01",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "DTM02",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "DTM03",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              }
+            ],
+            "body": [],
+            "missingInSrc": false
+          }
+        },
+        {
+          "canonicalName": "FOB"
+        },
+        {
+          "canonicalName": "N1",
+          "someAssignment": {
+            "canonicalName": "N1",
+            "fieldAssignments": [
+              {
+                "targetField": "N101",
+                "value": "N101",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              {
+                "targetField": "N102",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "matchField": "N103",
+                "cases": {
+                  "92": [
+                    {
+                      "targetField": "N103",
+                      "value": "N103",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    }
+                  ],
+                  "UL": [
+                    {
+                      "targetField": "N103",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    }
+                  ]
+                },
+                "isPlaceholder": false
+              },
+              {
+                "targetField": "N104",
+                "value": "N104",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              }
+            ],
+            "body": [
+              {
+                "canonicalName": "N3",
+                "someAssignment": {
+                  "canonicalName": "N3",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "N301",
+                      "value": "N301",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    },
+                    {
+                      "targetField": "N302",
+                      "value": "N302",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    }
+                  ],
+                  "body": [],
+                  "missingInSrc": false
+                },
+                "noneAssignment": {
+                  "canonicalName": "N3",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "N301",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N302",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    }
+                  ],
+                  "body": [],
+                  "missingInSrc": false
+                }
+              },
+              {
+                "canonicalName": "N4",
+                "someAssignment": {
+                  "canonicalName": "N4",
+                  "fieldAssignments": [
+                    {
+                      "assignment": {
+                        "targetField": "N401",
+                        "value": "N401",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      "orElseValue": "???",
+                      "orElseValueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "assignment": {
+                        "targetField": "N402",
+                        "value": "N402",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      "orElseValue": "???",
+                      "orElseValueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N403",
+                      "value": "N403",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    },
+                    {
+                      "targetField": "N404",
+                      "value": "N404",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    }
+                  ],
+                  "missingInSrc": false
+                },
+                "noneAssignment": {
+                  "canonicalName": "N4",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "N401",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N402",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N403",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N404",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    }
+                  ],
+                  "missingInSrc": false
+                }
+              }
+            ],
+            "missingInSrc": false
+          },
+          "noneAssignment": {
+            "canonicalName": "N1",
+            "fieldAssignments": [
+              {
+                "targetField": "N101",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "N102",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "N103",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "N104",
+                "value": "???",
+                "valueKind": "Constant",
+                "isPlaceholder": true
+              }
+            ],
+            "body": [
+              {
+                "canonicalName": "N3",
+                "someAssignment": {
+                  "canonicalName": "N3",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "N301",
+                      "value": "N301",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    },
+                    {
+                      "targetField": "N302",
+                      "value": "N302",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    }
+                  ],
+                  "body": [],
+                  "missingInSrc": false
+                },
+                "noneAssignment": {
+                  "canonicalName": "N3",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "N301",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N302",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    }
+                  ],
+                  "body": [],
+                  "missingInSrc": false
+                }
+              },
+              {
+                "canonicalName": "N4",
+                "someAssignment": {
+                  "canonicalName": "N4",
+                  "fieldAssignments": [
+                    {
+                      "assignment": {
+                        "targetField": "N401",
+                        "value": "N401",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      "orElseValue": "???",
+                      "orElseValueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "assignment": {
+                        "targetField": "N402",
+                        "value": "N402",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      "orElseValue": "???",
+                      "orElseValueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N403",
+                      "value": "N403",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    },
+                    {
+                      "targetField": "N404",
+                      "value": "N404",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    }
+                  ],
+                  "missingInSrc": false
+                },
+                "noneAssignment": {
+                  "canonicalName": "N4",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "N401",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N402",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N403",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N404",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    }
+                  ],
+                  "missingInSrc": false
+                }
+              }
+            ],
+            "missingInSrc": false
+          }
+        }
+      ],
+      "nested": {
+        "canonicalName": "HL[O]",
+        "fieldAssignments": [
+          {
+            "targetField": "HL01",
+            "value": "HL01",
+            "valueKind": "Direct",
+            "isPlaceholder": false
+          },
+          {
+            "assignment": {
+              "targetField": "HL02",
+              "value": "HL02",
+              "valueKind": "Direct",
+              "isPlaceholder": false
+            },
+            "orElseValue": "???",
+            "orElseValueKind": "Constant",
+            "isPlaceholder": true
+          },
+          {
+            "targetField": "HL03",
+            "value": "HL03",
+            "valueKind": "Direct",
+            "isPlaceholder": false
+          }
+        ],
+        "body": [
+          {
+            "canonicalName": "PRF",
+            "someAssignment": {
+              "canonicalName": "PRF",
+              "fieldAssignments": [
+                {
+                  "targetField": "PRF01",
+                  "value": "PRF01",
+                  "valueKind": "Direct",
+                  "isPlaceholder": false
+                },
+                {
+                  "targetField": "PRF04",
+                  "value": "PRF04",
+                  "valueKind": "Direct",
+                  "isPlaceholder": false
+                }
+              ],
+              "missingInSrc": false
+            },
+            "noneAssignment": {
+              "canonicalName": "PRF",
+              "fieldAssignments": [
+                {
+                  "targetField": "PRF01",
+                  "value": "???",
+                  "valueKind": "Constant",
+                  "isPlaceholder": true
+                },
+                {
+                  "targetField": "PRF04",
+                  "value": "???",
+                  "valueKind": "Constant",
+                  "isPlaceholder": true
+                }
+              ],
+              "missingInSrc": false
+            }
+          },
+          {
+            "canonicalName": "REF",
+            "someAssignment": {
+              "canonicalName": "REF",
+              "fieldAssignments": [
+                {
+                  "matchField": "REF01",
+                  "cases": {
+                    "IA": [
+                      {
+                        "targetField": "REF01",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "REF02",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      }
+                    ],
+                    "IV": [
+                      {
+                        "targetField": "REF01",
+                        "value": "REF01",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      {
+                        "targetField": "REF02",
+                        "value": "REF02",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      }
+                    ]
+                  },
+                  "isPlaceholder": false
+                }
+              ],
+              "body": [],
+              "missingInSrc": false
+            },
+            "noneAssignment": {
+              "canonicalName": "REF",
+              "fieldAssignments": [
+                {
+                  "targetField": "REF01",
+                  "value": "???",
+                  "valueKind": "Constant",
+                  "isPlaceholder": true
+                },
+                {
+                  "targetField": "REF02",
+                  "value": "???",
+                  "valueKind": "Constant",
+                  "isPlaceholder": true
+                }
+              ],
+              "body": [],
+              "missingInSrc": false
+            }
+          }
+        ],
+        "nested": {
+          "canonicalName": "HL[T]",
+          "fieldAssignments": [
+            {
+              "targetField": "HL01",
+              "value": "HL01",
+              "valueKind": "Direct",
+              "isPlaceholder": false
+            },
+            {
+              "assignment": {
+                "targetField": "HL02",
+                "value": "HL02",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              "orElseValue": "???",
+              "orElseValueKind": "Constant",
+              "isPlaceholder": true
+            },
+            {
+              "targetField": "HL03",
+              "value": "HL03",
+              "valueKind": "Direct",
+              "isPlaceholder": false
+            }
+          ],
+          "body": [
+            {
+              "canonicalName": "MAN",
+              "someAssignment": {
+                "canonicalName": "MAN",
+                "fieldAssignments": [
+                  {
+                    "targetField": "MAN01",
+                    "value": "MAN01",
+                    "valueKind": "Direct",
+                    "isPlaceholder": false
+                  },
+                  {
+                    "targetField": "MAN02",
+                    "value": "MAN02",
+                    "valueKind": "Direct",
+                    "isPlaceholder": false
+                  },
+                  {
+                    "targetField": "MAN04",
+                    "value": "CP",
+                    "valueKind": "Constant",
+                    "isPlaceholder": false
+                  },
+                  {
+                    "targetField": "MAN05",
+                    "value": "MAN05",
+                    "valueKind": "Direct",
+                    "isPlaceholder": false
+                  }
+                ],
+                "body": [],
+                "missingInSrc": false
+              },
+              "noneAssignment": {
+                "canonicalName": "MAN",
+                "fieldAssignments": [
+                  {
+                    "targetField": "MAN01",
+                    "value": "???",
+                    "valueKind": "Constant",
+                    "isPlaceholder": true
+                  },
+                  {
+                    "targetField": "MAN02",
+                    "value": "???",
+                    "valueKind": "Constant",
+                    "isPlaceholder": true
+                  },
+                  {
+                    "targetField": "MAN04",
+                    "value": "???",
+                    "valueKind": "Constant",
+                    "isPlaceholder": true
+                  },
+                  {
+                    "targetField": "MAN05",
+                    "value": "???",
+                    "valueKind": "Constant",
+                    "isPlaceholder": true
+                  }
+                ],
+                "body": [],
+                "missingInSrc": false
+              }
+            }
+          ],
+          "nested": {
+            "canonicalName": "HL[P]",
+            "fieldAssignments": [
+              {
+                "targetField": "HL01",
+                "value": "HL01",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              },
+              {
+                "assignment": {
+                  "targetField": "HL02",
+                  "value": "HL02",
+                  "valueKind": "Direct",
+                  "isPlaceholder": false
+                },
+                "orElseValue": "???",
+                "orElseValueKind": "Constant",
+                "isPlaceholder": true
+              },
+              {
+                "targetField": "HL03",
+                "value": "HL03",
+                "valueKind": "Direct",
+                "isPlaceholder": false
+              }
+            ],
+            "body": [
+              {
+                "canonicalName": "LIN"
+              },
+              {
+                "canonicalName": "SN1"
+              },
+              {
+                "canonicalName": "PO4",
+                "fieldAssignments": [
+                  {
+                    "targetField": "PO405",
+                    "value": "G",
+                    "valueKind": "Constant",
+                    "isPlaceholder": false
+                  },
+                  {
+                    "targetField": "PO406",
+                    "value": "PO406",
+                    "valueKind": "Direct",
+                    "isPlaceholder": false
+                  },
+                  {
+                    "targetField": "PO407",
+                    "value": "LB",
+                    "valueKind": "Constant",
+                    "isPlaceholder": false
+                  }
+                ],
+                "missingInSrc": false
+              },
+              {
+                "canonicalName": "PID"
+              },
+              {
+                "canonicalName": "MAN",
+                "fieldAssignments": [
+                  {
+                    "targetField": "MAN01",
+                    "value": "???",
+                    "valueKind": "Constant",
+                    "isPlaceholder": true
+                  },
+                  {
+                    "targetField": "MAN02",
+                    "value": "???",
+                    "valueKind": "Constant",
+                    "isPlaceholder": true
+                  },
+                  {
+                    "targetField": "MAN04",
+                    "value": "???",
+                    "valueKind": "Constant",
+                    "isPlaceholder": true
+                  },
+                  {
+                    "targetField": "MAN05",
+                    "value": "???",
+                    "valueKind": "Constant",
+                    "isPlaceholder": true
+                  }
+                ],
+                "body": [],
+                "missingInSrc": true
+              }
+            ],
+            "nested": {
+              "canonicalName": "HL[I]",
+              "fieldAssignments": [
+                {
+                  "targetField": "HL01",
+                  "value": "HL01",
+                  "valueKind": "Direct",
+                  "isPlaceholder": false
+                },
+                {
+                  "assignment": {
+                    "targetField": "HL02",
+                    "value": "HL02",
+                    "valueKind": "Direct",
+                    "isPlaceholder": false
+                  },
+                  "orElseValue": "???",
+                  "orElseValueKind": "Constant",
+                  "isPlaceholder": true
+                },
+                {
+                  "targetField": "HL03",
+                  "value": "HL03",
+                  "valueKind": "Direct",
+                  "isPlaceholder": false
+                }
+              ],
+              "body": [
+                {
+                  "canonicalName": "LIN",
+                  "someAssignment": {
+                    "canonicalName": "LIN",
+                    "fieldAssignments": [
+                      {
+                        "targetField": "LIN01",
+                        "value": "LIN01",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      {
+                        "targetField": "LIN02",
+                        "value": "LIN02",
+                        "valueKind": "Direct",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN03",
+                        "value": "LIN03",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      {
+                        "targetField": "LIN05",
+                        "value": "LIN05",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      {
+                        "targetField": "LIN07",
+                        "value": "LIN07",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      {
+                        "targetField": "LIN09",
+                        "value": "LIN09",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      {
+                        "targetField": "LIN11",
+                        "value": "LIN11",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      {
+                        "targetField": "LIN13",
+                        "value": "LIN13",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      }
+                    ],
+                    "missingInSrc": false
+                  },
+                  "noneAssignment": {
+                    "canonicalName": "LIN",
+                    "fieldAssignments": [
+                      {
+                        "targetField": "LIN01",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN02",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN03",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN04",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN05",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN06",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN07",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN08",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN09",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN10",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN11",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN12",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "LIN13",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      }
+                    ],
+                    "missingInSrc": false
+                  }
+                },
+                {
+                  "canonicalName": "SN1",
+                  "someAssignment": {
+                    "canonicalName": "SN1",
+                    "fieldAssignments": [
+                      {
+                        "assignment": {
+                          "targetField": "SN101",
+                          "value": "SN101",
+                          "valueKind": "Direct",
+                          "isPlaceholder": false
+                        },
+                        "orElseValue": "???",
+                        "orElseValueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "SN103",
+                        "value": "SN103",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      }
+                    ],
+                    "missingInSrc": false
+                  },
+                  "noneAssignment": {
+                    "canonicalName": "SN1",
+                    "fieldAssignments": [
+                      {
+                        "targetField": "SN101",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      },
+                      {
+                        "targetField": "SN103",
+                        "value": "???",
+                        "valueKind": "Constant",
+                        "isPlaceholder": true
+                      }
+                    ],
+                    "missingInSrc": false
+                  }
+                },
+                {
+                  "canonicalName": "PID",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "PID01",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "PID02",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "PID05",
+                      "value": "???",
+                      "valueKind": "Constant",
+                      "isPlaceholder": true
+                    }
+                  ],
+                  "body": [],
+                  "missingInSrc": true
+                },
+                {
+                  "canonicalName": "DTM",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "DTM01",
+                      "value": "DTM01",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    },
+                    {
+                      "assignment": {
+                        "targetField": "DTM02",
+                        "value": "DTM02",
+                        "valueKind": "Direct",
+                        "isPlaceholder": false
+                      },
+                      "orElseValue": "???",
+                      "orElseValueKind": "Constant",
+                      "isPlaceholder": true
+                    }
+                  ],
+                  "body": [],
+                  "missingInSrc": false
+                },
+                {
+                  "canonicalName": "N1",
+                  "fieldAssignments": [
+                    {
+                      "targetField": "N101",
+                      "value": "N101",
+                      "valueKind": "Direct",
+                      "isPlaceholder": true
+                    },
+                    {
+                      "targetField": "N102",
+                      "value": "N102",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    },
+                    {
+                      "targetField": "N103",
+                      "value": "N103",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    },
+                    {
+                      "targetField": "N104",
+                      "value": "N104",
+                      "valueKind": "Direct",
+                      "isPlaceholder": false
+                    }
+                  ],
+                  "body": [],
+                  "missingInSrc": false
+                }
+              ],
+              "missingInSrc": false
+            },
+            "missingInSrc": false
+          },
+          "missingInSrc": false
+        },
+        "missingInSrc": false
+      },
+      "missingInSrc": false
+    },
+    {
+      "canonicalName": "CTT",
+      "fieldAssignments": [
+        {
+          "targetField": "CTT01",
+          "value": "CTT01",
+          "valueKind": "Direct",
+          "isPlaceholder": false
+        }
+      ],
+      "missingInSrc": false
+    }
+  ]
+}

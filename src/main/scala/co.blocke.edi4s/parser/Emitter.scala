@@ -77,12 +77,13 @@ object Emitter:
     sb
 
   private def emitSe(cfg: TokenizerConfig, sb: StringBuilder, st: StSegment): StringBuilder =
-    sb.append(s"SE${cfg.elementDelimiter}${st.body.length}${cfg.elementDelimiter}${st.transactionSetControlNumber}${cfg.segmentDelimiter}")
+    sb.append(s"SE${cfg.elementDelimiter}${st.body.length+2}${cfg.elementDelimiter}${st.transactionSetControlNumber}${cfg.segmentDelimiter}")
     sb
 
   def emit(cfg: TokenizerConfig, sb: StringBuilder, bodySeg: SegmentX12Token): StringBuilder =
     sb.append(bodySeg.name + cfg.elementDelimiter)
     val maxFields = bodySeg.fields.length-1
+    if maxFields < 0 then sb.append(cfg.segmentDelimiter)
     bodySeg.fields.zipWithIndex.foreach {
       case (s: SimpleX12Token,i) =>
         sb.append(s.value)

@@ -175,6 +175,7 @@ object DiffEngine:
       maxDiff = Option.when(src.maxRepeats != target.maxRepeats)(src.maxRepeats, target.maxRepeats),
       bodyDiff = bodyDiff,
       hlRule = hlRule,
+      hlDiscriminator = getHLdiscriminator(target),
       nested = nestedDiffOpt
     )
 
@@ -267,7 +268,8 @@ object DiffEngine:
       None,
       None,
       List.empty,
-      None
+      None,
+      hlDiscriminator = getHLdiscriminator(src)
     )
 
   private def burnTargetLoop(
@@ -285,7 +287,8 @@ object DiffEngine:
       None,
       None,
       List.empty,
-      None
+      None,
+      hlDiscriminator = getHLdiscriminator(target)
     )
 
   private def compareSegmentFields(
@@ -487,7 +490,8 @@ object DiffEngine:
         case bd: RefinedSegmentSpec => burnTargetSegment(path, bd)
         case bd: RefinedLoopSpec => burnTargetLoop(path, bd)
       },
-      None
+      None,
+      hlDiscriminator = getHLdiscriminator(src),
     )
 
   private def burnTargetHL(path: Path, target: RefinedLoopSpec): LoopSegmentDifference =
@@ -505,7 +509,8 @@ object DiffEngine:
         case bd: RefinedSegmentSpec => burnTargetSegment(path, bd)
         case bd: RefinedLoopSpec => burnTargetLoop(path, bd)
       },
-      None
+      None,
+      hlDiscriminator = getHLdiscriminator(target)
     )
 
 
@@ -519,4 +524,9 @@ object DiffEngine:
         l.canonicalName + s"[${l.description}]"
       else
         l.canonicalName
+  }
+
+  private inline def getHLdiscriminator( loop: RefinedLoopSpec ): Option[String] = {
+    Option.when(loop.canonicalName == "HL"){
+      loop.fields.find(_.canonicalName == "HL03").map(_.asInstanceOf[RefinedSingleFieldSpec].validValues.mkString(","))}.flatten
   }

@@ -111,9 +111,36 @@ object RuleGenerator:
       loop( fs, Nil, Set.empty[String] )._1
 
 
+    inline def replaceTypeParam(s: String, newParam: String): String =
+      s.replaceAll("""\[\s*[^]]+\s*\]""", s"[$newParam]")
+
     def genSegmentRule( seg: SegmentDifference ): Option[SegmentAssignment] =
       val fieldsPresentInTarget = seg.fieldDiff.filter(_.presence._2)
       seg match {
+        case _ if seg.presence == (false,false) || (!seg.presence._1 && !seg.required._2)=>
+          None
+
+        case _ if seg.presence == (true,false) =>
+          Some(NoOpSegmentAssignment(seg.canonicalName))
+
+        case s: SimpleSegmentDifference if seg.presence == (false,true) && seg.required._2 =>  // missing from src, required in target
+          val noneFields = fieldsPresentInTarget.map(f => GeneralFieldAssignment(f.canonicalName, "???", ValueKind.Constant, true))
+          Some(FieldsSegmentAssignment(seg.canonicalName, noneFields, true))
+
+        case s: LoopSegmentDifference if seg.presence == (false,true) && seg.required._2 =>  // missing from src, required in target
+          val noneAssign = { // segment missing in src--assign all fields manually
+            val bodyAssign = generate(s.bodyDiff, enums)
+            val nestAssign = s.nested.flatMap(genSegmentRule).asInstanceOf[Option[LoopSegmentAssignment]]
+            LoopSegmentAssignment(
+              s.hlDiscriminator.map(d => replaceTypeParam(s.canonicalName, d)).getOrElse(s.canonicalName),
+              fieldsPresentInTarget.map(f => GeneralFieldAssignment(f.canonicalName, "???", ValueKind.Constant, true)),
+              bodyAssign,
+              nestAssign,
+              true
+            )
+          }
+          Some(noneAssign)
+
         // Target present, src/target both required -or- src required/target optional -or- src/target optional
         case s: SimpleSegmentDifference if s.required._1 || s.required == (false,false) =>
           Some(FieldsSegmentAssignment(s.canonicalName, genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil))))
@@ -132,7 +159,7 @@ object RuleGenerator:
           val bodyAssign = generate(s.bodyDiff, enums)
           val nestAssign = s.nested.flatMap(genSegmentRule).asInstanceOf[Option[LoopSegmentAssignment]]
           Some(LoopSegmentAssignment(
-            s.canonicalName,
+            s.hlDiscriminator.map(d => replaceTypeParam(s.canonicalName, d)).getOrElse(s.canonicalName),
             genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil)),
             bodyAssign,
             nestAssign)
@@ -143,14 +170,14 @@ object RuleGenerator:
           val nestAssign = s.nested.flatMap(genSegmentRule).asInstanceOf[Option[LoopSegmentAssignment]]
           val someAssign =  // segment present in src--assign normally
             LoopSegmentAssignment(
-              s.canonicalName,
+              s.hlDiscriminator.map(d => replaceTypeParam(s.canonicalName, d)).getOrElse(s.canonicalName),
               genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil)),
               bodyAssign,
               nestAssign
             )
           val noneAssign = { // segment missing in src--assign all fields manually
             LoopSegmentAssignment(
-              s.canonicalName,
+              s.hlDiscriminator.map(d => replaceTypeParam(s.canonicalName, d)).getOrElse(s.canonicalName),
               fieldsPresentInTarget.map(f => GeneralFieldAssignment(f.canonicalName, "???", ValueKind.Constant, true)),
               bodyAssign,
               nestAssign
@@ -163,5 +190,5 @@ object RuleGenerator:
           None
       }
 
-    diffs.filter(_.presence._2).flatMap(genSegmentRule)  // skip any segments not present in target then generate
+    diffs.flatMap(genSegmentRule)  // skip any segments not present in target then generate
 

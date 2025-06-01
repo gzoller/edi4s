@@ -7,7 +7,9 @@ import table.*
 import model.*
 import parser.*
 import diff.*
+import mapper.*
 
+import co.blocke.scalajack.ScalaJack
 import java.io.File
 import scala.io.Source
 import java.io.FileNotFoundException
@@ -33,6 +35,16 @@ object Main extends ZIOAppDefault {
     } yield refined
 
 
+  private def readJson[T](path: String)(using sj: ScalaJack[T]): ZIO[Any, CanonicalError, T] =
+    val filePath = Path(path)
+    for {
+      lines <- Files.readAllLines(filePath).mapError {
+        (ioe: Throwable) => CanonicalError("Can't read file: " + ioe.getMessage)
+      }
+      json = sj.fromJson(lines.mkString("\n"))
+    } yield json
+
+
   private def readEnumFields: ZIO[Any, CanonicalError, Map[String, List[String | EnumeratedDependency]]] =
     ZIO.scoped {
       ZIO.acquireRelease(ZIO.attempt(Source.fromResource("enumerated-fields.json")))(src =>
@@ -45,7 +57,7 @@ object Main extends ZIOAppDefault {
     }
 
 
-  def run: ZIO[ZIOAppArgs & Scope, CanonicalError | X12ParseError | DifferenceError | Throwable, Unit] = {
+  def run: ZIO[ZIOAppArgs & Scope, CanonicalError | X12ParseError | DifferenceError | MappingError | Throwable, Unit] = {
 
     for {
       _ <- ZIO.succeed("Starting!")
@@ -74,20 +86,31 @@ object Main extends ZIOAppDefault {
 //      _ <- ZIO.succeed(println("HL Rule: "+hlRule))
       // --- end test
 
-      diffResult <- DiffEngine.compareSpecs(src, std, tj)
+//      diffResult <- DiffEngine.compareSpecs(src, std, tj)
 //      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffResult, true)
 //      _ <- ZIO.succeed(println(table.toString))
 
-      rules = mapper.RuleGenerator.generate(diffResult, enums)
-      _ <- ZIO.succeed(println("RULES: \n"+sjAssignment.toJson(MappingSpec(rules))))
+//      rules = mapper.RuleGenerator.generate(diffResult, enums)
+//      _ <- ZIO.succeed(println("RULES: \n"+sjAssignment.toJson(MappingSpec(rules))))
 
 
 // >> Emitting X12
+
+      doc = readFileToString(new File("test/foo.x12"))
+//      doc = readFileToString(new File("test/OUT_ASN_856_TJ.x12"))
 //      doc = readFileToString(new File("specs/raw_x12/sample_856.x12"))
-//      (isa,cfg) <- X12Parser.parse(doc, TokenizerConfig())
-//
+      (isa,cfg) <- X12Parser.parse(doc, TokenizerConfig())
+
+      _ <- ZIO.succeed(println("HERE: "+isa.groupSets.head.transactions.head.body.size))
+
 //      sb = Emitter.emitTransaction(cfg, isa)
 //      _ <- ZIO.succeed(println(sb.split("~").mkString("\n").toString))
+
+      rules <- readJson[MappingSpec]("test/rules.json")
+      mapped <- MapRunner.mapWithRules(isa, rules)
+
+      sb2 = Emitter.emitTransaction(cfg, mapped)
+      _ <- ZIO.succeed(println(sb2.split("~").mkString("\n").toString))
 
     } yield ()
   }

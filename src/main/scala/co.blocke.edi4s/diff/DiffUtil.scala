@@ -100,7 +100,8 @@ object DiffUtil:
           hl03FieldOpt match {
             case Some(f) if f.validValues.contains(promotionRule.toHL03) =>
               val inserted = cloneWithNewHL03(tgtLoop, promotionRule.toDesc, promotionRule.toHL03)
-              ZIO.succeed(inserted.copy(nested = Some(tgtLoop))) // ⬅️ wrap `tgtLoop` inside promoted
+              val fixed = fixValidValues(tgtLoop, promotionRule.toHL03)
+              ZIO.succeed(inserted.copy(nested = Some(fixed))) // ⬅️ wrap `tgtLoop` inside promoted
             case Some(_) =>
               ZIO.fail(DifferenceError(s"Target HL03 does not support '${promotionRule.toHL03}'"))
             case None =>
@@ -113,4 +114,21 @@ object DiffUtil:
     }
 
     recurse(src, target)
+  }
+
+
+  private def fixValidValues(loop: RefinedLoopSpec, removeValue: String): RefinedLoopSpec = {
+    val newFields = loop.fields.zipWithIndex.map {
+      case (field: RefinedSingleFieldSpec, 2) =>
+        val updatedValues = field.validValues.filterNot(_ == removeValue)
+        field.copy(validValues = updatedValues)
+
+      case (field, 2) =>
+        // It's index 2, but not a RefinedSingleFieldSpec — leave unchanged
+        field
+
+      case (field, _) =>
+        field // Any other index — leave unchanged
+    }
+    loop.copy(fields = newFields)
   }

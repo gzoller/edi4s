@@ -12,7 +12,8 @@ sealed trait SegmentAssignment:
 
 case class FieldsSegmentAssignment(
                                     canonicalName: String,
-                                    fieldAssignments: List[FieldAssignment]
+                                    fieldAssignments: List[FieldAssignment],
+                                    missingInSrc: Boolean = false
                                   ) extends SegmentAssignment
 
 
@@ -22,7 +23,8 @@ case class LoopSegmentAssignment(
                                     body: List[SegmentAssignment], // used for loops
                                     // TODO: When we handle missing nest levels we'll need a top-level rule to flatten data
                                     // The machinery is all there--just not wired up.
-                                    nested: Option[LoopSegmentAssignment]  // for nested HL loops
+                                    nested: Option[LoopSegmentAssignment],  // for nested HL loops
+                                    missingInSrc: Boolean = false
                                   ) extends SegmentAssignment
 
 // For src-optional, target-required segments
@@ -31,6 +33,9 @@ case class OrElseFieldsSegmentAssignment(
                                     someAssignment: SegmentAssignment,
                                     noneAssignment: SegmentAssignment
                                   ) extends SegmentAssignment
+
+case class NoOpSegmentAssignment( canonicalName: String ) extends SegmentAssignment // used to help with data/rule alignment during mapping
+
 
 //---------------------
 
