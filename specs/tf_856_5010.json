@@ -94,7 +94,7 @@
           "required": false,
           "dataType": "string",
           "elementId": 1005,
-          "validValues": ["ZZZZ"],
+          "validValues": ["0009"],
           "validValuesRef": "X12_ID_1005"
         }
       ]

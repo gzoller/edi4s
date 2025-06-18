@@ -26,6 +26,12 @@
           "value": "BSN04",
           "valueKind": "Direct",
           "isPlaceholder": false
+        },
+        {
+          "targetField": "BSN05",
+          "value": "0009",
+          "valueKind": "Constant",
+          "isPlaceholder": false
         }
       ],
       "missingInSrc": false
@@ -51,6 +57,7 @@
           "canonicalName": "TD1",
           "fieldAssignments": [
             {
+              "targetField": "TD101",
               "assignment": {
                 "targetField": "TD101",
                 "value": "TD101",
@@ -62,6 +69,7 @@
               "isPlaceholder": true
             },
             {
+              "targetField": "TD102",
               "assignment": {
                 "targetField": "TD102",
                 "value": "TD102",
@@ -163,6 +171,7 @@
           "canonicalName": "TD3",
           "fieldAssignments": [
             {
+              "targetField": "TD301",
               "assignment": {
                 "targetField": "TD301",
                 "value": "TL",
@@ -174,12 +183,7 @@
               "isPlaceholder": true
             },
             {
-              "targetField": "TD302",
-              "value": "TD302",
-              "valueKind": "Direct",
-              "isPlaceholder": false
-            },
-            {
+              "targetField": "TD303",
               "assignment": {
                 "targetField": "TD303",
                 "value": "TD303",
@@ -206,6 +210,7 @@
                 "isPlaceholder": false
               },
               {
+                "targetField": "REF02",
                 "assignment": {
                   "targetField": "REF02",
                   "value": "REF02",
@@ -255,6 +260,7 @@
                 "isPlaceholder": false
               },
               {
+                "targetField": "DTM02",
                 "assignment": {
                   "targetField": "DTM02",
                   "value": "DTM02",
@@ -264,12 +270,6 @@
                 "orElseValue": "???",
                 "orElseValueKind": "Constant",
                 "isPlaceholder": true
-              },
-              {
-                "targetField": "DTM03",
-                "value": "DTM03",
-                "valueKind": "Direct",
-                "isPlaceholder": false
               }
             ],
             "body": [],
@@ -286,12 +286,6 @@
               },
               {
                 "targetField": "DTM02",
-                "value": "???",
-                "valueKind": "Constant",
-                "isPlaceholder": true
-              },
-              {
-                "targetField": "DTM03",
                 "value": "???",
                 "valueKind": "Constant",
                 "isPlaceholder": true
@@ -322,7 +316,7 @@
                 "isPlaceholder": true
               },
               {
-                "matchField": "N103",
+                "targetField": "N103",
                 "cases": {
                   "92": [
                     {
@@ -361,12 +355,6 @@
                       "value": "N301",
                       "valueKind": "Direct",
                       "isPlaceholder": false
-                    },
-                    {
-                      "targetField": "N302",
-                      "value": "N302",
-                      "valueKind": "Direct",
-                      "isPlaceholder": false
                     }
                   ],
                   "body": [],
@@ -377,12 +365,6 @@
                   "fieldAssignments": [
                     {
                       "targetField": "N301",
-                      "value": "???",
-                      "valueKind": "Constant",
-                      "isPlaceholder": true
-                    },
-                    {
-                      "targetField": "N302",
                       "value": "???",
                       "valueKind": "Constant",
                       "isPlaceholder": true
@@ -398,6 +380,7 @@
                   "canonicalName": "N4",
                   "fieldAssignments": [
                     {
+                      "targetField": "N401",
                       "assignment": {
                         "targetField": "N401",
                         "value": "N401",
@@ -409,6 +392,7 @@
                       "isPlaceholder": true
                     },
                     {
+                      "targetField": "N402",
                       "assignment": {
                         "targetField": "N402",
                         "value": "N402",
@@ -507,12 +491,6 @@
                       "value": "N301",
                       "valueKind": "Direct",
                       "isPlaceholder": false
-                    },
-                    {
-                      "targetField": "N302",
-                      "value": "N302",
-                      "valueKind": "Direct",
-                      "isPlaceholder": false
                     }
                   ],
                   "body": [],
@@ -523,12 +501,6 @@
                   "fieldAssignments": [
                     {
                       "targetField": "N301",
-                      "value": "???",
-                      "valueKind": "Constant",
-                      "isPlaceholder": true
-                    },
-                    {
-                      "targetField": "N302",
                       "value": "???",
                       "valueKind": "Constant",
                       "isPlaceholder": true
@@ -544,6 +516,7 @@
                   "canonicalName": "N4",
                   "fieldAssignments": [
                     {
+                      "targetField": "N401",
                       "assignment": {
                         "targetField": "N401",
                         "value": "N401",
@@ -555,6 +528,7 @@
                       "isPlaceholder": true
                     },
                     {
+                      "targetField": "N402",
                       "assignment": {
                         "targetField": "N402",
                         "value": "N402",
@@ -626,6 +600,7 @@
             "isPlaceholder": false
           },
           {
+            "targetField": "HL02",
             "assignment": {
               "targetField": "HL02",
               "value": "HL02",
@@ -689,7 +664,7 @@
               "canonicalName": "REF",
               "fieldAssignments": [
                 {
-                  "matchField": "REF01",
+                  "targetField": "REF01",
                   "cases": {
                     "IA": [
                       {
@@ -757,6 +732,7 @@
               "isPlaceholder": false
             },
             {
+              "targetField": "HL02",
               "assignment": {
                 "targetField": "HL02",
                 "value": "HL02",
@@ -791,18 +767,6 @@
                     "value": "MAN02",
                     "valueKind": "Direct",
                     "isPlaceholder": false
-                  },
-                  {
-                    "targetField": "MAN04",
-                    "value": "CP",
-                    "valueKind": "Constant",
-                    "isPlaceholder": false
-                  },
-                  {
-                    "targetField": "MAN05",
-                    "value": "MAN05",
-                    "valueKind": "Direct",
-                    "isPlaceholder": false
                   }
                 ],
                 "body": [],
@@ -819,18 +783,6 @@
                   },
                   {
                     "targetField": "MAN02",
-                    "value": "???",
-                    "valueKind": "Constant",
-                    "isPlaceholder": true
-                  },
-                  {
-                    "targetField": "MAN04",
-                    "value": "???",
-                    "valueKind": "Constant",
-                    "isPlaceholder": true
-                  },
-                  {
-                    "targetField": "MAN05",
                     "value": "???",
                     "valueKind": "Constant",
                     "isPlaceholder": true
@@ -851,6 +803,7 @@
                 "isPlaceholder": false
               },
               {
+                "targetField": "HL02",
                 "assignment": {
                   "targetField": "HL02",
                   "value": "HL02",
@@ -877,26 +830,7 @@
               },
               {
                 "canonicalName": "PO4",
-                "fieldAssignments": [
-                  {
-                    "targetField": "PO405",
-                    "value": "G",
-                    "valueKind": "Constant",
-                    "isPlaceholder": false
-                  },
-                  {
-                    "targetField": "PO406",
-                    "value": "PO406",
-                    "valueKind": "Direct",
-                    "isPlaceholder": false
-                  },
-                  {
-                    "targetField": "PO407",
-                    "value": "LB",
-                    "valueKind": "Constant",
-                    "isPlaceholder": false
-                  }
-                ],
+                "fieldAssignments": [],
                 "missingInSrc": false
               },
               {
@@ -916,18 +850,6 @@
                     "value": "???",
                     "valueKind": "Constant",
                     "isPlaceholder": true
-                  },
-                  {
-                    "targetField": "MAN04",
-                    "value": "???",
-                    "valueKind": "Constant",
-                    "isPlaceholder": true
-                  },
-                  {
-                    "targetField": "MAN05",
-                    "value": "???",
-                    "valueKind": "Constant",
-                    "isPlaceholder": true
                   }
                 ],
                 "body": [],
@@ -944,6 +866,7 @@
                   "isPlaceholder": false
                 },
                 {
+                  "targetField": "HL02",
                   "assignment": {
                     "targetField": "HL02",
                     "value": "HL02",
@@ -990,30 +913,6 @@
                         "value": "LIN05",
                         "valueKind": "Direct",
                         "isPlaceholder": false
-                      },
-                      {
-                        "targetField": "LIN07",
-                        "value": "LIN07",
-                        "valueKind": "Direct",
-                        "isPlaceholder": false
-                      },
-                      {
-                        "targetField": "LIN09",
-                        "value": "LIN09",
-                        "valueKind": "Direct",
-                        "isPlaceholder": false
-                      },
-                      {
-                        "targetField": "LIN11",
-                        "value": "LIN11",
-                        "valueKind": "Direct",
-                        "isPlaceholder": false
-                      },
-                      {
-                        "targetField": "LIN13",
-                        "value": "LIN13",
-                        "valueKind": "Direct",
-                        "isPlaceholder": false
                       }
                     ],
                     "missingInSrc": false
@@ -1050,54 +949,6 @@
                         "value": "???",
                         "valueKind": "Constant",
                         "isPlaceholder": true
-                      },
-                      {
-                        "targetField": "LIN06",
-                        "value": "???",
-                        "valueKind": "Constant",
-                        "isPlaceholder": true
-                      },
-                      {
-                        "targetField": "LIN07",
-                        "value": "???",
-                        "valueKind": "Constant",
-                        "isPlaceholder": true
-                      },
-                      {
-                        "targetField": "LIN08",
-                        "value": "???",
-                        "valueKind": "Constant",
-                        "isPlaceholder": true
-                      },
-                      {
-                        "targetField": "LIN09",
-                        "value": "???",
-                        "valueKind": "Constant",
-                        "isPlaceholder": true
-                      },
-                      {
-                        "targetField": "LIN10",
-                        "value": "???",
-                        "valueKind": "Constant",
-                        "isPlaceholder": true
-                      },
-                      {
-                        "targetField": "LIN11",
-                        "value": "???",
-                        "valueKind": "Constant",
-                        "isPlaceholder": true
-                      },
-                      {
-                        "targetField": "LIN12",
-                        "value": "???",
-                        "valueKind": "Constant",
-                        "isPlaceholder": true
-                      },
-                      {
-                        "targetField": "LIN13",
-                        "value": "???",
-                        "valueKind": "Constant",
-                        "isPlaceholder": true
                       }
                     ],
                     "missingInSrc": false
@@ -1109,6 +960,7 @@
                     "canonicalName": "SN1",
                     "fieldAssignments": [
                       {
+                        "targetField": "SN101",
                         "assignment": {
                           "targetField": "SN101",
                           "value": "SN101",
@@ -1182,6 +1034,7 @@
                       "isPlaceholder": false
                     },
                     {
+                      "targetField": "DTM02",
                       "assignment": {
                         "targetField": "DTM02",
                         "value": "DTM02",

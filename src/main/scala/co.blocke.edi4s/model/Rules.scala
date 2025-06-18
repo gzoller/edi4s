@@ -44,6 +44,7 @@ enum ValueKind {
 }
 
 sealed trait FieldAssignment:
+  val targetField: String
   val isPlaceholder: Boolean
 
 case class GeneralFieldAssignment(
@@ -55,6 +56,7 @@ case class GeneralFieldAssignment(
 
 // For src-optional, target-required fields
 case class OrElseFieldAssignment(
+                                  targetField: String,
                                   assignment: FieldAssignment,  // if defined in src
                                   orElseValue: String,
                                   orElseValueKind: ValueKind,
@@ -62,7 +64,7 @@ case class OrElseFieldAssignment(
                                 ) extends FieldAssignment
 
 case class EnumMatchFieldAssignment(
-                                  matchField: String, // usually a REF01-like field
+                                  targetField: String, // usually a REF01-like field
                                   cases: Map[String, List[FieldAssignment]],
                                   isPlaceholder: Boolean = false
                                 ) extends FieldAssignment

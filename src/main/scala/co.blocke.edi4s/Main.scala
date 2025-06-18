@@ -9,7 +9,7 @@ import parser.*
 import diff.*
 import mapper.*
 
-import co.blocke.scalajack.ScalaJack
+import co.blocke.scalajack.*
 import java.io.File
 import scala.io.Source
 import java.io.FileNotFoundException
@@ -66,13 +66,16 @@ object Main extends ZIOAppDefault {
 //      _ <- Locator.go
 
 // >> DiffEngine + Table
+
+      // Read json specs
       std <- readRefined("specs/x12_856_5010.json")
       src <- readRefined("specs/tf_856_5010.json")
 //      pfg <- readRefined("specs/pfg_856_5010.json")
       tj <- readRefined("specs/tj_856_4030.json")
 //      cm <- readRefined("specs/cm_856_5010.json")
 
-//      table1 = DiffReport.asTable("Taylor Farms", "Trader Joes", src, std, tj, true)
+      diffs <- DiffEngine.compareSpecs(src, std, tj)
+//      table1 = DiffReport.asTable("Taylor Farms", "Trader Joes", diffs, false)
 //      _ <- ZIO.succeed(println(table1.toString))
 
       // Test
@@ -86,32 +89,44 @@ object Main extends ZIOAppDefault {
 //      _ <- ZIO.succeed(println("HL Rule: "+hlRule))
       // --- end test
 
-//      diffResult <- DiffEngine.compareSpecs(src, std, tj)
-//      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffResult, true)
-//      _ <- ZIO.succeed(println(table.toString))
+      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffs, false)
+      _ <- ZIO.succeed(println(table.toString))
 
-//      rules = mapper.RuleGenerator.generate(diffResult, enums)
+//      rules = mapper.RuleGenerator.generate(diffs, enums)
 //      _ <- ZIO.succeed(println("RULES: \n"+sjAssignment.toJson(MappingSpec(rules))))
 
 
 // >> Emitting X12
+      //      doc = readFileToString(new File("test/OUT_ASN_856_TJ.x12"))
+      //      doc = readFileToString(new File("specs/raw_x12/sample_856.x12"))
+      //      sb = Emitter.emitTransaction(cfg, isa)
+      //      _ <- ZIO.succeed(println(sb.split("~").mkString("\n").toString))
 
+      /*
       doc = readFileToString(new File("test/foo.x12"))
-//      doc = readFileToString(new File("test/OUT_ASN_856_TJ.x12"))
-//      doc = readFileToString(new File("specs/raw_x12/sample_856.x12"))
       (isa,cfg) <- X12Parser.parse(doc, TokenizerConfig())
-
-      _ <- ZIO.succeed(println("HERE: "+isa.groupSets.head.transactions.head.body.size))
-
-//      sb = Emitter.emitTransaction(cfg, isa)
-//      _ <- ZIO.succeed(println(sb.split("~").mkString("\n").toString))
-
       rules <- readJson[MappingSpec]("test/rules.json")
       mapped <- MapRunner.mapWithRules(isa, rules)
-
       sb2 = Emitter.emitTransaction(cfg, mapped)
-      _ <- ZIO.succeed(println(sb2.split("~").mkString("\n").toString))
+      _ <- ZIO.succeed(println(sb2.toString
+        .split("~", -1)        // -1 to preserve empty segments between ~~ (like HL*...~~)
+        .mkString("~\n")))
+       */
 
     } yield ()
+
+
+    /*  Parse XML and emit X12
+    import tf.*
+    given sjXMLObject: ScalaJackXML[Invoice810] = ScalaJack.sjXmlCodecOf[Invoice810]
+    given sjObject: ScalaJack[Invoice810] = ScalaJack.sjCodecOf[Invoice810]
+
+    for {
+      _ <- ZIO.succeed(println("Starting..."))
+      doc = readFileToString(new File("test/PFG SO-2318909 810 Invoice.xml"))
+      xml = sjXMLObject.fromXml(doc)
+      _ <- ZIO.succeed(println(xml))
+    } yield ()
+     */
   }
 }

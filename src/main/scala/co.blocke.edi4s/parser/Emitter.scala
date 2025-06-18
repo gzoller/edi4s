@@ -83,18 +83,20 @@ object Emitter:
   def emit(cfg: TokenizerConfig, sb: StringBuilder, bodySeg: SegmentX12Token): StringBuilder =
     sb.append(bodySeg.name + cfg.elementDelimiter)
     val maxFields = bodySeg.fields.length-1
-    if maxFields < 0 then sb.append(cfg.segmentDelimiter)
-    bodySeg.fields.zipWithIndex.foreach {
-      case (s: SimpleX12Token,i) =>
-        sb.append(s.value)
-        if i == maxFields then sb.append(cfg.segmentDelimiter) else sb.append(cfg.elementDelimiter)
-      case (s: EmptyX12Token,i) =>
-        if i == maxFields then sb.append(cfg.segmentDelimiter) else sb.append(cfg.elementDelimiter)
-      case (s: RepeatedX12Token,i) =>
-        sb.append(s.value.mkString(cfg.repeatDelimiter.toString))
-        if i == maxFields then sb.append(cfg.segmentDelimiter) else sb.append(cfg.elementDelimiter)
-      case (s: CompositeX12Token,i) =>
-        sb.append(s.value.mkString(cfg.componentDelimiter.toString))
-        if i == maxFields then sb.append(cfg.segmentDelimiter) else sb.append(cfg.elementDelimiter)
-    }
+    if maxFields >= 0 then
+      bodySeg.fields.zipWithIndex.foreach {
+        case (s: SimpleX12Token,i) =>
+          sb.append(s.value)
+          if i == maxFields then sb.append(cfg.segmentDelimiter) else sb.append(cfg.elementDelimiter)
+        case (s: EmptyX12Token,i) =>
+          if i == maxFields then sb.append(cfg.segmentDelimiter) else sb.append(cfg.elementDelimiter)
+        case (s: RepeatedX12Token,i) =>
+          sb.append(s.value.mkString(cfg.repeatDelimiter.toString))
+          if i == maxFields then sb.append(cfg.segmentDelimiter) else sb.append(cfg.elementDelimiter)
+        case (s: CompositeX12Token,i) =>
+          sb.append(s.value.mkString(cfg.componentDelimiter.toString))
+          if i == maxFields then sb.append(cfg.segmentDelimiter) else sb.append(cfg.elementDelimiter)
+      }
+    else
+      sb.append(cfg.segmentDelimiter)
     sb

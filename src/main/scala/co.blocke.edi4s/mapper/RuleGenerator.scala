@@ -10,6 +10,21 @@ object RuleGenerator:
 
   def generate( diffs: List[SegmentDifference], enums: EnumFieldMap ): List[SegmentAssignment] =
 
+    def collectHlPath(diff: LoopSegmentDifference): String =
+      @annotation.tailrec
+      def loop(current: Option[LoopSegmentDifference], acc: List[String]): String = current match
+        case Some(ld) =>
+          loop(ld.nested, ld.hlDiscriminator.getOrElse("") :: acc)
+        case None =>
+          acc.reverse.mkString
+
+      loop(Some(diff), Nil)
+
+    // Pre-scan for HL (LoopSegmentDifference) and build loop hierarchy string--used for BSN05 field
+    val hlHierarchyBSN05: Option[String] =
+      diffs.collectFirst { case l: LoopSegmentDifference if l.canonicalName.startsWith("HL") => collectHlPath(l) }
+        .flatMap( h => hlStructureToBsn05.get(h) )
+
     def matchCaseAssignments(
                               valids: (List[String], List[String]),
                               canonicalName: String,
@@ -91,21 +106,30 @@ object RuleGenerator:
             (acc, mappedAlready) // skip fields we've already mapped
 
           case fd: FieldDifference =>
-            val (oneRule, newMapped) = genOneFieldRule( fd, mappedAlready )
 
-            // Now consider optionality. Drop any rules that are human-populated that are not required in target.
-            // Also consider src:Optional/target:Requierd fields and wrap that rule in a OrElseFieldAssignment if *not* human-populated already
-            fd.required match {
-              case (x,false) if oneRule.isPlaceholder => // drop placeholder if not required in target
-                //
-                // NOTE: We may want *NOT* to drop these if users prefer to manually set target-optional fields
-                //
-                loop(f.tail, acc, mappedAlready)
-              case (false,true) if !oneRule.isPlaceholder => // wrap if needed
-                loop(f.tail, acc :+ OrElseFieldAssignment(oneRule, "???", ValueKind.Constant, true), newMapped)
-              case _ =>
-                loop(f.tail, acc :+ oneRule, newMapped)
-            }
+            // Special cases
+            if fd.canonicalName == "BSN05" then
+              loop(
+                f.tail,
+                acc :+ GeneralFieldAssignment( fd.canonicalName, hlHierarchyBSN05.getOrElse(""), ValueKind.Constant, false),
+                mappedAlready + "BSN05"
+              )
+            else
+              val (oneRule, newMapped) = genOneFieldRule( fd, mappedAlready )
+
+              // Now consider optionality. Drop any rules that are human-populated that are not required in target.
+              // Also consider src:Optional/target:Required fields and wrap that rule in a OrElseFieldAssignment if *not* human-populated already
+              fd.required match {
+                case (false,true) if !oneRule.isPlaceholder => // wrap if needed
+                  loop(f.tail, acc :+ OrElseFieldAssignment(fd.canonicalName, oneRule, "???", ValueKind.Constant, true), newMapped)
+                case (x,false) if !fd.presence._1 || oneRule.isPlaceholder => // drop placeholder if not required in target
+                  //
+                  // NOTE: We may want *NOT* to drop these if users prefer to manually set target-optional fields
+                  //
+                  loop(f.tail, acc, mappedAlready)
+                case _ =>
+                  loop(f.tail, acc :+ oneRule, newMapped)
+              }
         }
 
       loop( fs, Nil, Set.empty[String] )._1
@@ -115,19 +139,26 @@ object RuleGenerator:
       s.replaceAll("""\[\s*[^]]+\s*\]""", s"[$newParam]")
 
     def genSegmentRule( seg: SegmentDifference ): Option[SegmentAssignment] =
-      val fieldsPresentInTarget = seg.fieldDiff.filter(_.presence._2)
+      import DiffRelevance.*
+      val fieldsPresentInTarget = seg.fieldDiff.filter(f => f.presence._2 && !(!f.presence._1 && !f.required._2))
       seg match {
-        case _ if seg.presence == (false,false) || (!seg.presence._1 && !seg.required._2)=>
-          None
 
-        case _ if seg.presence == (true,false) =>
+        case _ if seg.relevance == SRC_PRESENT_TARGET_MISSING =>
+//        case _ if seg.presence == (true,false) =>
           Some(NoOpSegmentAssignment(seg.canonicalName))
 
-        case s: SimpleSegmentDifference if seg.presence == (false,true) && seg.required._2 =>  // missing from src, required in target
+        // Skip ST/SE segments b/c we handle them as first-class parsed objects rather than general X12 segments
+        case _ if seg.relevance == TARGET_MISSING || seg.relevance == SRC_MISSING_TARGET_OPTIONAL || seg.canonicalName == "ST" || seg.canonicalName == "SE" =>
+//        case _ if seg.presence == (false,false) || (!seg.presence._1 && !seg.required._2) || seg.canonicalName == "ST" || seg.canonicalName == "SE" =>
+          None
+
+        case s: SimpleSegmentDifference if seg.relevance == SRC_MISSING_TARGET_REQ =>  // missing from src, required in target
+//        case s: SimpleSegmentDifference if seg.presence == (false,true) && seg.required._2 =>  // missing from src, required in target
           val noneFields = fieldsPresentInTarget.map(f => GeneralFieldAssignment(f.canonicalName, "???", ValueKind.Constant, true))
           Some(FieldsSegmentAssignment(seg.canonicalName, noneFields, true))
 
-        case s: LoopSegmentDifference if seg.presence == (false,true) && seg.required._2 =>  // missing from src, required in target
+        case s: LoopSegmentDifference if seg.relevance == SRC_MISSING_TARGET_REQ =>  // missing from src, required in target
+//        case s: LoopSegmentDifference if seg.presence == (false,true) && seg.required._2 =>  // missing from src, required in target
           val noneAssign = { // segment missing in src--assign all fields manually
             val bodyAssign = generate(s.bodyDiff, enums)
             val nestAssign = s.nested.flatMap(genSegmentRule).asInstanceOf[Option[LoopSegmentAssignment]]
@@ -141,21 +172,12 @@ object RuleGenerator:
           }
           Some(noneAssign)
 
-        // Target present, src/target both required -or- src required/target optional -or- src/target optional
-        case s: SimpleSegmentDifference if s.required._1 || s.required == (false,false) =>
+        case s: SimpleSegmentDifference if s.relevance == MATCH =>
+//        case s: SimpleSegmentDifference if s.required._1 || s.required == (false,false) =>
           Some(FieldsSegmentAssignment(s.canonicalName, genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil))))
 
-        // Target present, src optional/target required
-        case s: SimpleSegmentDifference if s.required == (false, true) =>
-          val someAssign =
-            FieldsSegmentAssignment(s.canonicalName, genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil)))
-          val noneAssign = {
-            val noneFields = fieldsPresentInTarget.map(f => GeneralFieldAssignment(f.canonicalName, "???", ValueKind.Constant, true))
-            FieldsSegmentAssignment(s.canonicalName, noneFields)
-          }
-          Some(OrElseFieldsSegmentAssignment(s.canonicalName, someAssign, noneAssign))
-
-        case s: LoopSegmentDifference if s.required._1 || s.required == (false,false) =>
+        case s: LoopSegmentDifference if s.relevance == MATCH =>
+          //        case s: LoopSegmentDifference if s.required._1 || s.required == (false,false) =>
           val bodyAssign = generate(s.bodyDiff, enums)
           val nestAssign = s.nested.flatMap(genSegmentRule).asInstanceOf[Option[LoopSegmentAssignment]]
           Some(LoopSegmentAssignment(
@@ -165,7 +187,19 @@ object RuleGenerator:
             nestAssign)
           )
 
-        case s: LoopSegmentDifference if s.required == (false, true) =>
+        // Target present, src optional/target required
+        case s: SimpleSegmentDifference if s.relevance == SRC_OPT_TARGET_REQ =>
+//        case s: SimpleSegmentDifference if s.required == (false, true) =>
+          val someAssign =
+            FieldsSegmentAssignment(s.canonicalName, genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil)))
+          val noneAssign = {
+            val noneFields = fieldsPresentInTarget.map(f => GeneralFieldAssignment(f.canonicalName, "???", ValueKind.Constant, true))
+            FieldsSegmentAssignment(s.canonicalName, noneFields)
+          }
+          Some(OrElseFieldsSegmentAssignment(s.canonicalName, someAssign, noneAssign))
+
+        case s: LoopSegmentDifference if s.relevance == SRC_OPT_TARGET_REQ =>
+//        case s: LoopSegmentDifference if s.required == (false, true) =>
           val bodyAssign = generate(s.bodyDiff, enums)
           val nestAssign = s.nested.flatMap(genSegmentRule).asInstanceOf[Option[LoopSegmentAssignment]]
           val someAssign =  // segment present in src--assign normally
