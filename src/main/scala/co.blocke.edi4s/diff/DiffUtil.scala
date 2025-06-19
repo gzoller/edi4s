@@ -132,3 +132,35 @@ object DiffUtil:
     }
     loop.copy(fields = newFields)
   }
+
+  // Descending entire diff tree--prune away any entries that produce no target output:
+  // * target.availability == MISSING
+  // * src.availability == MISSING, target.availability == OPTIONAL
+  def prune(diffs: List[Difference2]): List[Difference2] =
+    diffs.flatMap {
+      case s: SingleSegmentDifference2 =>
+        s.availability match
+          case (_, Availability.MISSING) => None
+          case (Availability.MISSING, Availability.OPTIONAL) => None
+          case _ => Some(s)
+
+      case l: LoopSegmentDifference2 =>
+        val prunedBody = prune(l.bodyDiff).collect {
+          case seg: SegmentDifference2 => seg
+        }
+
+        val prunedNested = l.nested.map { nestedLoop =>
+          // Recursively prune the nested loop and reconstruct
+          val nestedBody = prune(nestedLoop.bodyDiff).collect {
+            case seg: SegmentDifference2 => seg
+          }
+          val nestedNested = nestedLoop.nested.flatMap(n2 =>
+            prune(List(n2)).collectFirst { case loop: LoopSegmentDifference2 => loop })
+          nestedLoop.copy(bodyDiff = nestedBody, nested = nestedNested)
+        }
+
+        l.availability match
+          case (_, Availability.MISSING) => None
+          case (Availability.MISSING, Availability.OPTIONAL) => None
+          case _ => Some(l.copy(bodyDiff = prunedBody, nested = prunedNested))
+    }

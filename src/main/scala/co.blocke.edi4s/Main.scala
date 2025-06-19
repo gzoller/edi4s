@@ -74,7 +74,7 @@ object Main extends ZIOAppDefault {
       tj <- readRefined("specs/tj_856_4030.json")
 //      cm <- readRefined("specs/cm_856_5010.json")
 
-      diffs <- DiffEngine.compareSpecs(src, std, tj)
+//      diffs <- DiffEngine.compareSpecs(src, std, tj)
 //      table1 = DiffReport.asTable("Taylor Farms", "Trader Joes", diffs, false)
 //      _ <- ZIO.succeed(println(table1.toString))
 
@@ -89,8 +89,13 @@ object Main extends ZIOAppDefault {
 //      _ <- ZIO.succeed(println("HL Rule: "+hlRule))
       // --- end test
 
-      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffs, false)
-      _ <- ZIO.succeed(println(table.toString))
+//      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffs, false)
+//      _ <- ZIO.succeed(println(table.toString))
+
+      d <- DE.compareSpecs(src, std, tj)
+      pruned = DiffUtil.prune(d)
+      _ <- ZIO.succeed(println(pruned.mkString("\n")))
+      _ <- ZIO.succeed(println("--------------------------\n"+d.mkString("\n")))
 
 //      rules = mapper.RuleGenerator.generate(diffs, enums)
 //      _ <- ZIO.succeed(println("RULES: \n"+sjAssignment.toJson(MappingSpec(rules))))
