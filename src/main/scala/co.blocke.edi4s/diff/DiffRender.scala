@@ -3,13 +3,13 @@ package diff
 
 import model.*
 import table.*
-
+import Availability.*
 
 extension( fd: FieldDifference )
   def render(nestLevel: Int): List[BodyRow] = fd match {
     case sfd: SingleFieldDifference =>
       val rationalName = if sfd.name == sfd.canonicalName then sfd.name else s"${sfd.canonicalName} (${sfd.name})"
-      val presenceRow = DiffRender.presenceRow(rationalName, nestLevel, sfd.presence, sfd.required, Style.NEUTRAL)
+      val presenceRow = DiffRender.presenceRow(rationalName, nestLevel, sfd.availability, Style.NEUTRAL)
       val dataTypeRow = sfd.dataType.map { case (a, b) =>
         Row(
           List(
@@ -76,23 +76,16 @@ extension( fd: FieldDifference )
 
     case cfd: CompositeFieldDifference =>
       val rationalName = if cfd.name == cfd.canonicalName then cfd.name else s"${cfd.canonicalName} (${cfd.name})"
-      val presenceRow = DiffRender.presenceRow(rationalName, nestLevel, cfd.presence, cfd.required, Style.NEUTRAL)
+      val presenceRow = DiffRender.presenceRow(rationalName, nestLevel, cfd.availability, Style.NEUTRAL)
       val fieldsRows = cfd.fieldDiff.flatMap(_.render(nestLevel+1))
       List(presenceRow) ++ fieldsRows
-
-    case fde: FieldDifferenceError => List.empty
   }
 
 
 extension (sd: SegmentDifference)
   private def renderSeg(nestLevel: Int, s: SegmentDifference): List[BodyRow] =
     val rationalName = if s.name == s.canonicalName then s.name else s"${s.canonicalName} (${s.name})"
-    val (r1, r2) = s.required match {
-      case (true, false) => ("required", "optional")
-      case (false, true) => ("optional", "required")
-      case _ => ("", "")
-    }
-    val presenceRow = DiffRender.presenceRow(rationalName, nestLevel, s.presence, s.required, Style.SECONDARY)
+    val presenceRow = DiffRender.presenceRow(rationalName, nestLevel, s.availability, Style.SECONDARY)
     val fieldRows = if DiffRender.isMuted(presenceRow) then List.empty else s.fieldDiff.flatMap(_.render(nestLevel + 1))
     List(presenceRow) ++ fieldRows
 
@@ -127,19 +120,20 @@ extension (sd: SegmentDifference)
       }
       val bodyRows = lsd.bodyDiff.flatMap( bd => bd.render(nestLevel+1) )
       val nestedRows = lsd.nested.map( n =>
-        n.presence match {
-          case (true,false) => List(Row(List(
-            Cell(n.canonicalName, indent = nestLevel+1, style=Some(Style.ALERT)),
-            Cell({if n.required._1 then "required" else "optional"}, style=Some(Style.ALERT)),
-            Cell(n.canonicalName, indent = nestLevel+1, style=Some(Style.ALERT)),
-            Cell("missing", style=Some(Style.ALERT))
-          )))
-          case (false, true) if !n.required._2 => List.empty // no issue if src is missing if not required in target
-          case (false, true) => List(Row(List(
+        n.availability match {
+          case (_, MISSING) => List.empty // no issue if src is missing if not required in target
+          case (MISSING, OPTIONAL) => List.empty // no issue if src is missing if not required in target
+          case (MISSING, REQUIRED) => List(Row(List(
             Cell(n.canonicalName, indent = nestLevel+1, style=Some(Style.ALERT)),
             Cell("missing", style=Some(Style.ALERT)),
             Cell(n.canonicalName, indent = nestLevel+1, style=Some(Style.ALERT)),
-            Cell({if n.required._1 then "required" else "optional"}, style=Some(Style.ALERT))
+            Cell("required", style=Some(Style.ALERT))
+          )))
+          case (OPTIONAL,REQUIRED) => List(Row(List(
+            Cell(n.canonicalName, indent = nestLevel+1, style=Some(Style.ALERT)),
+            Cell("optional", style=Some(Style.ALERT)),
+            Cell(n.canonicalName, indent = nestLevel+1, style=Some(Style.ALERT)),
+            Cell("required", style=Some(Style.ALERT))
           )))
           case _ => n.render(nestLevel+1)
         }
@@ -153,9 +147,9 @@ object DiffRender:
 
   def isMuted(row: Row): Boolean = row.cells.forall(_.style.contains(Style.MUTED))
 
-  def presenceRow( label: String, nestLevel: Int, presence: (Boolean,Boolean), required: (Boolean,Boolean), okStyle: Style ): Row =
-    presence match {
-      case (_, false) => // target missing--nothing else matters
+  def presenceRow( label: String, nestLevel: Int, avail: (Availability,Availability), okStyle: Style ): Row =
+    avail match {
+      case (_, MISSING) =>
         Row(
           List(
             Cell(label, indent = nestLevel, style = Some(Style.MUTED)),
@@ -164,7 +158,7 @@ object DiffRender:
             Cell("missing", style = Some(Style.MUTED))
           )
         )
-      case (false, _) if !required._2 => // src missing, target present/optional
+      case (MISSING, OPTIONAL) =>
         Row(
           List(
             Cell(label, indent = nestLevel, style = Some(Style.MUTED)),
@@ -173,7 +167,7 @@ object DiffRender:
             Cell("optional", style = Some(Style.MUTED))
           )
         )
-      case (false, _) if required._2 => // src missing, target present/required
+      case (MISSING, REQUIRED) =>
         Row(
           List(
             Cell(label, indent = nestLevel, style = Some(Style.MUTED)),
@@ -182,7 +176,7 @@ object DiffRender:
             Cell("required", style = Some(Style.WARN))
           )
         )
-      case (true, _) if required == (false, true) => // src optional, target required
+      case (OPTIONAL, REQUIRED) =>
         Row(
           List(
             Cell(label, indent = nestLevel, style = Some(okStyle)),
@@ -191,7 +185,7 @@ object DiffRender:
             Cell("required", style = Some(Style.WARN))
           )
         )
-      case (true, _) if required == (true, false) => // src required, target optional
+      case (REQUIRED, OPTIONAL) =>
         Row(
           List(
             Cell(label, indent = nestLevel, style = Some(okStyle)),

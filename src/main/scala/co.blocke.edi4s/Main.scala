@@ -74,31 +74,13 @@ object Main extends ZIOAppDefault {
       tj <- readRefined("specs/tj_856_4030.json")
 //      cm <- readRefined("specs/cm_856_5010.json")
 
-//      diffs <- DiffEngine.compareSpecs(src, std, tj)
-//      table1 = DiffReport.asTable("Taylor Farms", "Trader Joes", diffs, false)
-//      _ <- ZIO.succeed(println(table1.toString))
+      // Demo 1 -- Compute differences in X12 specs and display as table
+      diffs <- DiffEngine.compareSpecs(src, std, tj)
+      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffs, false)
+      _ <- ZIO.succeed(println(table.toString))
 
-      // Test
-//      hlSrc = DiffUtil.getHLLevels( src.segments.find(_.name == "HL").get.asInstanceOf[RefinedLoopSpec] )
-//      hlTarget = DiffUtil.getHLLevels( tj.segments.find(_.name == "HL").get.asInstanceOf[RefinedLoopSpec] )
-//      _ <- ZIO.succeed(println("Src   : "+hlSrc.mkString(",")))
-//      _ <- ZIO.succeed(println("Target: "+hlTarget.mkString(",")))
-//      z = List(("Shipment","S"),("Order","O"),("Tare","T"),("Pack","P"),("Item","I"))
-//      _ <- ZIO.succeed(println("Target: "+z.mkString(",")))
-//      hlRule <- DiffUtil.analyzeHLStructures(hlSrc, z)
-//      _ <- ZIO.succeed(println("HL Rule: "+hlRule))
-      // --- end test
-
-//      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffs, false)
-//      _ <- ZIO.succeed(println(table.toString))
-
-      d <- DE.compareSpecs(src, std, tj)
-      pruned = DiffUtil.prune(d)
-      _ <- ZIO.succeed(println(pruned.mkString("\n")))
-      _ <- ZIO.succeed(println("--------------------------\n"+d.mkString("\n")))
-
-//      rules = mapper.RuleGenerator.generate(diffs, enums)
-//      _ <- ZIO.succeed(println("RULES: \n"+sjAssignment.toJson(MappingSpec(rules))))
+      rules = MappingSpec(mapper.RuleGenerator.generate(diffs, enums))
+      _ <- ZIO.succeed(println("RULES: \n"+ sjAssignment.toJson(rules)))
 
 
 // >> Emitting X12
@@ -107,16 +89,14 @@ object Main extends ZIOAppDefault {
       //      sb = Emitter.emitTransaction(cfg, isa)
       //      _ <- ZIO.succeed(println(sb.split("~").mkString("\n").toString))
 
-      /*
       doc = readFileToString(new File("test/foo.x12"))
       (isa,cfg) <- X12Parser.parse(doc, TokenizerConfig())
-      rules <- readJson[MappingSpec]("test/rules.json")
+//      rules <- readJson[MappingSpec]("test/rules.json")
       mapped <- MapRunner.mapWithRules(isa, rules)
       sb2 = Emitter.emitTransaction(cfg, mapped)
       _ <- ZIO.succeed(println(sb2.toString
         .split("~", -1)        // -1 to preserve empty segments between ~~ (like HL*...~~)
         .mkString("~\n")))
-       */
 
     } yield ()
 

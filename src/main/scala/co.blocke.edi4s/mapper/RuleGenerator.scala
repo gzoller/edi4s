@@ -2,6 +2,7 @@ package co.blocke.edi4s
 package mapper
 
 import model.*
+import Availability.*
 
 import scala.annotation.tailrec
 
@@ -10,7 +11,7 @@ object RuleGenerator:
 
   def generate( diffs: List[SegmentDifference], enums: EnumFieldMap ): List[SegmentAssignment] =
 
-    def collectHlPath(diff: LoopSegmentDifference): String =
+    def collectHlPath(prunedDiff: LoopSegmentDifference): String =
       @annotation.tailrec
       def loop(current: Option[LoopSegmentDifference], acc: List[String]): String = current match
         case Some(ld) =>
@@ -18,7 +19,7 @@ object RuleGenerator:
         case None =>
           acc.reverse.mkString
 
-      loop(Some(diff), Nil)
+      loop(Some(prunedDiff), Nil)
 
     // Pre-scan for HL (LoopSegmentDifference) and build loop hierarchy string--used for BSN05 field
     val hlHierarchyBSN05: Option[String] =
@@ -119,10 +120,10 @@ object RuleGenerator:
 
               // Now consider optionality. Drop any rules that are human-populated that are not required in target.
               // Also consider src:Optional/target:Required fields and wrap that rule in a OrElseFieldAssignment if *not* human-populated already
-              fd.required match {
-                case (false,true) if !oneRule.isPlaceholder => // wrap if needed
+              fd.availability match {
+                case (MISSING,REQUIRED) if !oneRule.isPlaceholder => // wrap if needed
                   loop(f.tail, acc :+ OrElseFieldAssignment(fd.canonicalName, oneRule, "???", ValueKind.Constant, true), newMapped)
-                case (x,false) if !fd.presence._1 || oneRule.isPlaceholder => // drop placeholder if not required in target
+                case (MISSING,OPTIONAL) => // drop placeholder if not required in target
                   //
                   // NOTE: We may want *NOT* to drop these if users prefer to manually set target-optional fields
                   //
@@ -139,25 +140,33 @@ object RuleGenerator:
       s.replaceAll("""\[\s*[^]]+\s*\]""", s"[$newParam]")
 
     def genSegmentRule( seg: SegmentDifference ): Option[SegmentAssignment] =
-      import DiffRelevance.*
-      val fieldsPresentInTarget = seg.fieldDiff.filter(f => f.presence._2 && !(!f.presence._1 && !f.required._2))
-      seg match {
+      val fieldsPresentInTarget = seg.fieldDiff.filter(f => f.availability._2 != MISSING && !(f.availability == (MISSING,REQUIRED)))
 
-        case _ if seg.relevance == SRC_PRESENT_TARGET_MISSING =>
+      (seg,seg.availability) match {
+
+        case (_,(MISSING,MISSING)) =>
+          //        case _ if seg.presence == (false,false) || (!seg.presence._1 && !seg.required._2) || seg.canonicalName == "ST" || seg.canonicalName == "SE" =>
+          None
+
+        case (_,(_,MISSING)) =>
 //        case _ if seg.presence == (true,false) =>
           Some(NoOpSegmentAssignment(seg.canonicalName))
 
         // Skip ST/SE segments b/c we handle them as first-class parsed objects rather than general X12 segments
-        case _ if seg.relevance == TARGET_MISSING || seg.relevance == SRC_MISSING_TARGET_OPTIONAL || seg.canonicalName == "ST" || seg.canonicalName == "SE" =>
+        case (s,(_,_)) if s.canonicalName == "ST" || s.canonicalName == "SE" =>
+          //        case _ if seg.presence == (false,false) || (!seg.presence._1 && !seg.required._2) || seg.canonicalName == "ST" || seg.canonicalName == "SE" =>
+          None
+
+        case (_,(MISSING,OPTIONAL)) =>
 //        case _ if seg.presence == (false,false) || (!seg.presence._1 && !seg.required._2) || seg.canonicalName == "ST" || seg.canonicalName == "SE" =>
           None
 
-        case s: SimpleSegmentDifference if seg.relevance == SRC_MISSING_TARGET_REQ =>  // missing from src, required in target
+        case (s:SingleSegmentDifference, (MISSING,REQUIRED)) =>  // missing from src, required in target
 //        case s: SimpleSegmentDifference if seg.presence == (false,true) && seg.required._2 =>  // missing from src, required in target
           val noneFields = fieldsPresentInTarget.map(f => GeneralFieldAssignment(f.canonicalName, "???", ValueKind.Constant, true))
-          Some(FieldsSegmentAssignment(seg.canonicalName, noneFields, true))
+          Some(SingleSegmentAssignment(seg.canonicalName, noneFields, true))
 
-        case s: LoopSegmentDifference if seg.relevance == SRC_MISSING_TARGET_REQ =>  // missing from src, required in target
+        case (s:LoopSegmentDifference, (MISSING,REQUIRED)) =>  // missing from src, required in target
 //        case s: LoopSegmentDifference if seg.presence == (false,true) && seg.required._2 =>  // missing from src, required in target
           val noneAssign = { // segment missing in src--assign all fields manually
             val bodyAssign = generate(s.bodyDiff, enums)
@@ -172,11 +181,11 @@ object RuleGenerator:
           }
           Some(noneAssign)
 
-        case s: SimpleSegmentDifference if s.relevance == MATCH =>
+        case (s:SingleSegmentDifference, (a, b)) if a == b =>
 //        case s: SimpleSegmentDifference if s.required._1 || s.required == (false,false) =>
-          Some(FieldsSegmentAssignment(s.canonicalName, genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil))))
+          Some(SingleSegmentAssignment(s.canonicalName, genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil))))
 
-        case s: LoopSegmentDifference if s.relevance == MATCH =>
+        case (s:LoopSegmentDifference, (a, b)) if a == b =>
           //        case s: LoopSegmentDifference if s.required._1 || s.required == (false,false) =>
           val bodyAssign = generate(s.bodyDiff, enums)
           val nestAssign = s.nested.flatMap(genSegmentRule).asInstanceOf[Option[LoopSegmentAssignment]]
@@ -188,17 +197,17 @@ object RuleGenerator:
           )
 
         // Target present, src optional/target required
-        case s: SimpleSegmentDifference if s.relevance == SRC_OPT_TARGET_REQ =>
+        case (s:SingleSegmentDifference, (OPTIONAL,REQUIRED)) =>
 //        case s: SimpleSegmentDifference if s.required == (false, true) =>
           val someAssign =
-            FieldsSegmentAssignment(s.canonicalName, genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil)))
+            SingleSegmentAssignment(s.canonicalName, genFieldRules(fieldsPresentInTarget, enums.getOrElse(s.canonicalName, Nil)))
           val noneAssign = {
             val noneFields = fieldsPresentInTarget.map(f => GeneralFieldAssignment(f.canonicalName, "???", ValueKind.Constant, true))
-            FieldsSegmentAssignment(s.canonicalName, noneFields)
+            SingleSegmentAssignment(s.canonicalName, noneFields)
           }
-          Some(OrElseFieldsSegmentAssignment(s.canonicalName, someAssign, noneAssign))
+          Some(OrElseSingleSegmentAssignment(s.canonicalName, someAssign, noneAssign))
 
-        case s: LoopSegmentDifference if s.relevance == SRC_OPT_TARGET_REQ =>
+        case (s:LoopSegmentDifference, (OPTIONAL,REQUIRED)) =>
 //        case s: LoopSegmentDifference if s.required == (false, true) =>
           val bodyAssign = generate(s.bodyDiff, enums)
           val nestAssign = s.nested.flatMap(genSegmentRule).asInstanceOf[Option[LoopSegmentAssignment]]
@@ -217,7 +226,7 @@ object RuleGenerator:
               nestAssign
             )
           }
-          Some(OrElseFieldsSegmentAssignment(s.canonicalName, someAssign, noneAssign))
+          Some(OrElseSingleSegmentAssignment(s.canonicalName, someAssign, noneAssign))
 
         // Cases we don't care about: e.g. not present in target -- should never happen
         case _ =>

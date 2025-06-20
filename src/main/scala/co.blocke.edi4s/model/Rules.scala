@@ -10,7 +10,7 @@ sealed trait SegmentAssignment:
   def canonicalName: String
 
 
-case class FieldsSegmentAssignment(
+case class SingleSegmentAssignment(
                                     canonicalName: String,
                                     fieldAssignments: List[FieldAssignment],
                                     missingInSrc: Boolean = false
@@ -28,7 +28,7 @@ case class LoopSegmentAssignment(
                                   ) extends SegmentAssignment
 
 // For src-optional, target-required segments
-case class OrElseFieldsSegmentAssignment(
+case class OrElseSingleSegmentAssignment(
                                     canonicalName: String,
                                     someAssignment: SegmentAssignment,
                                     noneAssignment: SegmentAssignment
