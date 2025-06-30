@@ -17,6 +17,7 @@ sealed trait Difference:
 sealed trait SegmentDifference extends Difference:
   val assertions: Option[(List[String], List[String])]
   val fieldDiff: List[FieldDifference]
+  val availability: (Availability, Availability)
 
 
 case class SingleSegmentDifference(

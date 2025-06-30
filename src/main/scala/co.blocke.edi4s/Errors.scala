@@ -1,7 +1,5 @@
 package co.blocke.edi4s
 
-import model.Path
-
 // Something bad happened while trying to parse the canonical json spec
 case class CanonicalError(msg: String)
 

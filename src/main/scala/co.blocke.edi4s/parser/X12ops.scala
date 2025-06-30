@@ -1,7 +1,7 @@
 package co.blocke.edi4s
-package mapper
+package parser
 
-import model.*
+import co.blocke.edi4s.model.*
 import scala.annotation.tailrec
 
 object X12ops:

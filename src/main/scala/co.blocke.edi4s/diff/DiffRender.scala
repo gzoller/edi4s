@@ -149,11 +149,16 @@ object DiffRender:
 
   def presenceRow( label: String, nestLevel: Int, avail: (Availability,Availability), okStyle: Style ): Row =
     avail match {
-      case (_, MISSING) =>
+      case (s, MISSING) =>
+        val sstr = s match {
+          case MISSING => "missing"
+          case OPTIONAL => "optional"
+          case REQUIRED => "required"
+        }
         Row(
           List(
             Cell(label, indent = nestLevel, style = Some(Style.MUTED)),
-            Cell("skipped", style = Some(Style.MUTED)),
+            Cell(sstr, style = Some(Style.MUTED)),
             Cell(label, indent = nestLevel, style = Some(Style.MUTED)),
             Cell("missing", style = Some(Style.MUTED))
           )

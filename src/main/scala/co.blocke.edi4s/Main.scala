@@ -57,7 +57,7 @@ object Main extends ZIOAppDefault {
     }
 
 
-  def run: ZIO[ZIOAppArgs & Scope, CanonicalError | X12ParseError | DifferenceError | MappingError | Throwable, Unit] = {
+  def run: ZIO[ZIOAppArgs & Scope, CanonicalError | X12ParseError | DifferenceError | MappingTrace | Throwable, Unit] = {
 
     for {
       _ <- ZIO.succeed("Starting!")
@@ -76,20 +76,24 @@ object Main extends ZIOAppDefault {
 
       // Demo 1 -- Compute differences in X12 specs and display as table
       diffs <- DiffEngine.compareSpecs(src, std, tj)
-      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffs, false)
+//      _ <- ZIO.succeed(println(DiffUtil.prune(diffs).map(_.toString).mkString("\n")))
+//      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", diffs)
+      table = DiffReport.asTable("Taylor Farms", "Trader Joe's", DiffUtil.prune(diffs))
       _ <- ZIO.succeed(println(table.toString))
 
-      rules = MappingSpec(mapper.RuleGenerator.generate(diffs, enums))
-      _ <- ZIO.succeed(println("RULES: \n"+ sjAssignment.toJson(rules)))
+      rules = MappingSpec(mapper.RuleGenerator.generate(DiffUtil.prune(diffs), enums))
+//      _ <- ZIO.succeed(println(rules))
+//      _ <- ZIO.succeed(println("RULES: \n"+ sjAssignment.toJson(rules)))
 
 
-// >> Emitting X12
+// >> Emitting X120
       //      doc = readFileToString(new File("test/OUT_ASN_856_TJ.x12"))
       //      doc = readFileToString(new File("specs/raw_x12/sample_856.x12"))
       //      sb = Emitter.emitTransaction(cfg, isa)
       //      _ <- ZIO.succeed(println(sb.split("~").mkString("\n").toString))
 
-      doc = readFileToString(new File("test/foo.x12"))
+      doc = readFileToString(new File("test/TJ_856_sample.x12"))
+//      doc = readFileToString(new File("test/foo.x12"))
       (isa,cfg) <- X12Parser.parse(doc, TokenizerConfig())
 //      rules <- readJson[MappingSpec]("test/rules.json")
       mapped <- MapRunner.mapWithRules(isa, rules)

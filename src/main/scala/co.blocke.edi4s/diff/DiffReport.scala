@@ -11,8 +11,7 @@ object DiffReport:
   def asTable(
             srcPartner: String,
             targetPartner: String,
-            diffs: List[SegmentDifference],
-            filterUnused: Boolean = true
+            diffs: List[SegmentDifference]
           ): Table =
     val titles = List(
       Title(List(Cell("📦 EDI Segment Comparison Report"))),
@@ -24,13 +23,14 @@ object DiffReport:
       Cell(s"Target ($targetPartner)"),
       Cell("Difference")
     ))
-    val rawRows = diffs.foldLeft(List.empty[BodyRow]) { case (acc, diff) => acc ++ diff.render() }
-    val rows = if filterUnused then
-      rawRows.filter { row =>
-        // keep rows that have at least one cell *not* muted
-        row.cells.exists(cell => !cell.style.contains(Style.MUTED))
-      }
-    else rawRows
+    val rows = diffs.foldLeft(List.empty[BodyRow]) { case (acc, diff) => acc ++ diff.render() }
+//   << DEPRECATED >> We can no do DiffUtil.prune() before calling asTable
+//    val rows = if filterUnused then
+//      rawRows.filter { row =>
+//        // keep rows that have at least one cell *not* muted
+//        row.cells.exists(cell => !cell.style.contains(Style.MUTED))
+//      }
+//    else rawRows
     Table(
       title = titles,
       columns = 4,

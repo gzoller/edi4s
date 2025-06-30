@@ -4,93 +4,12 @@ package mapper
 import zio.*
 import model.*
 import scala.annotation.tailrec
+import Availability.*
 
 object MapRunner:
 
-  val MAX_BREAK = 5000 // max number of iterations before we decide we're in an endless loop--this may fail for very large messages!
+  val MAX_BREAK = 200 // max number of iterations before we decide we're in an endless loop--this may fail for very large messages!
 
-  case class Frame( rules: List[SegmentAssignment], var pc: Int = 0 )
-
-  case class EC( accOut: List[SegmentX12Token] = Nil, frames: List[Frame] = Nil ):
-
-    def pushFrame(rules: List[SegmentAssignment] ): EC =
-//      println("  EC PUSHED FRAME: \n"+rules.map(r => r.canonicalName+ " :: "+r.getClass.getName).mkString("    ","\n    ",""))
-      this.copy( frames = Frame(rules) :: this.frames )
-
-    def popFrame: EC =
-      val popped = this.copy( frames = frames.drop(1) )
-//      println(" || popped next-rule "+popped.peek.map(_.canonicalName)) // skip the rule that caused the push we're now popping
-      popped
-
-    def next: Option[SegmentAssignment] =
-      frames.headOption.flatMap{ f =>
-        val result = f.rules.lift(f.pc)
-        f.pc += 1
-        result
-      }
-
-    def backspace: EC = this.copy(frames = frames match {
-      case h::t => h.copy(pc = h.pc-1) +: t
-      case Nil => Nil
-    })
-
-    def +( out: SegmentX12Token ): EC =
-//      println(" --> Mapped "+out.name)
-      this.copy(accOut = this.accOut :+ out)
-
-    def peek: Option[SegmentAssignment] = this.frames.headOption.flatMap(f => f.rules.lift(f.pc))
-
-    def showFrames: String =
-      "Frames:\n"+ {
-        if frames == Nil then "(empty)"
-        else
-          frames.map(f => "   -------------<<\n" + f.rules.map(r => "   "+r.canonicalName + " -> " + r.getClass.getCanonicalName).mkString("\n")).mkString("\n")
-      }
-
-
-  /*
-    Src Spec HL[P]:
-       LIN
-       SN1
-       PO4
-       PID
-
-    Target Spec HL[P]:
-       PO4
-       REF
-       MAN
-       DTM
-       N1
-
-    Src Data:
-       LIN
-       SN1
-       PID
-       TD1
-
-    Expected Output:
-       PO4
-       MAN (synthetic--not in src)
-
-    Rules:
-       LIN (no-op)
-       SN1 (no-op)
-       PO4 (assignment)
-       PID (no-op)
-       MAN (synthetic assignment)
-       *** Missing TD1 *** <- Or maybe TD1 belongs to a popped frame?
-
-    Problem: How to represent a rule/placeholder for when src does not contain a required field in target?
-    If src contains a segment NOT used in target we get a NoOpAssignment placeholder
-
-    Bad structure. Source data has TD1, which is not part of HL[Pack]. The data also has an N1 in HL[P] that isn't in the source spec.
-      In HL[I] src has PO4, which isn't in spec and is optional in target (correctly, no rule is generated for it)
-
-
-      EDI 997 is a functional ack.  Sent by receiver and may include errors. It says "I got this document." Doesn't
-      guarantee it was successfully ingested.
-
-    */
 
   private inline def resolveHLName( token: SegmentX12Token ): Option[String] =
     if token.name == "HL" then
@@ -101,26 +20,7 @@ object MapRunner:
 
   private inline def fieldNum(f: String) = f.takeRight(2).toInt
 
-  private def allTargetFields(assignments: List[FieldAssignment]): List[String] =
-    assignments.flatMap {
-      case e: EnumMatchFieldAssignment =>
-        // Include the EnumMatch’s own targetField and recurse into all case field assignments
-        val caseFields = e.cases.values.flatten.toList.flatMap(a => allTargetFields(List(a)))
-        e.targetField :: caseFields
-
-      case o: OrElseFieldAssignment =>
-        // Include the targetField and recurse into the `assignment` field
-        o.targetField :: allTargetFields(List(o.assignment))
-
-      case g: GeneralFieldAssignment =>
-        List(g.targetField)
-    }
-
-  private def maxTargetFieldNumber(assignments: List[FieldAssignment]): Int =
-    allTargetFields(assignments).sorted.lastOption.map(fieldNum).getOrElse(0)
-
-  private def applyFieldAssignments(segRule: SingleSegmentAssignment | LoopSegmentAssignment, data: SegmentX12Token ): List[X12Token] =
-
+  private def applyFieldAssignments(segRule: SingleSegmentAssignment | LoopSegmentAssignment, data: SegmentX12Token): List[X12Token] =
     def resolveFieldValue(f: X12Token): Option[String] = f match {
       case fv: SimpleX12Token => Some(fv.value)
       case fv: EmptyX12Token => Some("")
@@ -128,36 +28,36 @@ object MapRunner:
     }
 
     val dataMap = data.fields.map(f => (f.name -> f)).toMap
-//    println(dataMap)
+  //    println(dataMap)
 
-    def resolveValueKind( kind: ValueKind, v: String, targetField: String ): String =  // <<< Make this an option vs returning ERROR. May be ok if not found and field is optional!
-      kind match {
-        case ValueKind.Constant => v
-        case ValueKind.Direct => dataMap.get(targetField).flatMap(resolveFieldValue).getOrElse("ERROR")
-        case _ => "<CTX>"
-      }
-
-    val fieldAssigns = segRule match {
-      case f: SingleSegmentAssignment => f.fieldAssignments
-      case f: LoopSegmentAssignment => f.fieldAssignments
+  //    val fieldAssigns = segRule.fieldAssignments
+  //    val maxFields = maxTargetFieldNumber(fieldAssigns)  // take last 2 digits
+    val maxFields = segRule.fieldAssignments.lastOption match {
+      case Some(m: MatchFieldAssignment) =>  // for Match, we gotta dig deeper to discover the ordinality of the fields
+        m.cases(m.cases.keySet.toList.head).lastOption.map(fa => fa.targetField.takeRight(2).toInt).getOrElse(0)
+      case _ => segRule.fieldAssignments.lastOption.map(fa => fa.targetField.takeRight(2).toInt).getOrElse(0)
     }
-    val maxFields = maxTargetFieldNumber(fieldAssigns)  // take last 2 digits
 
     def assignOneField( f: FieldAssignment, slots: List[String] ): List[String] =
       f match {
-        case fa: GeneralFieldAssignment =>
-//          println("Updating " + fa.targetField + " num " + fieldNum(fa.targetField))
-          val v = resolveValueKind(fa.valueKind, fa.value, fa.targetField)
+        // This should never happen in production!
+        case fa: PlaceholderAssignment =>
+          val fnum = fieldNum(fa.targetField)
+          slots.updated(fnum-1, fa.dummyValue)
+        case fa: DirectAssignment =>
+  //          println("Updating " + fa.targetField + " num " + fieldNum(fa.targetField))
+          val v = dataMap.get(fa.targetField).flatMap(resolveFieldValue).getOrElse("ERROR")
           val fnum = fieldNum(fa.targetField)
           slots.updated(fnum - 1, v)
-        case fa: OrElseFieldAssignment =>
-          if dataMap.contains(fa.targetField) then
-            assignOneField(fa.assignment, slots)
-          else
-            val v = resolveValueKind(fa.orElseValueKind, fa.orElseValue, fa.targetField)
-            val fnum = fieldNum(fa.targetField)
-            slots.updated(fnum - 1, v)
-        case fa: EnumMatchFieldAssignment =>
+        case fa: ConstantAssignment =>
+          //          println("Updating " + fa.targetField + " num " + fieldNum(fa.targetField))
+          val fnum = fieldNum(fa.targetField)
+          slots.updated(fnum - 1, fa.value)
+        case fa: ProfileAssignment =>
+          //          println("Updating " + fa.targetField + " num " + fieldNum(fa.targetField))
+          val fnum = fieldNum(fa.targetField)
+          slots.updated(fnum - 1, "<CTX>")  // TODO: Wire up to the context + profile object
+        case fa: MatchFieldAssignment =>
           dataMap.get(fa.targetField).map {
             case v: SimpleX12Token =>
               val fnum = fieldNum(fa.targetField)
@@ -169,43 +69,54 @@ object MapRunner:
             // TODO: Others... (eg repeated)
           }.get  // TODO: Use ZIO here to return error. fd.targetField was not in dataMap
       }
-//      if f.targetField.startsWith("PID") then
-//        println(s"   >> PID ${f.getClass.getName}: "+z)
-//      z
+  //      if f.targetField.startsWith("PID") then
+  //        println(s"   >> PID ${f.getClass.getName}: "+z)
+  //      z
 
-//    println("Map Segment "+segRule.canonicalName+" fields: "+fieldAssigns.size)
-    val slotsDone = fieldAssigns.foldLeft(Array.fill(maxFields)("").toList){ (wipSlots, fassign) => assignOneField(fassign, wipSlots) }
+  //    println("Map Segment "+segRule.canonicalName+" fields: "+fieldAssigns.size)
+    val slotsDone = segRule.fieldAssignments.foldLeft(Array.fill(maxFields)("").toList){ (wipSlots, fassign) => assignOneField(fassign, wipSlots) }
     val segName = if segRule.canonicalName.startsWith("HL[") then "HL" else segRule.canonicalName
     slotsDone.zipWithIndex.map{
       case ("", i) => EmptyX12Token( segName + f"${i+1}%02d" )
       case (v, i)  => SimpleX12Token( segName + f"${i+1}%02d", v )
     }
 
+  //----------------------------------------------------------------------------------
 
-  @tailrec
-  private def applySegAssignment(rule: SegmentAssignment, uponData: Option[SegmentX12Token], ec: EC, missingInSrc: Boolean = false ): EC =
-//    println( "   Assign = "+rule.getClass.getName+ " upon "+uponData)
-//    println( "                 EC: "+ec.accOut.map(_.name).mkString(","))
+  private inline def classname(c: Any) =
+//    println(">>> "+c.getClass.getName)
+    c.getClass.getName.split('.').last
+
+  private def applySegAssignment(rule: SegmentAssignment, uponData: Option[SegmentX12Token], ec: EC, trace: MappingTrace): (EC,MappingTrace,Boolean) =
+//    println( s"Assign segment ${uponData.map(_.name)} with assignment "+ rule.getClass.getName.split('.').last)
+    //    println( "                 EC: "+ec.accOut.map(_.name).mkString(","))
     rule match {
-      case a: NoOpSegmentAssignment => ec // no action
+      case a: NoOpSegmentAssignment =>
+//        println(s"   --- No-Op (${a.canonicalName}) ---")
+        (ec, trace + SegAssignEvent(a.canonicalName, classname(a)), false) // no action
       case a: SingleSegmentAssignment if uponData.isDefined =>
-        // TODO: Real field assignments here...dummy for now
-        ec + SegmentX12Token(rule.canonicalName, applyFieldAssignments(a, uponData.get))
+        (
+          ec + SegmentX12Token(rule.canonicalName, applyFieldAssignments(a, uponData.get)),
+          trace + SegAssignEvent(a.canonicalName, classname(a)),
+          false
+        )
       case a: SingleSegmentAssignment =>
-        ec // missing optional src and target is likewise optional (or it'd be OrElseFieldsSegmentAssignment!)
-      // TODO: What about LoopSeegmentAssignment w/no data?
+        (ec, trace + SegAssignEvent(a.canonicalName + " (optional+missing)", classname(a)), false) // missing optional src and target is likewise optional (or it'd be OrElseFieldsSegmentAssignment!)
+      // TODO: What about LoopSegmentAssignment w/no data?
       case a: LoopSegmentAssignment =>
         val fields = if uponData.isDefined then applyFieldAssignments(a, uponData.get) else Nil
         val stage1 = ec + SegmentX12Token(rule.canonicalName.replaceAll("""\[\w+]\s*""", ""), fields)
-        if missingInSrc then
-          stage1
+        if rule.availability._1 == MISSING then
+          (stage1, trace + SegAssignEvent(a.canonicalName + " (src missing)", classname(a)), true)
+        else if a.body.isEmpty then
+          (stage1.backspace, trace + SegAssignEvent(a.canonicalName, classname(a)), true)
         else
-//          println("     (push frame) "+a.canonicalName)
-          stage1.pushFrame(a.body)
-      case a: OrElseSingleSegmentAssignment if uponData.isDefined =>
-        applySegAssignment(a.someAssignment, uponData, ec)
-      case a: OrElseSingleSegmentAssignment =>
-        applySegAssignment(a.noneAssignment, uponData, ec)
+          //          println("     (push frame) "+a.canonicalName)
+          (
+            stage1.pushFrame(a.canonicalName, a.body),
+            trace + LoopPushEvent(a.canonicalName, a.body.map(_.canonicalName)),
+            true
+          )
     }
 
   private def findHLLevel(level: String, loopRules: LoopSegmentAssignment): Option[LoopSegmentAssignment] =
@@ -217,95 +128,108 @@ object MapRunner:
   private def mapOneSegment(
                              segs: List[SegmentX12Token],
                              ec: EC,
+                             trace: MappingTrace,
                              loopLatch: Boolean = false, // set to true to ignore (once) a missing element (end of loop)
                              breakLimit: Int = 0 // protect us from infinite loops
-                           ): ZIO[Any, MappingError, (List[SegmentX12Token], EC)] =
+                           ): ZIO[Any, MappingTrace, (List[SegmentX12Token], EC, MappingTrace)] =
 //    if segs.nonEmpty then
 //      println("Segment "+resolveHLName(segs.head) + " "+ec.peek.map(_.canonicalName))//ec.frames.head.pc)
-    if breakLimit > MAX_BREAK then ZIO.fail(MappingError("Endless loop for "+segs.headOption.map(_.name)))
+    if breakLimit > MAX_BREAK then
+      println("BOOM: \n"+trace.events.mkString("\n"))
+      ZIO.fail( trace + ErrorEvent("Endless loop detected for segment "+segs.headOption.map(_.name)))
     else
-    (segs, ec.next) match {
-      case (Nil,None) =>
-//        println("All done...")
-        ZIO.succeed(Nil, ec)  // successful completion
-      case (sH::sT, None) =>
-        // May be an error or end of a loop... need to check
-//        println("    (pop frame)")
-        val ecc = ec.popFrame.backspace
-//        println("LoopPop: "+sH.name + " -> "+ecc.peek.map(_.canonicalName))
-//        println("EC: "+ec.popFrame.backspace.frames)
-//        if xxx < 150 then
-//          println("re-mapping...(no loop repeat)")
-        mapOneSegment(segs, ecc, true, breakLimit+1)
-//          mapOneSegment(segs, ec.popFrame.backspace)
-//        else
-//          println(s"What happened? $xxx "+sH)
-//          ZIO.fail(MappingError(s"We've run out of mapping rules before we've run out of data at ${sH}."))
+      (segs, ec.next) match {
+        case (Nil,None) =>  // Successful completion
+          ZIO.succeed(Nil, ec, trace + DoneEvent()) // trace is ignored upon return because we succeeded
 
-      case (Nil, Some(r:SingleSegmentAssignment)) if r.missingInSrc =>
-//        println("(end of data) - Missing In Src"+" -> "+ec.peek.map(_.canonicalName))
-        mapOneSegment(segs, applySegAssignment(r, None, ec), false, breakLimit+1)  // don't advance segs
-      case (Nil, Some(r:LoopSegmentAssignment)) if r.missingInSrc =>
-//        println("(end of data) (loop) - Missing In Src"+" -> "+ec.peek.map(_.canonicalName))
-        mapOneSegment(segs, applySegAssignment(r, None, ec), false, breakLimit+1)  // don't advance segs
+        case (sH::sT, None) =>  // May be an error or end of a loop... need to check
+          //        println("    (pop frame)")
+          val ecc = ec.popFrame.backspace
+          ecc.frames.headOption match {
+            case Some(topFrame) =>
+              val newTrace = trace + EvalSegEvent(Some(sH.name), None, 1) + LoopPopEvent(topFrame.level, ecc.peek.map(_.canonicalName).getOrElse("unknown"))
+              //        println("LoopPop: "+sH.name + " -> "+ecc.peek.map(_.canonicalName))
+              mapOneSegment(segs, ecc, newTrace, true, breakLimit + 1)
+            case None =>
+              println("BOOM: \n"+trace)
+              ZIO.fail( trace + EvalSegEvent(Some(sH.name), None, 2) + ErrorEvent(s"End of rules detected yet there's more data at segment $breakLimit"))
+          }
 
-      case (Nil, Some(r)) =>
-        ZIO.fail(MappingError(s"We've run out of data before we've run out of mapping rules at ${r.canonicalName} segment ${ec.frames.head.pc}."))
+        case (Nil, Some(r:SingleSegmentAssignment)) if r.availability._1 == MISSING => // Single: missing in src and end of data (not an error)
+          val newTrace = trace + EvalSegEvent(None, Some(r.canonicalName), 3) + SegMatchEvent(r.canonicalName, true, false)
+          //        println("(end of data) - Missing In Src"+" -> "+ec.peek.map(_.canonicalName))
+          val (ec2, newTrace2, isLoop) = applySegAssignment(r, None, ec, newTrace)
+          mapOneSegment(segs, ec2, newTrace2, isLoop, breakLimit+1)  // don't advance segs
+        case (Nil, Some(r:LoopSegmentAssignment)) if r.availability._1 == MISSING => // Single: missing in src and end of data (not an error)
+          val newTrace = trace + EvalSegEvent(None, Some(r.canonicalName), 4) + SegMatchEvent(r.canonicalName, true, false)
+//          val nextTrace = trace + LoopSegmentTrace("(none)", r.getClass.getName.split('.').last, r.availability, Nil, None, Nil, false)
+          //        println("(end of data) (loop) - Missing In Src"+" -> "+ec.peek.map(_.canonicalName))
+          val (ec2, newTrace2, isLoop) = applySegAssignment(r, None, ec, newTrace)
+          mapOneSegment(segs, ec2, newTrace2, isLoop, breakLimit+1)  // don't advance segs
 
-//      case (sH::sT, Some(r:LoopSegmentAssignment)) if (sH.name == "HL" && (r.canonicalName == resolveHLName(sH))) =>
-      case (sH::sT, Some(r:LoopSegmentAssignment)) if sH.name == "HL" && r.canonicalName.startsWith("HL") =>
+        case (Nil, Some(r)) =>  // End of data but not missing in src, means unexpected early termination of input data
+          ZIO.fail( trace + EvalSegEvent(None, Some(r.canonicalName), 5) + ErrorEvent(s"We've run out of data before we've run out of mapping rules at ${r.canonicalName} segment ${ec.frames.head.pc}."))
 
-        resolveHLName(sH) match {
-          case None => ZIO.fail(MappingError("No HL03 field found on HL field."))
-          case Some(hl) =>
-            // Now we need to make sure levels are ok, or do we need to go to nested level
-            findHLLevel(hl, r) match {
-              case None => ZIO.fail(MappingError(s"No HL level defined for discriminator $hl"))
-              case Some(x) =>
-//                println(s"    <HL loop found> $hl -> "+x.canonicalName)
-                mapOneSegment(sT, applySegAssignment(x, Some(sH), ec), false, breakLimit+1)
-            }
-        }
-//        println("Found HL: "+sH)
-        // Gotta parse out the level from r (HL[S]->S) then compare it to HL03 in the data.
-        // If not a match -- have logic to look ahead and "find" the right level.
-//        sH.fields.find(_.name == "HL03").map(_.asInstanceOf[SimpleX12Token].value) match {
-//          case None => ZIO.fail(MappingError("No HL03 field found on HL field."))
-//          case Some(v) => findHLLevel(s"HL[$v]", r) match {
-//            case None => ZIO.fail(MappingError(s"No HL level defined for discriminator $v"))
-//            case Some(x) =>
-//              println("    <HL loop found> "+r.canonicalName)
-//              mapOneSegment(sT, applySegAssignment(x, Some(sH), ec))
-//          }
-//        }
-      case (sH::sT, Some(r)) if (sH.name == r.canonicalName) =>
-//        println("Direct Match: "+sH.name + " :: "+r.canonicalName)
-        mapOneSegment(sT, applySegAssignment(r, Some(sH), ec), false, breakLimit+1)
+        //      case (sH::sT, Some(r:LoopSegmentAssignment)) if (sH.name == "HL" && (r.canonicalName == resolveHLName(sH))) =>
+        case (sH::sT, Some(r:LoopSegmentAssignment)) if sH.name == "HL" && r.canonicalName.startsWith("HL") =>  // HL loop handling
+          resolveHLName(sH) match {
+            case None => ZIO.fail( trace + ErrorEvent(s"No HL03 field found on HL field on segment $breakLimit"))
+            case Some(hl) =>
+              val trace1 = trace + EvalSegEvent(Some(sH.name), Some(hl), 6)
+              val newTrace = trace1 + SegMatchEvent(hl, false, false)
+              // Now we need to make sure levels are ok, or do we need to go to nested level
+              findHLLevel(hl, r) match {
+                case None => ZIO.fail( newTrace + ErrorEvent(s"No HL level defined for discriminator $hl on segment $breakLimit"))
+                case Some(x) =>
+//                  println(s"    <HL loop found> $hl -> "+x.canonicalName)
+                  val (ec2, newTrace2, isLoop) = applySegAssignment(x, Some(sH), ec, newTrace)
+                  mapOneSegment(sT, ec2, newTrace2, isLoop, breakLimit+1)
+              }
+          }
 
-      case (sH::sT, Some(r:SingleSegmentAssignment)) if r.missingInSrc =>
-//        println("Mismatch - Missing In Src "+sH.name+ " -> "+ec.peek.map(_.canonicalName))
-        mapOneSegment(segs, applySegAssignment(r, None, ec, r.missingInSrc), false, breakLimit+1)  // don't advance segs
-      case (sH::sT, Some(r:LoopSegmentAssignment)) if r.missingInSrc =>
-//        println("Mismatch (loop) - Missing In Src "+sH.name+ " -> "+ec.peek.map(_.canonicalName) + " for rule "+r.canonicalName)
-        mapOneSegment(segs, applySegAssignment(r, None, ec, r.missingInSrc), false, breakLimit+1)  // don't advance segs
+        case (sH::sT, Some(r)) if (sH.name == r.canonicalName) => // Direct match
+          val newTrace = trace + EvalSegEvent(Some(sH.name), Some(r.canonicalName), 7) + SegMatchEvent(r.canonicalName, false, false)
+          //        println("Direct Match: "+sH.name + " :: "+r.canonicalName)
+          val (ec2, newTrace2, isLoop) = applySegAssignment(r, Some(sH), ec, newTrace)
+          mapOneSegment(sT, ec2, newTrace2, isLoop, breakLimit+1)
 
-      case (sH::sT, Some(r)) if !loopLatch =>
-//        println("Missing: "+sH.name + " :: "+r.canonicalName)
-        mapOneSegment(segs, applySegAssignment(r, None, ec), false, breakLimit+1)  // don't advance segs
-      case (sH::sT, Some(r)) =>
-//        println("Loop skip: "+sH.name + " :: "+r.canonicalName)
-//        println("     (peek): "+ec.peek.get.canonicalName)
-        mapOneSegment(segs, ec, false , breakLimit+1)  // don't advance segs
-    }
+        case (sH::sT, Some(r:SegmentAssignment)) if r.availability == (OPTIONAL,REQUIRED) && !loopLatch => // GetOrElse assignment
+          val newTrace = trace + EvalSegEvent(Some(sH.name), Some(r.canonicalName), 8) + SegMatchEvent(r.canonicalName, false, true)
+          //        println("Mismatch - Missing In Src "+sH.name+ " -> "+ec.peek.map(_.canonicalName))
+          r match {
+            case sa: SingleSegmentAssignment if sa.orElseAssignments.isDefined =>
+              val (ec2, newTrace2, isLoop) = applySegAssignment(sa.orElseAssignments.get, None, ec, newTrace)
+              mapOneSegment(segs, ec2, newTrace2, isLoop, breakLimit+1)  // don't advance segs
+            case la: LoopSegmentAssignment if la.orElseAssignments.isDefined =>
+              val (ec2, newTrace2, isLoop) = applySegAssignment(la.orElseAssignments.get, None, ec, newTrace)
+              mapOneSegment(segs, ec2, newTrace2, isLoop, breakLimit+1)  // don't advance segs
+            case _ =>
+              ZIO.fail( newTrace + ErrorEvent(s"Src optional, target required, but no 'orElse' assignment specified for when src is None on segment $breakLimit"))
+          }
+
+        case (sH::sT, Some(r)) if !loopLatch =>
+          // no trace activity here
+          //        println("Missing: "+sH.name + " :: "+r.canonicalName)
+          val (ec2, newTrace2, isLoop) = applySegAssignment(r, None, ec, trace + EvalSegEvent(Some(sH.name), Some(r.canonicalName), 9))
+          mapOneSegment(segs, ec2, newTrace2, isLoop, breakLimit+1)  // don't advance segs
+
+        case (sH::sT, Some(r)) =>
+          // no trace activity here
+          //        println("Loop skip: "+sH.name + " :: "+r.canonicalName)
+          //        println("     (peek): "+ec.peek.get.canonicalName)
+          mapOneSegment(segs, ec, trace + EvalSegEvent(Some(sH.name), Some(r.canonicalName), 10), false, breakLimit+1)  // don't advance segs
+      }
 
 
-  def mapWithRules(isa: IsaSegment, rules: MappingSpec): ZIO[Any, MappingError, IsaSegment] =
+  // Top-level call to run rules. If error occurs, we return a trace of what happened. Mapping is so complex that
+  // we need to return some visibility into the process so we don't devolve into a forrest of printlns!
+  def mapWithRules(isa: IsaSegment, rules: MappingSpec): ZIO[Any, MappingTrace, IsaSegment] =
 
-    def transformBody(body: List[SegmentX12Token]): ZIO[Any, MappingError, EC] =
-      val ec = EC().pushFrame(rules.rules)
-      mapOneSegment(isa.groupSets.head.transactions.head.body, ec).map(_._2)
+    def transformBody(body: List[SegmentX12Token]): ZIO[Any, MappingTrace, EC] =
+      val ec = EC().pushFrame("top",rules.rules)
+      mapOneSegment(isa.groupSets.head.transactions.head.body, ec, MappingTrace()).map(_._2)
 
-    def transformSt(st: StSegment): ZIO[Any, MappingError, StSegment] =
+    def transformSt(st: StSegment): ZIO[Any, MappingTrace, StSegment] =
       for
         // Process ST
         // In real life, this is where you'd go to some cache and get the ruleset of the doc, eg 856
@@ -317,7 +241,7 @@ object MapRunner:
         newBodyEC <- transformBody(st.body)
       yield st.copy(body = newBodyEC.accOut)
 
-    def transformGs(gs: GsSegment): ZIO[Any, MappingError, GsSegment] =
+    def transformGs(gs: GsSegment): ZIO[Any, MappingTrace, GsSegment] =
       for
         newTransactions <- ZIO.foreach(gs.transactions)(transformSt)
       yield gs.copy(transactions = newTransactions)
@@ -329,3 +253,14 @@ object MapRunner:
     for
       newGroupSets <- ZIO.foreach(isa.groupSets)(transformGs)
     yield isa.copy(groupSets = newGroupSets)
+
+
+/*
+    
+    Problems:
+    
+    1) HL02 for HL[O] is blank.  Should be 1. Strangely other HL levels seem to work ok
+    2) Empty MAN fields
+    3) Empty PID fields
+    4) Empty N1 fields
+    */

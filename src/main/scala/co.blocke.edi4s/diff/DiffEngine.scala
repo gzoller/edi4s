@@ -26,12 +26,13 @@ object DiffEngine:
                            target: List[RefinedSingleOrLoopSegmentSpec],
                            acc: List[SegmentDifference] = List.empty
                          ): ZIO[Any, DifferenceError, List[SegmentDifference]] =
+
     (src, edi, target) match {
       // All lists traversed -- Done!
       case (Nil, Nil, Nil) =>
         ZIO.succeed(acc)
 
-      // src+target exhausted, more etl
+      // src+target exhausted, more edi
       case (Nil, eH :: eT, Nil) =>
         eH match {
           case e: RefinedSegmentSpec =>
@@ -72,7 +73,7 @@ object DiffEngine:
                 loopLabel <- makeLoopLabel(eH.canonicalName, tH.fields)
                 (assertDiffs, minDiff, maxDiff, fieldDiff) <- segmentDetailCompare((MISSING, targetAvail), None, e, tH)
                 bodyDiff <- compareSegmentLists(Nil, e.body, t.body)
-                nextRecursion <- compareSegmentLists(src, eT, tT, 
+                nextRecursion <- compareSegmentLists(src, eT, tT,
                   acc :+ LoopSegmentDifference(eH.name, loopLabel, (MISSING, targetAvail), bodyDiff, None, LevelsOk(), getHLdiscriminator(t), assertDiffs, fieldDiff, minDiff, maxDiff))
               } yield nextRecursion
             case (_, _) =>
@@ -81,11 +82,11 @@ object DiffEngine:
         else
           eH match {
             case e: RefinedSegmentSpec =>
-              compareSegmentLists(src, edi, tT, acc :+ SingleSegmentDifference(eH.name, eH.canonicalName, (MISSING, targetAvail)))
+              compareSegmentLists(src, edi, tT, acc :+ SingleSegmentDifference(tH.name, tH.canonicalName, (MISSING, targetAvail)))
             case e: RefinedLoopSpec =>
               for {
-                loopLabel <- makeLoopLabel(eH.canonicalName, tH.fields)
-                nextRecursion <- compareSegmentLists(src, edi, tT, acc :+ LoopSegmentDifference(eH.name, loopLabel, (MISSING, targetAvail)))
+                loopLabel <- makeLoopLabel(tH.canonicalName, tH.fields)
+                nextRecursion <- compareSegmentLists(src, edi, tT, acc :+ LoopSegmentDifference(tH.name, loopLabel, (MISSING, targetAvail)))
               } yield nextRecursion
           }
 
@@ -220,7 +221,7 @@ object DiffEngine:
           val srcAvail = if ns.required then REQUIRED else OPTIONAL
           val targetAvail = if nt.required then REQUIRED else OPTIONAL
           for {
-            (assertDiffs, minDiff, maxDiff, fieldDiff) <- segmentDetailCompare((srcAvail, targetAvail), Some(s), e, t)
+            (assertDiffs, minDiff, maxDiff, fieldDiff) <- segmentDetailCompare((srcAvail, targetAvail), Some(ns), e, nt)
             nextRecursion <- compareTwoLoops(ns, e, nt).map(ld => Some(ld.copy(availability = (srcAvail,targetAvail), assertions = assertDiffs, minDiff = minDiff, maxDiff = maxDiff, fieldDiff = fieldDiff)))
           } yield nextRecursion
         case (None, None) =>
