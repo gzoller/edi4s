@@ -20,14 +20,14 @@ object MapRunner:
 
   private inline def fieldNum(f: String) = f.takeRight(2).toInt
 
-  private def applyFieldAssignments(segRule: SingleSegmentAssignment | LoopSegmentAssignment, data: SegmentX12Token): List[X12Token] =
+  private def applyFieldAssignments(segRule: SingleSegmentAssignment | LoopSegmentAssignment, data: Option[SegmentX12Token]): List[X12Token] =
     def resolveFieldValue(f: X12Token): Option[String] = f match {
       case fv: SimpleX12Token => Some(fv.value)
       case fv: EmptyX12Token => Some("")
       case _ => None
     }
 
-    val dataMap = data.fields.map(f => (f.name -> f)).toMap
+    val dataMap = data.map(_.fields.map(f => (f.name -> f)).toMap).getOrElse(Map.empty[String, X12Token])
   //    println(dataMap)
 
   //    val fieldAssigns = segRule.fieldAssignments
@@ -46,7 +46,11 @@ object MapRunner:
           slots.updated(fnum-1, fa.dummyValue)
         case fa: DirectAssignment =>
   //          println("Updating " + fa.targetField + " num " + fieldNum(fa.targetField))
-          val v = dataMap.get(fa.targetField).flatMap(resolveFieldValue).getOrElse("ERROR")
+          val v = (dataMap.get(fa.targetField), fa.availability._1) match { // data + src availability -- ignore optional
+            case (None, OPTIONAL) => ""
+            case (Some(d), _) => resolveFieldValue(d).getOrElse("")
+            case _ => "ERROR"
+          }
           val fnum = fieldNum(fa.targetField)
           slots.updated(fnum - 1, v)
         case fa: ConstantAssignment =>
@@ -61,17 +65,15 @@ object MapRunner:
           dataMap.get(fa.targetField).map {
             case v: SimpleX12Token =>
               val fnum = fieldNum(fa.targetField)
+              val mt = if fa.availability._2 == OPTIONAL then "" else "ERROR"
               fa.cases.get(v.value).map(assigns =>
                 assigns.foldLeft(slots) { case (wipSlots, a) => assignOneField(a, wipSlots) }
-              ).getOrElse(slots.updated(fnum - 1, "ERROR"))
+              ).getOrElse(slots.updated(fnum - 1, mt))
             case _: EmptyX12Token =>
               slots // should never happen--makes no sense
             // TODO: Others... (eg repeated)
           }.get  // TODO: Use ZIO here to return error. fd.targetField was not in dataMap
       }
-  //      if f.targetField.startsWith("PID") then
-  //        println(s"   >> PID ${f.getClass.getName}: "+z)
-  //      z
 
   //    println("Map Segment "+segRule.canonicalName+" fields: "+fieldAssigns.size)
     val slotsDone = segRule.fieldAssignments.foldLeft(Array.fill(maxFields)("").toList){ (wipSlots, fassign) => assignOneField(fassign, wipSlots) }
@@ -96,17 +98,22 @@ object MapRunner:
         (ec, trace + SegAssignEvent(a.canonicalName, classname(a)), false) // no action
       case a: SingleSegmentAssignment if uponData.isDefined =>
         (
-          ec + SegmentX12Token(rule.canonicalName, applyFieldAssignments(a, uponData.get)),
+          ec + SegmentX12Token(a.canonicalName, applyFieldAssignments(a, uponData)),
           trace + SegAssignEvent(a.canonicalName, classname(a)),
           false
         )
       case a: SingleSegmentAssignment =>
-        (ec, trace + SegAssignEvent(a.canonicalName + " (optional+missing)", classname(a)), false) // missing optional src and target is likewise optional (or it'd be OrElseFieldsSegmentAssignment!)
-      // TODO: What about LoopSegmentAssignment w/no data?
+        if a.availability._2 == REQUIRED then // for MISSING/REQUIRED.  All others do nothing
+          (
+            ec + SegmentX12Token(a.canonicalName, applyFieldAssignments(a, uponData)),
+            trace + SegAssignEvent(a.canonicalName + " (missing+required)", classname(a)),
+            false // missing optional src and target is likewise optional (or it'd be OrElseFieldsSegmentAssignment!)
+          )
+        else
+          (ec, trace + SegAssignEvent(a.canonicalName + " (optional+missing)", classname(a)), false) // missing optional src and target is likewise optional (or it'd be OrElseFieldsSegmentAssignment!)
       case a: LoopSegmentAssignment =>
-        val fields = if uponData.isDefined then applyFieldAssignments(a, uponData.get) else Nil
-        val stage1 = ec + SegmentX12Token(rule.canonicalName.replaceAll("""\[\w+]\s*""", ""), fields)
-        if rule.availability._1 == MISSING then
+        val stage1 = ec + SegmentX12Token(a.canonicalName.replaceAll("""\[\w+]\s*""", ""), applyFieldAssignments(a, uponData))
+        if a.availability._1 == MISSING then
           (stage1, trace + SegAssignEvent(a.canonicalName + " (src missing)", classname(a)), true)
         else if a.body.isEmpty then
           (stage1.backspace, trace + SegAssignEvent(a.canonicalName, classname(a)), true)
@@ -256,11 +263,10 @@ object MapRunner:
 
 
 /*
-    
+
     Problems:
-    
-    1) HL02 for HL[O] is blank.  Should be 1. Strangely other HL levels seem to work ok
-    2) Empty MAN fields
+
+    2) Empty MAN fields in HL[P]
     3) Empty PID fields
     4) Empty N1 fields
     */

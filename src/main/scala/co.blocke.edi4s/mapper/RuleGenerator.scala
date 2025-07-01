@@ -65,7 +65,9 @@ object RuleGenerator:
       def genOneFieldRule( fd: FieldDifference, mappedAlready: Set[String] ): (FieldAssignment, Set[String]) =
         fd match {
           case sf: SingleFieldDifference =>
-            if (sf.dataType.isEmpty || sf.dataType.get._1 == sf.dataType.get._2) &&
+            if sf.availability == (MISSING,REQUIRED) then
+              (PlaceholderAssignment( sf.canonicalName, sf.availability ), mappedAlready + sf.canonicalName)
+            else if (sf.dataType.isEmpty || sf.dataType.get._1 == sf.dataType.get._2) &&
               (sf.format.isEmpty || sf.format.get._1 == sf.format.get._2) &&
               (sf.elementId.isEmpty || sf.elementId.get._1 == sf.elementId.get._2) &&
               (sf.validValues.isEmpty || sf.validValues.get._1 == sf.validValues.get._2) &&
@@ -105,7 +107,7 @@ object RuleGenerator:
       def loop(f: List[FieldDifference], acc: List[FieldAssignment], mappedAlready: Set[String] ): (List[FieldAssignment], Set[String]) =
         if f.isEmpty then (acc, mappedAlready)
         else f.head match {
-          case sf: FieldDifference if mappedAlready.contains(sf.canonicalName) =>
+          case fd: FieldDifference if mappedAlready.contains(fd.canonicalName) =>
             (acc, mappedAlready) // skip fields we've already mapped
 
           case fd: FieldDifference =>
